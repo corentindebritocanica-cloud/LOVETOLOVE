@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Masque Caméra iPhone</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        #video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Le masque SVG superposé */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Permet de cliquer à travers si besoin */
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="video-container">
+    <video id="webcam" autoplay playsinline></video>
+    
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+            <mask id="hole-mask">
+                <rect width="100" height="100" fill="white" />
+                <circle cx="25" cy="25" r="10" fill="black" />
+                <circle cx="75" cy="25" r="10" fill="black" />
+                <circle cx="25" cy="75" r="10" fill="black" />
+                <circle cx="75" cy="75" r="10" fill="black" />
+            </mask>
+        </defs>
+        <rect width="100" height="100" fill="white" mask="url(#hole-mask)" />
+    </svg>
+</div>
+
+<script>
+    const video = document.getElementById('webcam');
+
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment" // Force la caméra arrière
+                },
+                audio: false
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Erreur d'accès à la caméra : " + err.message);
+        }
+    }
+
+    // Démarrer la caméra au chargement
+    window.addEventListener('load', startCamera);
+</script>
+
+</body>
+</html>
