@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Décodeur iPhone 16</title>
+    <title>Alignement A4 - iPhone 16</title>
     <style>
-        /* Optimisation pour iPhone 16 (gestion de l'encoche/Dynamic Island) */
         body, html {
             margin: 0;
             padding: 0;
@@ -31,7 +30,6 @@
             z-index: 1;
         }
 
-        /* Le masque blanc */
         svg {
             position: absolute;
             top: 0;
@@ -40,6 +38,13 @@
             height: 100%;
             z-index: 10;
             pointer-events: none;
+        }
+
+        /* Style pour les repères d'alignement visuels */
+        .guide-rect {
+            fill: none;
+            stroke: red;
+            stroke-width: 0.8;
         }
     </style>
 </head>
@@ -53,14 +58,18 @@
             <mask id="hole-mask">
                 <rect width="100" height="100" fill="white" />
                 
-                <circle id="trou1" cx="30" cy="20" r="4" fill="black" />
-                <circle id="trou2" cx="70" cy="35" r="4" fill="black" />
-                <circle id="trou3" cx="25" cy="60" r="4" fill="black" />
-                <circle id="trou4" cx="80" cy="80" r="4" fill="black" />
-            </mask>
+                <circle cx="35" cy="40" r="3" fill="black" />
+                <circle cx="65" cy="40" r="3" fill="black" />
+                <circle cx="35" cy="60" r="3" fill="black" />
+                <circle cx="65" cy="60" r="3" fill="black" />
+
+                <rect x="80" y="5" width="10" height="10" fill="black" /> <rect x="10" y="85" width="10" height="10" fill="black" /> </mask>
         </defs>
         
         <rect width="100" height="100" fill="white" mask="url(#hole-mask)" />
+
+        <rect x="80" y="5" width="10" height="10" class="guide-rect" />
+        <rect x="10" y="85" width="10" height="10" class="guide-rect" />
     </svg>
 </div>
 
@@ -72,7 +81,6 @@
             const constraints = {
                 video: {
                     facingMode: "environment",
-                    // On demande une haute résolution pour bien lire les lettres
                     width: { ideal: 1920 },
                     height: { ideal: 1080 }
                 },
@@ -82,19 +90,15 @@
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
         } catch (err) {
-            console.error("Erreur caméra:", err);
-            alert("Veuillez autoriser la caméra et utiliser HTTPS sur GitHub Pages.");
+            alert("Erreur caméra : Vérifiez que vous êtes en HTTPS et que l'accès est autorisé.");
         }
     }
 
-    // Lance la caméra au chargement
     window.addEventListener('load', initCamera);
 
-    // Empêche le zoom accidentel par double tape sur iPhone
-    document.addEventListener('touchstart', function (event) {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
+    // Empêcher le zoom tactile
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 </script>
 
