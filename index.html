@@ -2,61 +2,64 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Masque Caméra iPhone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Décodeur iPhone 16</title>
     <style>
+        /* Optimisation pour iPhone 16 (gestion de l'encoche/Dynamic Island) */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000;
+            background-color: #fff;
         }
 
-        #video-container {
+        #app-container {
             position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         video {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            z-index: 1;
         }
 
-        /* Le masque SVG superposé */
+        /* Le masque blanc */
         svg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Permet de cliquer à travers si besoin */
             z-index: 10;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-<div id="video-container">
+<div id="app-container">
     <video id="webcam" autoplay playsinline></video>
     
     <svg viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
             <mask id="hole-mask">
                 <rect width="100" height="100" fill="white" />
-                <circle cx="25" cy="25" r="10" fill="black" />
-                <circle cx="75" cy="25" r="10" fill="black" />
-                <circle cx="25" cy="75" r="10" fill="black" />
-                <circle cx="75" cy="75" r="10" fill="black" />
+                
+                <circle id="trou1" cx="30" cy="20" r="4" fill="black" />
+                <circle id="trou2" cx="70" cy="35" r="4" fill="black" />
+                <circle id="trou3" cx="25" cy="60" r="4" fill="black" />
+                <circle id="trou4" cx="80" cy="80" r="4" fill="black" />
             </mask>
         </defs>
+        
         <rect width="100" height="100" fill="white" mask="url(#hole-mask)" />
     </svg>
 </div>
@@ -64,22 +67,35 @@
 <script>
     const video = document.getElementById('webcam');
 
-    async function startCamera() {
+    async function initCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            const constraints = {
                 video: {
-                    facingMode: "environment" // Force la caméra arrière
+                    facingMode: "environment",
+                    // On demande une haute résolution pour bien lire les lettres
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 },
                 audio: false
-            });
+            };
+            
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
         } catch (err) {
-            alert("Erreur d'accès à la caméra : " + err.message);
+            console.error("Erreur caméra:", err);
+            alert("Veuillez autoriser la caméra et utiliser HTTPS sur GitHub Pages.");
         }
     }
 
-    // Démarrer la caméra au chargement
-    window.addEventListener('load', startCamera);
+    // Lance la caméra au chargement
+    window.addEventListener('load', initCamera);
+
+    // Empêche le zoom accidentel par double tape sur iPhone
+    document.addEventListener('touchstart', function (event) {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    }, { passive: false });
 </script>
 
 </body>
