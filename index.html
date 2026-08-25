@@ -3,1167 +3,646 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PsyAgenda — Emploi du temps</title>
+<title>Terrain — Ligue 1, La Liga, Premier League</title>
 <style>
-  :root {
-    --bg: #F4F2EF;
-    --surface: #FFFFFF;
-    --surface2: #F0EDE8;
-    --border: #E2DDD8;
-    --text: #1E2B3C;
-    --text-muted: #6B7A8D;
-    --nav-bg: #1A2535;
-    --nav-text: #E8E4DF;
-    --accent: #1E2B3C;
-    --adulte: #E8826A;
-    --adulte-light: #FDF0EC;
-    --ado: #9B8EC4;
-    --ado-light: #F3F0FB;
-    --enfant: #7BB89A;
-    --enfant-light: #EEF7F3;
-    --icv: #F0A050;
-    --icv-light: #FEF5E8;
-    --perso: #8B9BB4;
-    --perso-light: #EEF1F6;
-    --sport: #5BB8D4;
-    --sport-light: #EAF7FB;
-    --shadow: 0 2px 12px rgba(30,43,60,0.08);
-    --radius: 10px;
-    --radius-sm: 6px;
-    --slot-height: 58px;
+  :root{
+    --bg:#fbfbfd;
+    --surface:#ffffff;
+    --surface-2:#f5f5f7;
+    --border:rgba(0,0,0,.08);
+    --text:#1d1d1f;
+    --text-2:#6e6e73;
+    --text-3:#86868b;
+    --accent:#0071e3;
+    --accent-hover:#0077ed;
+    --win:#34c759;
+    --draw:#ff9f0a;
+    --loss:#ff3b30;
+    --radius:18px;
+    --radius-sm:12px;
+    --ease:cubic-bezier(.28,.11,.32,1);
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow: hidden; }
-
-  #app { display: flex; height: 100vh; }
-
-  /* ── SIDEBAR ── */
-  #sidebar {
-    width: 230px; min-width: 230px; background: var(--nav-bg); color: var(--nav-text);
-    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; z-index: 10;
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
   }
-  .logo { padding: 22px 20px 16px; font-size: 17px; font-weight: 700; letter-spacing: -0.5px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 8px; }
-  .logo em { color: var(--adulte); font-style: normal; }
-  .nav-section { padding: 14px 16px 5px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; color: rgba(255,255,255,0.3); }
-  .nav-btn {
-    display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 20px;
-    cursor: pointer; background: none; border: none; color: var(--nav-text);
-    font-size: 13px; font-family: inherit; width: 100%; text-align: left; transition: background 0.12s; position: relative;
+  a{color:inherit; text-decoration:none;}
+  ::selection{background:var(--accent); color:#fff;}
+
+  /* ---------- Ticker : bandeau noir façon annonce Apple ---------- */
+  .ticker-wrap{
+    background:#000;
+    overflow:hidden;
+    white-space:nowrap;
+    height:36px;
+    display:flex;
+    align-items:center;
+    position:relative;
   }
-  .nav-btn:hover { background: rgba(255,255,255,0.06); }
-  .nav-btn.active { background: rgba(255,255,255,0.1); font-weight: 600; }
-  .nav-btn.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:60%; background:var(--adulte); border-radius:0 2px 2px 0; }
-  .nav-icon { width:16px; text-align:center; opacity:.7; font-size:14px; }
-  .nav-badge { margin-left:auto; background:rgba(255,255,255,0.12); border-radius:20px; padding:1px 7px; font-size:11px; font-weight:600; }
-  .nav-divider { height:1px; background:rgba(255,255,255,0.07); margin:6px 0; }
-  .sidebar-footer { margin-top:auto; padding:14px 16px; border-top:1px solid rgba(255,255,255,0.08); }
-  .sync-status { display:flex; align-items:center; gap:7px; font-size:11.5px; color:rgba(255,255,255,0.5); }
-  .sync-dot { width:7px; height:7px; border-radius:50%; background:#555; flex-shrink:0; }
-  .sync-dot.ok { background:#2ecc71; }
-  .sync-dot.error { background:#e74c3c; }
-  .sync-dot.loading { background:#f0a050; animation:pulse 0.9s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
-
-  /* ── MAIN ── */
-  #main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-
-  /* ── TOPBAR ── */
-  #topbar {
-    background:var(--surface); border-bottom:1px solid var(--border);
-    padding:12px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0;
+  .ticker-wrap::before{content:'';position:absolute;left:0;top:0;bottom:0;width:36px;background:linear-gradient(90deg,#000,transparent);z-index:2;}
+  .ticker-wrap::after{content:'';position:absolute;right:0;top:0;bottom:0;width:36px;background:linear-gradient(270deg,#000,transparent);z-index:2;}
+  .ticker{
+    display:inline-flex; gap:32px; padding-left:100%;
+    animation:scroll 44s linear infinite;
+    font-size:12.5px; font-weight:500; letter-spacing:.01em; color:rgba(255,255,255,.55);
   }
-  #topbar h1 { font-size:15px; font-weight:700; flex:1; }
-  #topbar h1 small { font-size:11.5px; font-weight:400; color:var(--text-muted); margin-left:8px; }
-  .undo-redo { display:flex; gap:4px; }
-  .undo-btn {
-    width:32px; height:32px; border-radius:6px; border:1.5px solid var(--border);
-    background:var(--surface); color:var(--text); font-size:15px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; transition:all .12s; font-family:inherit;
+  .ticker .dot{color:#ff3b30; font-size:8px; vertical-align:middle;}
+  .ticker b{color:#fff; font-weight:600;}
+  @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
+
+  /* ---------- Header ---------- */
+  header{
+    max-width:720px; margin:0 auto; padding:44px 20px 0;
   }
-  .undo-btn:hover:not(:disabled) { border-color:var(--accent); background:var(--surface2); }
-  .undo-btn:disabled { opacity:.3; cursor:default; }
-  .btn {
-    display:inline-flex; align-items:center; gap:6px; padding:7px 13px;
-    border-radius:var(--radius-sm); border:1.5px solid var(--border);
-    background:var(--surface); color:var(--text); font-size:13px; font-weight:500;
-    cursor:pointer; font-family:inherit; transition:all .12s; white-space:nowrap;
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:16px;}
+  .eyebrow{font-size:13px; font-weight:600; color:var(--accent); letter-spacing:.01em; margin:0 0 6px;}
+  h1{font-size:40px; font-weight:700; letter-spacing:-.022em; margin:0 0 8px; color:var(--text);}
+  .subtitle{font-size:17px; color:var(--text-2); margin:0 0 28px; line-height:1.5; max-width:480px;}
+
+  .refresh-btn{
+    background:var(--surface-2); border:none; color:var(--text);
+    font-size:13px; font-weight:600; letter-spacing:.01em;
+    padding:9px 16px; border-radius:100px; cursor:pointer;
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+    transition:background .2s var(--ease);
   }
-  .btn:hover { border-color:var(--accent); background:var(--surface2); }
-  .btn-primary { background:var(--accent); color:white; border-color:var(--accent); }
-  .btn-primary:hover { background:#2c3f58; border-color:#2c3f58; }
-  .btn-sm { padding:5px 10px; font-size:12px; }
-  .btn-danger { border-color:#e74c3c; color:#e74c3c; }
-  .btn-danger:hover { background:#fde8e7; }
+  .refresh-btn:hover{background:#e8e8ed;}
+  .refresh-btn:active{transform:scale(.97);}
+  .refresh-btn:disabled{opacity:.4; cursor:default;}
+  .refresh-btn .ic{display:inline-block; transition:transform .5s var(--ease);}
+  .refresh-btn.spinning .ic{transform:rotate(360deg);}
 
-  /* ── STATS BAR ── */
-  #statsbar {
-    background:var(--surface); border-bottom:1px solid var(--border);
-    padding:9px 22px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; flex-shrink:0;
+  .update-label{font-size:12px; color:var(--text-3); text-align:right; margin-top:8px; height:16px;}
+
+  /* ---------- Segmented control (ligues) ---------- */
+  .leagues{
+    display:flex; gap:2px; background:var(--surface-2);
+    padding:3px; border-radius:12px; margin-bottom:14px;
   }
-  .stat-chip { display:flex; align-items:center; gap:7px; padding:5px 11px; background:var(--surface2); border-radius:20px; font-size:12px; }
-  .stat-chip .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .stat-chip strong { font-weight:700; }
-  .stat-chip .euro { color:var(--text-muted); font-size:10.5px; margin-left:3px; }
-  .stat-sep { width:1px; height:22px; background:var(--border); }
-  .stat-total { font-weight:700; font-size:13.5px; }
-  .stat-total span { color:var(--text-muted); font-weight:400; font-size:11.5px; margin-left:4px; }
-
-  /* ── CONTENT ── */
-  #content { flex:1; overflow-y:auto; overflow-x:hidden; }
-  #content::-webkit-scrollbar { width:6px; }
-  #content::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-
-  /* ── WEEK GRID ── */
-  #week-view { display:flex; flex-direction:column; }
-  .week-header {
-    display:grid; grid-template-columns:56px repeat(5,1fr);
-    background:var(--surface); border-bottom:2px solid var(--border);
-    position:sticky; top:0; z-index:5;
+  .league-btn{
+    flex:1; background:none; border:none; color:var(--text-2);
+    font-family:inherit; font-size:14px; font-weight:600;
+    padding:9px 6px; cursor:pointer; border-radius:9px;
+    transition:background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
   }
-  .day-head { padding:11px 8px; text-align:center; font-size:11.5px; font-weight:700; letter-spacing:.3px; color:var(--text-muted); text-transform:uppercase; border-left:1px solid var(--border); }
-  .week-body { display:grid; grid-template-columns:56px repeat(5,1fr); }
-  .time-col { display:flex; flex-direction:column; }
-  .time-label { height:var(--slot-height); display:flex; align-items:flex-start; justify-content:flex-end; padding:4px 7px 0 0; font-size:10px; color:var(--text-muted); font-weight:500; flex-shrink:0; }
-  .day-col { border-left:1px solid var(--border); display:flex; flex-direction:column; position:relative; }
-  .time-slot { height:var(--slot-height); border-bottom:1px solid var(--border); position:relative; flex-shrink:0; cursor:pointer; transition:background .1s; }
-  .time-slot:hover { background:rgba(232,130,106,0.05); }
-  .time-slot[data-drop-over="true"] { background:rgba(232,130,106,0.12) !important; outline:2px dashed var(--adulte); outline-offset:-2px; }
+  .league-btn.active{color:var(--text); background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.1);}
 
-  /* ── RDV CHIPS ── */
-  .rdv-chip {
-    position:absolute; left:3px; right:3px; border-radius:7px; padding:5px 8px;
-    cursor:grab; z-index:3; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,0.1);
-    display:flex; flex-direction:column; gap:1px; border-left:3.5px solid transparent;
-    transition:transform .1s, box-shadow .1s; user-select:none;
+  .subnav{
+    display:flex; gap:2px; background:var(--surface-2);
+    padding:3px; border-radius:12px; max-width:720px; margin:0 auto; padding-left:3px;
   }
-  .rdv-chip:active { cursor:grabbing; transform:scale(1.015); box-shadow:0 4px 14px rgba(0,0,0,0.16); }
-  .rdv-chip.dragging { opacity:.55; z-index:100; }
-  .rdv-chip .chip-title { font-size:11px; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:16px; }
-  .rdv-chip .chip-sub { font-size:9.5px; opacity:.7; }
-  .rdv-chip .chip-del {
-    position:absolute; top:3px; right:4px; width:15px; height:15px; background:rgba(0,0,0,0.15);
-    border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:8px;
-    cursor:pointer; opacity:0; transition:opacity .12s; border:none; color:inherit; line-height:1;
+  .subnav-wrap{max-width:720px; margin:0 auto; padding:0 20px 18px;}
+  .subnav-btn{
+    flex:1; background:none; border:none; color:var(--text-2);
+    font-family:inherit; font-size:13px; font-weight:600;
+    padding:8px 6px; cursor:pointer; border-radius:9px;
+    transition:background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
   }
-  .rdv-chip:hover .chip-del { opacity:1; }
-  .rdv-chip[data-type="adulte"] { background:var(--adulte-light); border-left-color:var(--adulte); color:#7A3020; }
-  .rdv-chip[data-type="ado"]    { background:var(--ado-light);    border-left-color:var(--ado);    color:#3D2D6A; }
-  .rdv-chip[data-type="enfant"] { background:var(--enfant-light); border-left-color:var(--enfant); color:#1D5A3A; }
-  .rdv-chip[data-type="icv"]   { background:var(--icv-light);   border-left-color:var(--icv);   color:#7A4E10; }
-  .rdv-chip[data-type="perso"] { background:var(--perso-light); border-left-color:var(--perso); color:#2D3F55; }
-  .rdv-chip[data-type="sport"] { background:var(--sport-light); border-left-color:var(--sport); color:#0A506A; }
+  .subnav-btn.active{color:var(--text); background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.1);}
 
-  /* ── OVERLAY / MODAL ── */
-  .overlay { position:fixed; inset:0; background:rgba(20,30,45,0.5); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(2px); }
-  .overlay.hidden { display:none; }
-  .panel { background:var(--surface); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.22); width:100%; max-width:420px; padding:26px; display:flex; flex-direction:column; gap:16px; max-height:90vh; overflow-y:auto; position:relative; }
-  .panel h2 { font-size:17px; font-weight:700; }
-  .panel-close { position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); line-height:1; padding:2px 6px; border-radius:4px; }
-  .panel-close:hover { background:var(--surface2); }
-  .form-row { display:flex; flex-direction:column; gap:5px; }
-  .form-row label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; }
-  .form-row input, .form-row select {
-    padding:9px 11px; border:1.5px solid var(--border); border-radius:var(--radius-sm);
-    font-family:inherit; font-size:14px; background:var(--surface); color:var(--text); outline:none; width:100%; transition:border-color .12s;
+  main{max-width:720px; margin:0 auto; padding:8px 20px 40px;}
+
+  .status-line{font-size:15px; color:var(--text-2); padding:60px 0; text-align:center;}
+  .status-line.error{color:var(--loss);}
+
+  /* ---------- Date picker ---------- */
+  .date-picker{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .date-picker button{
+    background:var(--surface-2); border:none; color:var(--text);
+    width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px;
+    transition:background .2s var(--ease);
   }
-  .form-row input:focus, .form-row select:focus { border-color:var(--accent); }
-  .flex-gap { display:flex; gap:10px; align-items:center; }
-  .btn-row { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+  .date-picker button:hover{background:#e8e8ed;}
+  .date-label{color:var(--text); font-size:15px; font-weight:600;}
 
-  /* ── TYPE PICKER ── */
-  .type-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .type-opt { padding:10px 6px; border-radius:8px; text-align:center; cursor:pointer; font-size:12px; font-weight:600; border:2px solid transparent; transition:all .12s; line-height:1.4; }
-  .type-opt .type-icon { font-size:17px; display:block; margin-bottom:3px; }
-  .type-opt[data-type="adulte"] { background:var(--adulte-light); color:#7A3020; }
-  .type-opt[data-type="ado"]    { background:var(--ado-light);    color:#3D2D6A; }
-  .type-opt[data-type="enfant"] { background:var(--enfant-light); color:#1D5A3A; }
-  .type-opt[data-type="icv"]   { background:var(--icv-light);   color:#7A4E10; }
-  .type-opt[data-type="perso"] { background:var(--perso-light); color:#2D3F55; }
-  .type-opt[data-type="sport"] { background:var(--sport-light); color:#0A506A; }
-  .type-opt.selected[data-type="adulte"] { border-color:var(--adulte); }
-  .type-opt.selected[data-type="ado"]    { border-color:var(--ado); }
-  .type-opt.selected[data-type="enfant"] { border-color:var(--enfant); }
-  .type-opt.selected[data-type="icv"]   { border-color:var(--icv); }
-  .type-opt.selected[data-type="perso"] { border-color:var(--perso); }
-  .type-opt.selected[data-type="sport"] { border-color:var(--sport); }
+  /* ---------- Match cards ---------- */
+  .match{
+    display:flex; align-items:center; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; margin-bottom:10px; gap:12px;
+    transition:box-shadow .2s var(--ease), transform .2s var(--ease);
+  }
+  .match:hover{box-shadow:0 4px 18px rgba(0,0,0,.06); transform:translateY(-1px);}
+  .match .teams{flex:1; min-width:0;}
+  .team-row{display:flex; align-items:center; gap:10px; padding:4px 0; font-size:15px;}
+  .team-row img{width:20px; height:20px; object-fit:contain;}
+  .team-row .name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2);}
+  .team-row.winner .name{font-weight:600; color:var(--text);}
+  .score-col{font-weight:700; font-size:19px; text-align:right; min-width:28px; font-variant-numeric:tabular-nums;}
+  .match-meta{font-size:11px; font-weight:600; text-align:center; min-width:58px; color:var(--text-3); letter-spacing:.02em;}
+  .match-meta.live{color:var(--loss);}
+  .match-meta.live::before{content:'● '; font-size:8px;}
 
-  /* ── DURATION BTNS ── */
-  .dur-row { display:flex; gap:7px; }
-  .dur-btn { flex:1; padding:8px 4px; border-radius:6px; border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all .12s; }
-  .dur-btn.active { border-color:var(--accent); background:var(--accent); color:white; }
+  /* ---------- Standings ---------- */
+  .table-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{text-align:left; color:var(--text-3); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:12px 8px; border-bottom:1px solid var(--border);}
+  td{padding:12px 8px; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr{transition:background .15s var(--ease);}
+  tbody tr:hover{background:var(--surface-2);}
+  td.club{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:500; white-space:nowrap;}
+  td.club img{width:18px; height:18px; object-fit:contain;}
+  td.num{text-align:center; color:var(--text-2);}
+  td.pts{font-weight:700; color:var(--text);}
+  tr.top4 td.rank{color:var(--win); font-weight:700;}
+  tr.releg td.rank{color:var(--loss); font-weight:700;}
 
-  /* ── WEEK MANAGER ── */
-  .week-list { display:flex; flex-direction:column; gap:7px; max-height:260px; overflow-y:auto; }
-  .week-item { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border-radius:var(--radius-sm); cursor:pointer; border:1.5px solid transparent; transition:all .12s; }
-  .week-item:hover { border-color:var(--border); }
-  .week-item.selected { border-color:var(--accent); background:white; }
-  .week-item .week-name { font-weight:600; flex:1; font-size:13.5px; }
-  .week-label { font-size:11px; padding:2px 8px; border-radius:20px; background:rgba(30,43,60,0.08); color:var(--text-muted); }
-  .week-label.A { background:rgba(232,130,106,0.18); color:#8B3020; }
-  .week-label.B { background:rgba(155,142,196,0.18); color:#3D2D6A; }
-  .week-actions { display:flex; gap:5px; }
+  /* ---------- History ---------- */
+  .club-select{display:flex; gap:10px; margin-bottom:20px;}
+  select{
+    flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text);
+    font-family:inherit; font-size:15px; font-weight:500; padding:12px 14px; border-radius:var(--radius-sm);
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236e6e73' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:34px;
+  }
+  .load-btn{
+    background:var(--accent); color:#fff; border:none;
+    font-family:inherit; font-weight:600; font-size:14px;
+    padding:0 22px; border-radius:var(--radius-sm); cursor:pointer;
+    transition:background .2s var(--ease), transform .1s var(--ease);
+  }
+  .load-btn:hover{background:var(--accent-hover);}
+  .load-btn:active{transform:scale(.97);}
+  .load-btn:disabled{opacity:.4; cursor:default;}
 
-  /* ── TARIF GRID ── */
-  .tarif-grid { display:grid; grid-template-columns:1fr 90px; gap:8px 14px; align-items:center; }
-  .tarif-grid label { font-size:13px; }
-  .tarif-grid input { padding:7px 10px; border:1.5px solid var(--border); border-radius:6px; font-family:inherit; font-size:14px; text-align:right; }
+  .form-block{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px;}
+  .form-block h3{margin:0 0 14px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-3); font-weight:600;}
+  .form-block .dots-row{display:flex; gap:8px;}
+  .form-dot{width:30px; height:30px; border-radius:9px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .form-dot.W{background:var(--win);}
+  .form-dot.D{background:var(--draw);}
+  .form-dot.L{background:var(--loss);}
 
-  /* ── MONTH / ANNUAL VIEWS ── */
-  #month-view, #annual-view { padding:28px; }
-  .view-title { font-size:20px; font-weight:800; margin-bottom:6px; }
-  .view-sub { font-size:12.5px; color:var(--text-muted); margin-bottom:22px; }
-  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
-  .month-card { background:var(--surface); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); border-top:4px solid var(--border); }
-  .month-card[data-type="adulte"] { border-top-color:var(--adulte); }
-  .month-card[data-type="ado"]    { border-top-color:var(--ado); }
-  .month-card[data-type="enfant"] { border-top-color:var(--enfant); }
-  .month-card[data-type="icv"]   { border-top-color:var(--icv); }
-  .mc-label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-muted); margin-bottom:8px; }
-  .mc-count { font-size:34px; font-weight:800; line-height:1; }
-  .mc-sub { font-size:12px; color:var(--text-muted); margin-top:4px; }
-  .mc-euros { font-size:13px; font-weight:700; margin-top:6px; }
-  .proj-box { background:var(--surface); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); }
-  .proj-box h3 { font-size:14px; font-weight:700; margin-bottom:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.6px; }
-  .proj-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px; }
-  .proj-row:last-child { border-bottom:none; font-weight:700; font-size:15px; padding-top:12px; }
-  .proj-row .proj-color { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; }
-  .big-total { font-size:26px; font-weight:800; color:var(--adulte); }
+  .progress{font-size:13px; color:var(--text-2); margin-bottom:12px;}
 
-  /* ── ANNUAL SPECIFICS ── */
-  .annual-inputs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
-  .annual-input-box { background:var(--surface); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
-  .annual-input-box label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); margin-bottom:8px; }
-  .annual-input-box input { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:22px; font-weight:700; font-family:inherit; text-align:center; outline:none; transition:border-color .12s; }
-  .annual-input-box input:focus { border-color:var(--accent); }
-  .delta-box { background:#FEF5E8; border:1.5px solid var(--icv); border-radius:var(--radius); padding:18px 22px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
-  .delta-box .delta-label { font-size:13px; color:#7A4E10; font-weight:600; }
-  .delta-box .delta-val { font-size:20px; font-weight:800; color:#7A4E10; }
+  .season-block{margin-bottom:8px; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:var(--surface);}
+  .season-head{
+    padding:14px 18px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+    font-size:14px; font-weight:600; transition:background .15s var(--ease);
+  }
+  .season-head:hover{background:var(--surface-2);}
+  .season-head .rec{color:var(--text-3); font-weight:500; font-size:12.5px;}
+  .season-body{display:none;}
+  .season-body.open{display:block;}
+  .hist-row{display:flex; align-items:center; gap:12px; padding:10px 18px; border-top:1px solid var(--border); font-size:13.5px;}
+  .hist-row .res{font-weight:700; font-size:11px; width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;}
+  .res.W{background:var(--win);}
+  .res.D{background:var(--draw);}
+  .res.L{background:var(--loss);}
+  .hist-row .opp{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2);}
+  .hist-row .sc{font-weight:600; color:var(--text); font-variant-numeric:tabular-nums;}
+  .hist-row .dt{font-size:11.5px; color:var(--text-3); width:52px; text-align:right;}
 
-  /* ── TOAST ── */
-  #toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(70px); background:var(--text); color:white; padding:9px 18px; border-radius:24px; font-size:13px; z-index:200; transition:transform .22s; pointer-events:none; white-space:nowrap; }
-  #toast.show { transform:translateX(-50%) translateY(0); }
+  /* ---------- News ---------- */
+  .news-item{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin-bottom:12px; display:block;
+    transition:box-shadow .2s var(--ease), transform .2s var(--ease);
+  }
+  .news-item:hover{box-shadow:0 4px 18px rgba(0,0,0,.06); transform:translateY(-1px);}
+  .news-item h4{margin:0 0 8px; font-size:16.5px; font-weight:600; color:var(--text); letter-spacing:-.01em;}
+  .news-item p{margin:0 0 10px; font-size:14px; color:var(--text-2); line-height:1.5;}
+  .news-item .meta{font-size:11.5px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
 
-  .hidden { display:none !important; }
+  footer{text-align:center; padding:36px 20px 50px; font-size:12px; color:var(--text-3); line-height:1.6;}
+
+  @media (prefers-reduced-motion:reduce){
+    .ticker{animation:none;}
+    .match, .news-item, .refresh-btn .ic{transition:none;}
+  }
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- SIDEBAR -->
-<aside id="sidebar">
-  <div class="logo">🧠 <em>Psy</em>Agenda</div>
-  <div class="nav-section">Semaines type</div>
-  <div id="nav-weeks-list"></div>
-  <button class="nav-btn" onclick="showWeekManager()"><span class="nav-icon">＋</span> Gérer les semaines</button>
-  <div class="nav-divider"></div>
-  <div class="nav-section">Bilans</div>
-  <button class="nav-btn" id="nav-month" onclick="switchView('month')"><span class="nav-icon">📊</span> Récap mensuel</button>
-  <button class="nav-btn" id="nav-annual" onclick="switchView('annual')"><span class="nav-icon">📅</span> Bilan annuel</button>
-  <div class="nav-divider"></div>
-  <div class="nav-section">Réglages</div>
-  <button class="nav-btn" onclick="showSettings()"><span class="nav-icon">⚙️</span> Tarifs & Horaires</button>
-  <button class="nav-btn" onclick="showGithubSettings()"><span class="nav-icon">☁️</span> Sync GitHub</button>
-  <div class="sidebar-footer">
-    <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Non configuré</span></div>
+<div class="ticker-wrap"><div class="ticker" id="ticker">
+  <span><span class="dot">●</span> chargement du direct…</span>
+</div></div>
+
+<header>
+  <div class="top-row">
+    <div>
+      <p class="eyebrow">Live · Classements · Actus · Historique</p>
+      <h1>Terrain</h1>
+    </div>
+    <div>
+      <button class="refresh-btn" id="refreshBtn"><span class="ic">↻</span> Actualiser</button>
+    </div>
   </div>
-</aside>
+  <p class="subtitle">Ligue 1, La Liga et Premier League — scores en direct, classements, actualités et dix ans d'historique par club.</p>
+  <div class="leagues">
+    <button class="league-btn active" data-league="fra.1">Ligue 1</button>
+    <button class="league-btn" data-league="esp.1">La Liga</button>
+    <button class="league-btn" data-league="eng.1">Premier League</button>
+  </div>
+</header>
 
-<!-- MAIN -->
+<div class="subnav-wrap">
+  <div class="subnav">
+    <button class="subnav-btn active" data-view="scores">Matchs</button>
+    <button class="subnav-btn" data-view="standings">Classement</button>
+    <button class="subnav-btn" data-view="history">Historique</button>
+    <button class="subnav-btn" data-view="news">Actus</button>
+  </div>
+</div>
+
 <main id="main">
-  <div id="topbar">
-    <h1 id="topbar-title">PsyAgenda <small id="topbar-sub"></small></h1>
-    <div class="undo-redo">
-      <button class="undo-btn" id="btn-undo" onclick="undo()" title="Annuler (Ctrl+Z)">↩</button>
-      <button class="undo-btn" id="btn-redo" onclick="redo()" title="Rétablir (Ctrl+Y)">↪</button>
-    </div>
-    <button class="btn btn-sm" onclick="showWeekManager()">📋 Semaines</button>
-    <button class="btn btn-sm btn-primary" onclick="openAddRdv()">＋ RDV</button>
-    <button class="btn btn-sm" onclick="syncToGithub()" title="Sauvegarder sur GitHub">☁️ Sync</button>
-  </div>
-  <div id="statsbar"></div>
-  <div id="content">
-    <div id="week-view"></div>
-    <div id="month-view" class="hidden"></div>
-    <div id="annual-view" class="hidden"></div>
-  </div>
+  <div class="status-line">Chargement…</div>
 </main>
-</div>
+<div class="update-label" id="updateLabel" style="max-width:720px;margin:0 auto;padding:0 20px 20px;"></div>
 
-<div id="toast"></div>
-
-<!-- MODAL RDV -->
-<div class="overlay hidden" id="rdv-modal">
-  <div class="panel">
-    <button class="panel-close" onclick="closeRdvModal()">✕</button>
-    <h2 id="rdv-modal-title">Nouveau rendez-vous</h2>
-    <div class="form-row">
-      <label>Type</label>
-      <div class="type-picker">
-        <div class="type-opt" data-type="adulte" onclick="selectType('adulte')"><span class="type-icon">👤</span>Adulte<br><small id="tp-adulte"></small></div>
-        <div class="type-opt" data-type="ado"    onclick="selectType('ado')"><span class="type-icon">🧑</span>Ado<br><small id="tp-ado"></small></div>
-        <div class="type-opt" data-type="enfant" onclick="selectType('enfant')"><span class="type-icon">👧</span>Enfant<br><small id="tp-enfant"></small></div>
-        <div class="type-opt" data-type="icv"    onclick="selectType('icv')"><span class="type-icon">🧠</span>ICV<br><small id="tp-icv"></small></div>
-        <div class="type-opt" data-type="perso"  onclick="selectType('perso')"><span class="type-icon">🏠</span>Perso<br><small></small></div>
-        <div class="type-opt" data-type="sport"  onclick="selectType('sport')"><span class="type-icon">🏃</span>Sport<br><small></small></div>
-      </div>
-    </div>
-    <div class="form-row">
-      <label>Étiquette (optionnel)</label>
-      <input type="text" id="rdv-label" placeholder="Ex : Mme Martin, Yoga…">
-    </div>
-    <div class="form-row">
-      <label>Durée</label>
-      <div class="dur-row">
-        <button class="dur-btn" data-dur="30"  onclick="selectDur(30)">30 min</button>
-        <button class="dur-btn" data-dur="60"  onclick="selectDur(60)">1 h</button>
-        <button class="dur-btn" data-dur="90"  onclick="selectDur(90)">1 h 30</button>
-        <button class="dur-btn" data-dur="120" onclick="selectDur(120)">2 h</button>
-      </div>
-    </div>
-    <div class="form-row">
-      <label>Jour & Heure de début</label>
-      <div class="flex-gap">
-        <select id="rdv-day" style="flex:1">
-          <option value="0">Lundi</option><option value="1">Mardi</option>
-          <option value="2">Mercredi</option><option value="3">Jeudi</option><option value="4">Vendredi</option>
-        </select>
-        <select id="rdv-hour" style="flex:1"></select>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-danger btn-sm hidden" id="rdv-delete-btn" onclick="deleteCurrentRdv()">🗑 Supprimer</button>
-      <button class="btn" onclick="closeRdvModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveRdv()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL WEEK MANAGER -->
-<div class="overlay hidden" id="week-modal">
-  <div class="panel" style="max-width:500px">
-    <button class="panel-close" onclick="closeWeekModal()">✕</button>
-    <h2>Semaines type</h2>
-    <div id="week-modal-list" class="week-list"></div>
-    <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
-      <input type="text" id="new-week-name" placeholder="Nom de la semaine…" style="flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:14px;">
-      <select id="new-week-ab" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:14px;">
-        <option value="">— (standard)</option><option value="A">Semaine A</option><option value="B">Semaine B</option>
-      </select>
-      <button class="btn btn-primary" onclick="addWeek()">Ajouter</button>
-    </div>
-    <p style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">💡 Créer une semaine A et une semaine B active le calcul en alternance (÷2) pour le mensuel.</p>
-  </div>
-</div>
-
-<!-- MODAL SETTINGS -->
-<div class="overlay hidden" id="settings-modal">
-  <div class="panel" style="max-width:400px">
-    <button class="panel-close" onclick="closeSettings()">✕</button>
-    <h2>Tarifs & Horaires</h2>
-    <div class="tarif-grid">
-      <label>Consultation Adulte (€)</label>
-      <input type="number" id="t-adulte">
-      <label>Consultation Ado (€)</label>
-      <input type="number" id="t-ado">
-      <label>Consultation Enfant (€)</label>
-      <input type="number" id="t-enfant">
-      <label>Séance ICV (€)</label>
-      <input type="number" id="t-icv">
-    </div>
-    <div class="form-row" style="margin-top:8px;">
-      <label>Plage horaire affichée</label>
-      <div class="flex-gap">
-        <select id="hour-start" style="flex:1;padding:9px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;"></select>
-        <span style="color:var(--text-muted);font-size:16px;">→</span>
-        <select id="hour-end" style="flex:1;padding:9px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;"></select>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn" onclick="closeSettings()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL GITHUB -->
-<div class="overlay hidden" id="github-modal">
-  <div class="panel" style="max-width:430px">
-    <button class="panel-close" onclick="closeGithubSettings()">✕</button>
-    <h2>Synchronisation GitHub</h2>
-    <p style="font-size:13px;color:var(--text-muted);line-height:1.65;">Données stockées dans un <strong>Gist privé</strong>. Créez un token sur <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--adulte)">github.com/settings/tokens</a> avec la permission <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;">gist</code>.</p>
-    <div class="form-row">
-      <label>Personal Access Token</label>
-      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
-    </div>
-    <div class="form-row">
-      <label>Gist ID (vide = nouveau Gist)</label>
-      <input type="text" id="gh-gist-id" placeholder="Créé automatiquement au premier sync">
-    </div>
-    <div class="btn-row">
-      <button class="btn" onclick="closeGithubSettings()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveGithubSettings()">Enregistrer & Tester</button>
-    </div>
-    <p style="font-size:11px;color:var(--text-muted);">⚠️ Token stocké dans localStorage de votre navigateur uniquement.</p>
-  </div>
-</div>
+<footer>Données non-officielles via l'API publique ESPN — usage personnel, peut se casser sans préavis.<br>Cache local 12h par appareil, rafraîchissement manuel possible à tout moment.</footer>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  STATE & HISTORY
-// ══════════════════════════════════════════════════════════════
+const LEAGUES = {
+  'fra.1': {name:'Ligue 1', flag:'🇫🇷'},
+  'esp.1': {name:'La Liga', flag:'🇪🇸'},
+  'eng.1': {name:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'}
+};
+const TWELVE_H = 12 * 60 * 60 * 1000;
+
 let state = {
-  weeks: [],
-  currentWeekId: null,
-  tarifs: { adulte: 60, ado: 55, enfant: 55, icv: 75 },
-  hourStart: 8,
-  hourEnd: 20,
-  annualConges: 30
+  league: 'fra.1',
+  view: 'scores',
+  scoreDate: null,     // null = journée en cours par défaut (vue ESPN)
+  teamsCache: {},
+  forcedFresh: false
 };
 
-// Undo/redo stacks
-let history = [];
-let historyIndex = -1;
-const MAX_HISTORY = 50;
+const main = document.getElementById('main');
+const updateLabel = document.getElementById('updateLabel');
+const refreshBtn = document.getElementById('refreshBtn');
 
-function snapshot() {
-  // Sérialise un clone profond pour éviter les mutations par référence
-  const s = JSON.stringify(JSON.parse(JSON.stringify(state)));
-  if (historyIndex < history.length - 1) history = history.slice(0, historyIndex + 1);
-  history.push(s);
-  if (history.length > MAX_HISTORY) history.shift();
-  historyIndex = history.length - 1;
-  updateUndoRedoBtns();
+/* ============ Cache localStorage (12h) ============ */
+/* localStorage est synchrone et pris en charge par tout navigateur / GitHub Pages,
+   contrairement à window.storage qui n'existe que dans l'environnement Claude. */
+function cacheGet(key){
+  try{
+    const raw = localStorage.getItem('terrain:'+key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; } // ex: navigation privée qui bloque localStorage
 }
-
-function undo() {
-  if (historyIndex <= 0) return;
-  historyIndex--;
-  state = JSON.parse(history[historyIndex]);
-  saveToLocalStorage();
-  renderAll();
-  updateUndoRedoBtns();
-  showToast('↩ Annulé');
+function cacheSet(key, value){
+  try{
+    localStorage.setItem('terrain:'+key, JSON.stringify(value));
+  }catch(e){ /* stockage indisponible ou plein : on continue sans cache */ }
 }
-
-function redo() {
-  if (historyIndex >= history.length - 1) return;
-  historyIndex++;
-  state = JSON.parse(history[historyIndex]);
-  saveToLocalStorage();
-  renderAll();
-  updateUndoRedoBtns();
-  showToast('↪ Rétabli');
-}
-
-function updateUndoRedoBtns() {
-  document.getElementById('btn-undo').disabled = historyIndex <= 0;
-  document.getElementById('btn-redo').disabled = historyIndex >= history.length - 1;
-}
-
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
-});
-
-// ══════════════════════════════════════════════════════════════
-//  CONSTANTS
-// ══════════════════════════════════════════════════════════════
-const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
-const TYPE_LABELS = { adulte:'Adulte', ado:'Ado', enfant:'Enfant', icv:'ICV', perso:'Perso', sport:'Sport' };
-const TYPE_ICONS  = { adulte:'👤', ado:'🧑', enfant:'👧', icv:'🧠', perso:'🏠', sport:'🏃' };
-const BILLING_TYPES = ['adulte','ado','enfant','icv'];
-const TYPE_COLORS = { adulte:'var(--adulte)', ado:'var(--ado)', enfant:'var(--enfant)', icv:'var(--icv)' };
-
-let rdvModal = { editId:null, type:'adulte', dur:60 };
-let dragState = { dragging:false, rdvId:null };
-let currentView = 'week';
-
-// ══════════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════════
-function init() {
-  loadFromLocalStorage();
-  if (state.weeks.length === 0) {
-    const w = { id: uid(), name: 'Semaine type', ab: '', rdvs: [] };
-    state.weeks.push(w);
-    state.currentWeekId = w.id;
+async function getCachedOrFetch(key, fetchFn, maxAge = TWELVE_H){
+  if(!state.forcedFresh){
+    const cached = cacheGet(key);
+    if(cached && (Date.now() - cached.ts) < maxAge){
+      showUpdateLabel(cached.ts);
+      return cached.data;
+    }
   }
-  if (!state.currentWeekId) state.currentWeekId = state.weeks[0].id;
-  if (state.annualConges === undefined) state.annualConges = 30;
-  buildHourSelects();
-  snapshot(); // initial snapshot
-  renderAll();
-  const { token, gistId } = getGithubCreds();
-  if (token && gistId) loadFromGithub();
+  const data = await fetchFn();
+  const ts = Date.now();
+  cacheSet(key, {ts, data});
+  showUpdateLabel(ts);
+  return data;
+}
+function showUpdateLabel(ts){
+  const mins = Math.round((Date.now()-ts)/60000);
+  updateLabel.textContent = mins < 1 ? "Mis à jour à l'instant" : mins < 60 ? `Mis à jour il y a ${mins} min` : `Mis à jour il y a ${Math.round(mins/60)} h`;
 }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
-// ══════════════════════════════════════════════════════════════
-//  PERSISTENCE
-// ══════════════════════════════════════════════════════════════
-function saveToLocalStorage() {
-  localStorage.setItem('psyagenda_v2', JSON.stringify(state));
-}
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem('psyagenda_v2') || localStorage.getItem('psyagenda_state');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // Remplacement complet des propriétés (évite les résidus d'anciens états)
-      Object.keys(parsed).forEach(k => { state[k] = parsed[k]; });
-      // Valeurs par défaut pour les clés manquantes
-      if (!state.weeks) state.weeks = [];
-      if (!state.currentWeekId && state.weeks.length > 0) state.currentWeekId = state.weeks[0].id;
-      if (!state.tarifs) state.tarifs = { adulte:60, ado:55, enfant:55, icv:75 };
-      if (state.hourStart === undefined) state.hourStart = 8;
-      if (state.hourEnd === undefined) state.hourEnd = 20;
-      if (state.annualConges === undefined) state.annualConges = 30;
-    }
-  } catch(e) { console.error('Erreur chargement localStorage:', e); }
-}
-function getGithubCreds() {
-  return { token: localStorage.getItem('gh_token')||'', gistId: localStorage.getItem('gh_gist_id')||'' };
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AUTO-SAVE (appelé après chaque mutation)
-// ══════════════════════════════════════════════════════════════
-function commit(toastMsg) {
-  // IMPORTANT : snapshot() en premier (capture l'état courant),
-  // puis saveToLocalStorage() écrit ce même état dans localStorage
-  snapshot();
-  saveToLocalStorage();
-  if (toastMsg) showToast(toastMsg);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  GITHUB
-// ══════════════════════════════════════════════════════════════
-async function syncToGithub() {
-  const { token, gistId } = getGithubCreds();
-  if (!token) { showToast('⚙️ Configurez d\'abord la sync GitHub'); showGithubSettings(); return; }
-  setSyncStatus('loading','Sauvegarde…');
-  const content = JSON.stringify(state, null, 2);
-  try {
-    let resp;
-    if (gistId) {
-      resp = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method:'PATCH',
-        headers:{ Authorization:`token ${token}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ files:{ 'psyagenda.json':{ content } } })
-      });
-    } else {
-      resp = await fetch('https://api.github.com/gists', {
-        method:'POST',
-        headers:{ Authorization:`token ${token}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ description:'PsyAgenda Data', public:false, files:{ 'psyagenda.json':{ content } } })
-      });
-      if (resp.ok) { const d = await resp.json(); localStorage.setItem('gh_gist_id', d.id); }
-    }
-    if (resp.ok) { setSyncStatus('ok','Synchronisé'); showToast('✅ Sauvegardé sur GitHub'); }
-    else { setSyncStatus('error','Erreur '+resp.status); showToast('❌ GitHub erreur '+resp.status); }
-  } catch(e) { setSyncStatus('error','Hors ligne'); showToast('❌ Connexion impossible'); }
-}
-
-async function loadFromGithub() {
-  const { token, gistId } = getGithubCreds();
-  if (!token || !gistId) return;
-  setSyncStatus('loading','Chargement…');
-  try {
-    const resp = await fetch(`https://api.github.com/gists/${gistId}`, { headers:{ Authorization:`token ${token}` } });
-    if (resp.ok) {
-      const data = await resp.json();
-      const content = data.files['psyagenda.json']?.content;
-      if (content) {
-        Object.assign(state, JSON.parse(content));
-        saveToLocalStorage();
-        renderAll();
-        setSyncStatus('ok','Synchronisé');
-        showToast('✅ Données chargées');
-      }
-    } else { setSyncStatus('error','Erreur '+resp.status); }
-  } catch(e) { setSyncStatus('error','Hors ligne'); }
-}
-
-function setSyncStatus(type, label) {
-  document.getElementById('sync-dot').className = 'sync-dot ' + type;
-  document.getElementById('sync-label').textContent = label;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  RENDER ALL
-// ══════════════════════════════════════════════════════════════
-function renderAll() {
-  renderSidebarWeeks();
-  renderTopBar();
-  renderStatsBar();
-  if (currentView === 'week') renderWeekView();
-  else if (currentView === 'month') renderMonthView();
-  else if (currentView === 'annual') renderAnnualView();
-  updateUndoRedoBtns();
-}
-
-function renderSidebarWeeks() {
-  document.getElementById('nav-weeks-list').innerHTML = state.weeks.map(w => `
-    <button class="nav-btn ${w.id===state.currentWeekId && currentView==='week' ? 'active':''}" onclick="selectWeek('${w.id}')">
-      <span class="nav-icon">${w.ab ? w.ab : '📅'}</span>
-      <span>${w.name}</span>
-      ${w.ab ? `<span class="nav-badge">${w.ab}</span>` : ''}
-    </button>
-  `).join('');
-  document.getElementById('nav-month').className = 'nav-btn' + (currentView==='month'?' active':'');
-  document.getElementById('nav-annual').className = 'nav-btn' + (currentView==='annual'?' active':'');
-}
-
-function renderTopBar() {
-  const w = currentWeek();
-  if (currentView === 'week' && w) {
-    document.getElementById('topbar-title').innerHTML = `${w.name} <small>${w.ab ? 'Semaine '+w.ab : ''}</small>`;
-  } else if (currentView === 'month') {
-    document.getElementById('topbar-title').innerHTML = 'Récapitulatif mensuel <small></small>';
-  } else {
-    document.getElementById('topbar-title').innerHTML = 'Bilan annuel <small></small>';
+/* ============ Fetch ESPN avec repli CORS ============ */
+async function espnFetch(path, base='https://site.api.espn.com'){
+  const direct = base + path;
+  try{
+    const r = await fetch(direct);
+    if(!r.ok) throw new Error('http '+r.status);
+    return await r.json();
+  }catch(e){
+    const proxied = 'https://corsproxy.io/?url=' + encodeURIComponent(direct);
+    const r2 = await fetch(proxied);
+    if(!r2.ok) throw new Error('proxy http '+r2.status);
+    return await r2.json();
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  WEEK VIEW
-// ══════════════════════════════════════════════════════════════
-function renderWeekView() {
-  showOnly('week-view');
-  const view = document.getElementById('week-view');
-  const w = currentWeek();
-  if (!w) { view.innerHTML = '<p style="padding:40px;color:var(--text-muted);text-align:center;">Créez une semaine type pour commencer.</p>'; return; }
+function fmtDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}${m}${day}`;
+}
+function fmtDateLabel(d){
+  return d.toLocaleDateString('fr-FR',{weekday:'short', day:'numeric', month:'short'});
+}
 
-  const hs = state.hourStart, he = state.hourEnd;
-  const hours = [];
-  for (let h = hs; h < he; h++) hours.push(h);
+/* ============ Ticker ============ */
+async function loadTicker(){
+  const el = document.getElementById('ticker');
+  try{
+    const chunks = [];
+    for(const lg of Object.keys(LEAGUES)){
+      const data = await espnFetch(`/apis/site/v2/sports/soccer/${lg}/scoreboard`);
+      (data.events||[]).forEach(ev=>{
+        const c = ev.competitions[0];
+        const home = c.competitors.find(x=>x.homeAway==='home');
+        const away = c.competitors.find(x=>x.homeAway==='away');
+        const live = ev.status.type.state === 'in';
+        const done = ev.status.type.completed;
+        const scoreStr = (home.score!=null && (live||done)) ? `${home.score}-${away.score}` : ev.status.type.shortDetail;
+        chunks.push(`<span>${live?'<span class="dot">●</span> ':''}${LEAGUES[lg].flag} <b>${home.team.shortDisplayName}</b> ${scoreStr} <b>${away.team.shortDisplayName}</b></span>`);
+      });
+    }
+    el.innerHTML = chunks.length ? chunks.join('') + chunks.join('') : '<span>Aucun match en cours sur les 3 championnats actuellement</span>';
+  }catch(e){
+    el.innerHTML = '<span>Direct indisponible pour le moment</span>';
+  }
+}
 
-  view.innerHTML = `
-    <div class="week-header">
-      <div></div>
-      ${DAYS.map(d => `<div class="day-head">${d}</div>`).join('')}
+/* ============ Vue Matchs ============ */
+async function renderScores(){
+  const label = state.scoreDate ? fmtDateLabel(state.scoreDate) : 'Journée en cours';
+  main.innerHTML = `
+    <div class="date-picker">
+      <button id="prevDay">&larr;</button>
+      <span class="date-label" id="dateLabel">${label}</span>
+      <button id="nextDay">&rarr;</button>
     </div>
-    <div class="week-body">
-      <div class="time-col">${hours.map(h=>`<div class="time-label">${h}:00</div>`).join('')}</div>
-      ${[0,1,2,3,4].map(di=>`
-        <div class="day-col" id="day-col-${di}">
-          ${hours.map(h=>`
-            <div class="time-slot" data-day="${di}" data-hour="${h}"
-              onclick="slotClick(event,${di},${h})"
-              ondragover="dragOver(event)" ondrop="drop(event,${di},${h})"
-              ondragleave="dragLeave(event)">
-            </div>
-          `).join('')}
+    <div class="status-line">Chargement…</div>
+  `;
+  document.getElementById('prevDay').onclick = ()=>{
+    const base = state.scoreDate ? new Date(state.scoreDate) : new Date();
+    base.setDate(base.getDate()-1); state.scoreDate = base; renderScores();
+  };
+  document.getElementById('nextDay').onclick = ()=>{
+    const base = state.scoreDate ? new Date(state.scoreDate) : new Date();
+    base.setDate(base.getDate()+1); state.scoreDate = base; renderScores();
+  };
+
+  try{
+    const path = state.scoreDate
+      ? `/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(state.scoreDate)}`
+      : `/apis/site/v2/sports/soccer/${state.league}/scoreboard`;
+    const data = await espnFetch(path);
+    const events = data.events || [];
+    const list = document.querySelector('.status-line');
+    if(events.length===0){ list.textContent = 'Aucun match trouvé pour cette période.'; return; }
+    list.remove();
+    const wrap = document.createElement('div');
+    events.forEach(ev=>{
+      const c = ev.competitions[0];
+      const home = c.competitors.find(x=>x.homeAway==='home');
+      const away = c.competitors.find(x=>x.homeAway==='away');
+      const st = ev.status.type;
+      const live = st.state === 'in';
+      const done = st.completed;
+      const homeWin = done && Number(home.score) > Number(away.score);
+      const awayWin = done && Number(away.score) > Number(home.score);
+      const metaText = live ? (st.shortDetail || 'EN DIRECT').toUpperCase() : (done ? 'TERMINÉ' : new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' · ' + new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+      const div = document.createElement('div');
+      div.className = 'match';
+      div.innerHTML = `
+        <div class="teams">
+          <div class="team-row ${homeWin?'winner':''}"><img src="${home.team.logo||''}" onerror="this.style.display='none'"><span class="name">${home.team.displayName}</span></div>
+          <div class="team-row ${awayWin?'winner':''}"><img src="${away.team.logo||''}" onerror="this.style.display='none'"><span class="name">${away.team.displayName}</span></div>
         </div>
-      `).join('')}
-    </div>`;
-
-  (w.rdvs || []).forEach(rdv => placeChip(rdv));
-}
-
-function placeChip(rdv) {
-  const col = document.getElementById(`day-col-${rdv.day}`);
-  if (!col) return;
-  const sh = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--slot-height')) || 58;
-  const top = (rdv.hour - state.hourStart) * sh;
-  const height = Math.max((rdv.dur||60)/60*sh - 4, 20);
-  const label = rdv.label || TYPE_LABELS[rdv.type];
-  const durStr = rdv.dur===30?'30 min':rdv.dur===60?'1h':rdv.dur===90?'1h30':'2h';
-
-  const chip = document.createElement('div');
-  chip.className = 'rdv-chip';
-  chip.dataset.type = rdv.type;
-  chip.dataset.id = rdv.id;
-  chip.style.cssText = `top:${top}px;height:${height}px;`;
-  chip.draggable = true;
-  chip.innerHTML = `
-    <div class="chip-title">${TYPE_ICONS[rdv.type]} ${label}</div>
-    <div class="chip-sub">${rdv.hour}h — ${durStr}</div>
-    <button class="chip-del" onclick="event.stopPropagation();deleteRdv('${rdv.id}')" title="Supprimer">✕</button>`;
-  chip.addEventListener('click', e => { if(!e.target.classList.contains('chip-del')) openEditRdv(rdv); });
-  chip.addEventListener('dragstart', e => {
-    dragState = { dragging:true, rdvId:rdv.id };
-    chip.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  chip.addEventListener('dragend', () => { chip.classList.remove('dragging'); dragState.dragging = false; });
-  col.appendChild(chip);
-}
-
-function dragOver(e) { if(!dragState.dragging) return; e.preventDefault(); e.dataTransfer.dropEffect='move'; e.currentTarget.dataset.dropOver='true'; }
-function dragLeave(e) { e.currentTarget.dataset.dropOver='false'; }
-function drop(e, day, hour) {
-  e.preventDefault(); e.currentTarget.dataset.dropOver='false';
-  if (!dragState.rdvId) return;
-  const w = currentWeek(); if (!w) return;
-  const rdv = w.rdvs.find(r => r.id===dragState.rdvId); if (!rdv) return;
-  rdv.day = day; rdv.hour = hour;
-  commit('↕ RDV déplacé');
-  renderWeekView(); renderStatsBar();
-}
-
-function slotClick(e, day, hour) {
-  if (e.target.closest('.rdv-chip')) return;
-  openAddRdv(day, hour);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  STATS BAR
-// ══════════════════════════════════════════════════════════════
-function renderStatsBar() {
-  const bar = document.getElementById('statsbar');
-  if (currentView !== 'week') { bar.innerHTML = ''; return; }
-  const w = currentWeek(); if (!w) { bar.innerHTML=''; return; }
-  const counts={}, euros={};
-  (w.rdvs||[]).forEach(r => {
-    if (BILLING_TYPES.includes(r.type)) {
-      counts[r.type]=(counts[r.type]||0)+1;
-      euros[r.type]=(euros[r.type]||0)+(state.tarifs[r.type]||0);
-    }
-  });
-  const totalRdv = BILLING_TYPES.reduce((s,t)=>s+(counts[t]||0),0);
-  const totalEuros = BILLING_TYPES.reduce((s,t)=>s+(euros[t]||0),0);
-  const LABELS = { adulte:'Adultes', ado:'Ados', enfant:'Enfants', icv:'ICV' };
-  bar.innerHTML = BILLING_TYPES.map(t=>`
-    <div class="stat-chip">
-      <span class="dot" style="background:${TYPE_COLORS[t]}"></span>
-      ${LABELS[t]} : <strong>${counts[t]||0}</strong>
-      <span class="euro">${euros[t]||0} €</span>
-    </div>`).join('') +
-    `<div class="stat-sep"></div>
-     <div class="stat-chip"><strong>${totalRdv} RDV</strong></div>
-     <div class="stat-total">${totalEuros} € <span>/ semaine</span></div>`;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  MONTH VIEW
-// ══════════════════════════════════════════════════════════════
-function renderMonthView() {
-  showOnly('month-view');
-  const mv = document.getElementById('month-view');
-  const { weekStats, mode, noteHtml } = getWeekStatsForProjection();
-
-  // Monthly counts: A+B alternating → each week appears 2× per month on avg
-  // Standard → appears 4× per month
-  const monthMult = (mode === 'AB') ? 2 : 4;
-  const LABELS = { adulte:'Adultes', ado:'Ados', enfant:'Enfants', icv:'ICV' };
-
-  let totalMonthEuros = 0;
-  const rows = BILLING_TYPES.map(t => {
-    const wkCount = weekStats.counts[t]||0;
-    const monthly = Math.round(wkCount * monthMult);
-    const euros = monthly * (state.tarifs[t]||0);
-    totalMonthEuros += euros;
-    return { t, wkCount, monthly, euros };
-  });
-
-  mv.innerHTML = `
-    <div class="view-title">Récapitulatif mensuel</div>
-    <div class="view-sub">${noteHtml}</div>
-    <div class="cards-grid">
-      ${rows.map(r=>`
-        <div class="month-card" data-type="${r.t}">
-          <div class="mc-label">${LABELS[r.t]}</div>
-          <div class="mc-count" style="color:${TYPE_COLORS[r.t]}">${r.monthly}</div>
-          <div class="mc-sub">RDV / mois (${r.wkCount} / sem.)</div>
-          <div class="mc-euros">${r.euros} €</div>
-        </div>`).join('')}
-    </div>
-    <div class="proj-box">
-      <h3>Projection chiffre d'affaires mensuel</h3>
-      ${rows.map(r=>`
-        <div class="proj-row">
-          <span><span class="proj-color" style="background:${TYPE_COLORS[r.t]}"></span>${LABELS[r.t]}</span>
-          <span>${r.monthly} × ${state.tarifs[r.t]} € = <strong>${r.euros} €</strong></span>
-        </div>`).join('')}
-      <div class="proj-row">
-        <span>💰 Total mensuel estimé</span>
-        <span class="big-total">${totalMonthEuros} €</span>
-      </div>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  ANNUAL VIEW
-// ══════════════════════════════════════════════════════════════
-function renderAnnualView() {
-  showOnly('annual-view');
-  const av = document.getElementById('annual-view');
-  const { weekStats, mode, noteHtml } = getWeekStatsForProjection();
-  const conges = state.annualConges || 30;
-
-  // Weeks per year = 52; AB mode: each week 26×; standard: 52×
-  // But we subtract holidays. 1 day congé = avg daily rate
-  // Working days/year ≈ 52×5 = 260. Daily avg = annual / 260 × (5 days/week)
-  const weeksPerYear = (mode === 'AB') ? 26 : 52;
-  const LABELS = { adulte:'Adultes', ado:'Ados', enfant:'Enfants', icv:'ICV' };
-
-  let grossAnnual = 0;
-  const rows = BILLING_TYPES.map(t => {
-    const annual = Math.round((weekStats.counts[t]||0) * weeksPerYear);
-    const euros = annual * (state.tarifs[t]||0);
-    grossAnnual += euros;
-    return { t, annual, euros };
-  });
-
-  // Delta congés: moyenne journalière = brut / (52*5 jours travaillés)
-  const dailyAvg = grossAnnual / (52 * 5);
-  const deltaConges = Math.round(dailyAvg * conges);
-  const netAnnual = grossAnnual - deltaConges;
-
-  av.innerHTML = `
-    <div class="view-title">Bilan annuel</div>
-    <div class="view-sub">${noteHtml} — Projection sur 52 semaines</div>
-
-    <div class="annual-inputs">
-      <div class="annual-input-box">
-        <label>🌴 Jours de congés / an</label>
-        <input type="number" id="annual-conges" value="${conges}" min="0" max="365"
-          oninput="state.annualConges=parseInt(this.value)||0;saveToLocalStorage();updateAnnualDelta()">
-      </div>
-      <div class="annual-input-box">
-        <label>📉 Perte estimée (congés)</label>
-        <input type="number" id="annual-delta-display" value="${deltaConges}" readonly
-          style="background:var(--surface2);color:var(--text-muted);">
-      </div>
-    </div>
-
-    <div class="delta-box" id="delta-box">
-      <div>
-        <div class="delta-label">CA brut annuel estimé</div>
-        <div style="font-size:28px;font-weight:800;color:#1E2B3C" id="gross-annual-display">${grossAnnual} €</div>
-      </div>
-      <div style="text-align:right">
-        <div class="delta-label">CA net après ${conges} j. de congés</div>
-        <div class="delta-val" id="net-annual-display">${netAnnual} €</div>
-      </div>
-    </div>
-
-    <div class="proj-box">
-      <h3>Détail par type de RDV</h3>
-      ${rows.map(r=>`
-        <div class="proj-row">
-          <span><span class="proj-color" style="background:${TYPE_COLORS[r.t]}"></span>${LABELS[r.t]}</span>
-          <span>${r.annual} RDV × ${state.tarifs[r.t]} € = <strong>${r.euros} €</strong></span>
-        </div>`).join('')}
-      <div class="proj-row">
-        <span>💰 CA brut annuel</span>
-        <span class="big-total">${grossAnnual} €</span>
-      </div>
-      <div class="proj-row" style="color:var(--text-muted);font-size:12.5px;font-weight:400;">
-        <span>🌴 Déduction congés (${conges} j. × ${Math.round(dailyAvg)} €/j)</span>
-        <span>− ${deltaConges} €</span>
-      </div>
-      <div class="proj-row" style="border-top:2px solid var(--border);">
-        <span>✅ CA net estimé</span>
-        <span class="big-total" style="color:var(--enfant)">${netAnnual} €</span>
-      </div>
-    </div>`;
-
-  // Store for live update
-  av.dataset.grossAnnual = grossAnnual;
-  av.dataset.dailyAvg = dailyAvg;
-}
-
-function updateAnnualDelta() {
-  const av = document.getElementById('annual-view');
-  const grossAnnual = parseFloat(av.dataset.grossAnnual)||0;
-  const dailyAvg = parseFloat(av.dataset.dailyAvg)||0;
-  const conges = state.annualConges||0;
-  const delta = Math.round(dailyAvg * conges);
-  const net = Math.round(grossAnnual - delta);
-  const el1 = document.getElementById('annual-delta-display');
-  const el2 = document.getElementById('net-annual-display');
-  if (el1) el1.value = delta;
-  if (el2) el2.textContent = net + ' €';
-  // update delta-box label
-  const db = document.getElementById('delta-box');
-  if (db) {
-    const labels = db.querySelectorAll('.delta-label');
-    if (labels[1]) labels[1].textContent = `CA net après ${conges} j. de congés`;
-  }
-}
-
-// ══════════════════════════════════════════════════════════════
-//  STATS HELPER (semaines A/B aware)
-// ══════════════════════════════════════════════════════════════
-function getWeekStatsForProjection() {
-  const hasA = state.weeks.some(w=>w.ab==='A');
-  const hasB = state.weeks.some(w=>w.ab==='B');
-  const isAB = hasA && hasB;
-
-  let weekStats, mode, noteHtml;
-  if (isAB) {
-    const wA = state.weeks.find(w=>w.ab==='A');
-    const wB = state.weeks.find(w=>w.ab==='B');
-    const sA = statsFor(wA), sB = statsFor(wB);
-    // Average per week = (A+B)/2
-    weekStats = { counts:{}, euros:{} };
-    BILLING_TYPES.forEach(t => {
-      weekStats.counts[t] = ((sA.counts[t]||0)+(sB.counts[t]||0))/2;
-      weekStats.euros[t]  = ((sA.euros[t]||0)+(sB.euros[t]||0))/2;
+        <div class="score-col"><div>${home.score ?? '–'}</div><div>${away.score ?? '–'}</div></div>
+        <div class="match-meta ${live?'live':''}">${metaText}</div>
+      `;
+      wrap.appendChild(div);
     });
-    mode = 'AB';
-    noteHtml = `📋 Mode <strong>Semaine A + Semaine B</strong> — moyenne des deux semaines (÷2) pour extrapolation`;
-  } else {
-    const w = currentWeek() || state.weeks[0];
-    weekStats = statsFor(w);
-    mode = 'standard';
-    noteHtml = `📋 Basé sur : <strong>${w?.name||'—'}</strong>`;
+    main.appendChild(wrap);
+  }catch(e){
+    document.querySelector('.status-line').textContent = 'Erreur de chargement des matchs.';
+    document.querySelector('.status-line').classList.add('error');
   }
-  return { weekStats, mode, noteHtml };
 }
 
-function statsFor(w) {
-  const counts={}, euros={};
-  (w?.rdvs||[]).forEach(r => {
-    if (BILLING_TYPES.includes(r.type)) {
-      counts[r.type]=(counts[r.type]||0)+1;
-      euros[r.type]=(euros[r.type]||0)+(state.tarifs[r.type]||0);
+/* ============ Vue Classement ============ */
+async function renderStandings(){
+  main.innerHTML = `<div class="status-line">Chargement du classement…</div>`;
+  try{
+    const data = await getCachedOrFetch(`standings:${state.league}`, async ()=>{
+      // /apis/site/v2/ renvoie {} pour standings sur cette API — il faut /apis/v2/
+      return await espnFetch(`/apis/v2/sports/soccer/${state.league}/standings`);
+    });
+
+    let entries = [];
+    if(data.children){
+      data.children.forEach(g=>{ if(g.standings && g.standings.entries) entries = entries.concat(g.standings.entries); });
+    } else if(data.standings && data.standings.entries){
+      entries = data.standings.entries;
     }
-  });
-  return { counts, euros };
-}
+    if(!entries.length){ main.innerHTML = '<div class="status-line">Classement indisponible pour cette ligue actuellement.</div>'; return; }
 
-// ══════════════════════════════════════════════════════════════
-//  VIEW SWITCH
-// ══════════════════════════════════════════════════════════════
-function showOnly(id) {
-  ['week-view','month-view','annual-view'].forEach(v => {
-    document.getElementById(v).classList.toggle('hidden', v!==id);
-  });
-}
+    const getStat = (entry,names)=>{
+      for(const n of names){
+        const s = entry.stats.find(s=>s.name===n || s.type===n);
+        if(s) return s.displayValue ?? s.value;
+      }
+      return '–';
+    };
 
-function switchView(v) {
-  currentView = v;
-  renderAll();
-}
+    let rows = entries.map((e,i)=>{
+      const rank = i+1;
+      const cls = rank<=4 ? 'top4' : (rank>entries.length-3 ? 'releg' : '');
+      return `<tr class="${cls}">
+        <td class="num rank">${rank}</td>
+        <td class="club"><img src="${e.team.logos ? e.team.logos[0].href : ''}" onerror="this.style.display='none'">${e.team.shortDisplayName || e.team.displayName}</td>
+        <td class="num">${getStat(e,['gamesPlayed'])}</td>
+        <td class="num">${getStat(e,['wins'])}</td>
+        <td class="num">${getStat(e,['ties','draws'])}</td>
+        <td class="num">${getStat(e,['losses'])}</td>
+        <td class="num">${getStat(e,['pointDifferential','goalDifferential'])}</td>
+        <td class="num pts">${getStat(e,['points'])}</td>
+      </tr>`;
+    }).join('');
 
-function selectWeek(id) {
-  state.currentWeekId = id;
-  currentView = 'week';
-  saveToLocalStorage();
-  renderAll();
-}
-
-function currentWeek() { return state.weeks.find(w=>w.id===state.currentWeekId)||null; }
-
-// ══════════════════════════════════════════════════════════════
-//  ADD / EDIT RDV
-// ══════════════════════════════════════════════════════════════
-function openAddRdv(day, hour) {
-  rdvModal = { editId:null, type:'adulte', dur:60 };
-  document.getElementById('rdv-modal-title').textContent = 'Nouveau rendez-vous';
-  document.getElementById('rdv-label').value = '';
-  document.getElementById('rdv-day').value = day !== undefined ? day : 0;
-  document.getElementById('rdv-hour').value = hour !== undefined ? hour : state.hourStart;
-  document.getElementById('rdv-delete-btn').classList.add('hidden');
-  updateTypePrices();
-  selectType('adulte');
-  selectDur(60);
-  document.getElementById('rdv-modal').classList.remove('hidden');
-}
-
-function openEditRdv(rdv) {
-  rdvModal = { editId:rdv.id, type:rdv.type, dur:rdv.dur||60 };
-  document.getElementById('rdv-modal-title').textContent = 'Modifier le rendez-vous';
-  document.getElementById('rdv-label').value = rdv.label||'';
-  document.getElementById('rdv-day').value = rdv.day;
-  document.getElementById('rdv-hour').value = rdv.hour;
-  document.getElementById('rdv-delete-btn').classList.remove('hidden');
-  updateTypePrices();
-  selectType(rdv.type);
-  selectDur(rdv.dur||60);
-  document.getElementById('rdv-modal').classList.remove('hidden');
-}
-
-function closeRdvModal() { document.getElementById('rdv-modal').classList.add('hidden'); }
-
-function updateTypePrices() {
-  ['adulte','ado','enfant','icv'].forEach(t => {
-    const el = document.getElementById('tp-'+t);
-    if (el) el.textContent = state.tarifs[t]+' €';
-  });
-}
-
-function selectType(t) {
-  rdvModal.type = t;
-  document.querySelectorAll('.type-opt').forEach(el => el.classList.toggle('selected', el.dataset.type===t));
-}
-
-function selectDur(d) {
-  rdvModal.dur = d;
-  document.querySelectorAll('.dur-btn').forEach(el => el.classList.toggle('active', parseInt(el.dataset.dur)===d));
-}
-
-function saveRdv() {
-  const w = currentWeek(); if (!w) return;
-  const label = document.getElementById('rdv-label').value.trim();
-  const day   = parseInt(document.getElementById('rdv-day').value);
-  const hour  = parseInt(document.getElementById('rdv-hour').value);
-
-  if (rdvModal.editId) {
-    const rdv = w.rdvs.find(r=>r.id===rdvModal.editId);
-    if (rdv) Object.assign(rdv, { type:rdvModal.type, label, day, hour, dur:rdvModal.dur });
-  } else {
-    w.rdvs.push({ id:uid(), type:rdvModal.type, label, day, hour, dur:rdvModal.dur });
-  }
-  commit('✅ RDV enregistré');
-  closeRdvModal();
-  renderWeekView();
-  renderStatsBar();
-}
-
-function deleteRdv(id) {
-  const w = currentWeek(); if (!w) return;
-  w.rdvs = w.rdvs.filter(r=>r.id!==id);
-  commit('🗑 RDV supprimé');
-  renderWeekView();
-  renderStatsBar();
-}
-
-function deleteCurrentRdv() {
-  if (!rdvModal.editId) return;
-  deleteRdv(rdvModal.editId);
-  closeRdvModal();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  WEEK MANAGER
-// ══════════════════════════════════════════════════════════════
-function showWeekManager() { renderWeekModal(); document.getElementById('week-modal').classList.remove('hidden'); }
-function closeWeekModal()  { document.getElementById('week-modal').classList.add('hidden'); }
-
-function renderWeekModal() {
-  document.getElementById('week-modal-list').innerHTML = state.weeks.map(w=>`
-    <div class="week-item ${w.id===state.currentWeekId?'selected':''}" onclick="selectWeekFromModal('${w.id}')">
-      <span class="week-name">${w.name}</span>
-      <span class="week-label ${w.ab}">${w.ab?'Semaine '+w.ab:'Standard'}</span>
-      <div class="week-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-sm" onclick="renameWeek('${w.id}')">✏️</button>
-        ${state.weeks.length>1?`<button class="btn btn-sm btn-danger" onclick="removeWeek('${w.id}')">🗑</button>`:''}
+    main.innerHTML = `
+      <div class="table-card">
+        <table>
+          <thead><tr><th>#</th><th>Club</th><th class="num">MJ</th><th class="num">V</th><th class="num">N</th><th class="num">D</th><th class="num">Diff</th><th class="num">Pts</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>
-    </div>`).join('');
-}
-
-function selectWeekFromModal(id) {
-  state.currentWeekId = id; currentView = 'week';
-  saveToLocalStorage(); renderAll(); closeWeekModal();
-}
-
-function addWeek() {
-  const name = document.getElementById('new-week-name').value.trim() || 'Nouvelle semaine';
-  const ab   = document.getElementById('new-week-ab').value;
-  state.weeks.push({ id:uid(), name, ab, rdvs:[] });
-  document.getElementById('new-week-name').value = '';
-  commit(); renderWeekModal(); renderSidebarWeeks();
-}
-
-function renameWeek(id) {
-  const w = state.weeks.find(x=>x.id===id); if (!w) return;
-  const name = prompt('Nom de la semaine :', w.name);
-  if (name===null) return;
-  w.name = name.trim() || w.name;
-  const ab = prompt('Type A / B (laisser vide pour aucun) :', w.ab);
-  if (ab !== null) { w.ab = ab.trim().toUpperCase(); if(w.ab!=='A'&&w.ab!=='B') w.ab=''; }
-  commit(); renderAll(); renderWeekModal();
-}
-
-function removeWeek(id) {
-  if (state.weeks.length<=1) { showToast('❌ Impossible de supprimer la dernière semaine'); return; }
-  if (!confirm('Supprimer cette semaine et tous ses RDV ?')) return;
-  state.weeks = state.weeks.filter(w=>w.id!==id);
-  if (state.currentWeekId===id) state.currentWeekId = state.weeks[0]?.id;
-  commit(); renderAll(); renderWeekModal();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════════════════════════
-function showSettings() {
-  document.getElementById('t-adulte').value = state.tarifs.adulte;
-  document.getElementById('t-ado').value    = state.tarifs.ado;
-  document.getElementById('t-enfant').value = state.tarifs.enfant;
-  document.getElementById('t-icv').value    = state.tarifs.icv;
-  document.getElementById('hour-start').value = state.hourStart;
-  document.getElementById('hour-end').value   = state.hourEnd;
-  document.getElementById('settings-modal').classList.remove('hidden');
-}
-function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
-function saveSettings() {
-  state.tarifs.adulte = parseFloat(document.getElementById('t-adulte').value)||60;
-  state.tarifs.ado    = parseFloat(document.getElementById('t-ado').value)||55;
-  state.tarifs.enfant = parseFloat(document.getElementById('t-enfant').value)||55;
-  state.tarifs.icv    = parseFloat(document.getElementById('t-icv').value)||75;
-  state.hourStart     = parseInt(document.getElementById('hour-start').value)||8;
-  state.hourEnd       = parseInt(document.getElementById('hour-end').value)||20;
-  commit('✅ Réglages enregistrés');
-  closeSettings(); buildHourSelects(); renderAll();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  GITHUB SETTINGS
-// ══════════════════════════════════════════════════════════════
-function showGithubSettings() {
-  document.getElementById('gh-token').value   = localStorage.getItem('gh_token')||'';
-  document.getElementById('gh-gist-id').value = localStorage.getItem('gh_gist_id')||'';
-  document.getElementById('github-modal').classList.remove('hidden');
-}
-function closeGithubSettings() { document.getElementById('github-modal').classList.add('hidden'); }
-async function saveGithubSettings() {
-  const token  = document.getElementById('gh-token').value.trim();
-  const gistId = document.getElementById('gh-gist-id').value.trim();
-  if (token)  localStorage.setItem('gh_token', token);
-  if (gistId) localStorage.setItem('gh_gist_id', gistId);
-  else        localStorage.removeItem('gh_gist_id');
-  closeGithubSettings();
-  await syncToGithub();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  HOUR SELECTS
-// ══════════════════════════════════════════════════════════════
-function buildHourSelects() {
-  const rdvH = document.getElementById('rdv-hour');
-  const hS   = document.getElementById('hour-start');
-  const hE   = document.getElementById('hour-end');
-  [rdvH, hS, hE].forEach(el => { el.innerHTML = ''; });
-  for (let h = 6; h <= 22; h++) {
-    rdvH.innerHTML += `<option value="${h}">${h}:00</option>`;
-    hS.innerHTML   += `<option value="${h}">${h}h</option>`;
-    hE.innerHTML   += `<option value="${h}">${h}h</option>`;
+    `;
+  }catch(e){
+    main.innerHTML = '<div class="status-line error">Erreur de chargement du classement.</div>';
   }
-  rdvH.value = state.hourStart;
-  hS.value   = state.hourStart;
-  hE.value   = state.hourEnd;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════════════════════
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+/* ============ Vue Actus ============ */
+async function renderNews(){
+  main.innerHTML = `<div class="status-line">Chargement des actus…</div>`;
+  try{
+    const data = await getCachedOrFetch(`news:${state.league}`, async ()=>{
+      return await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/news`);
+    });
+    const articles = data.articles || [];
+    if(!articles.length){ main.innerHTML = '<div class="status-line">Aucune actualité disponible pour le moment.</div>'; return; }
+    main.innerHTML = articles.slice(0,20).map(a=>`
+      <a class="news-item" href="${a.links?.web?.href || '#'}" target="_blank" rel="noopener">
+        <h4>${a.headline || ''}</h4>
+        <p>${a.description || ''}</p>
+        <span class="meta">${a.published ? new Date(a.published).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : ''}</span>
+      </a>
+    `).join('');
+  }catch(e){
+    main.innerHTML = '<div class="status-line error">Erreur de chargement des actus.</div>';
+  }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  CLOSE MODALS ON OVERLAY CLICK
-// ══════════════════════════════════════════════════════════════
-['rdv-modal','week-modal','settings-modal','github-modal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', function(e) {
-    if (e.target===this) this.classList.add('hidden');
-  });
+/* ============ Vue Historique ============ */
+async function loadTeams(league){
+  if(state.teamsCache[league]) return state.teamsCache[league];
+  const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/teams?limit=50`);
+  const teams = (data.sports?.[0]?.leagues?.[0]?.teams || []).map(t=>t.team);
+  state.teamsCache[league] = teams;
+  return teams;
+}
+
+async function renderHistory(){
+  main.innerHTML = `<div class="status-line">Chargement des clubs…</div>`;
+  let teams;
+  try{
+    teams = await loadTeams(state.league);
+  }catch(e){
+    main.innerHTML = '<div class="status-line error">Impossible de charger la liste des clubs.</div>';
+    return;
+  }
+  const options = teams.map(t=>`<option value="${t.id}">${t.displayName}</option>`).join('');
+  main.innerHTML = `
+    <div class="club-select">
+      <select id="clubSelect">${options}</select>
+      <button class="load-btn" id="loadHistBtn">Charger 10 ans</button>
+    </div>
+    <div id="formArea"></div>
+    <div id="histArea"></div>
+  `;
+  document.getElementById('loadHistBtn').onclick = loadClubHistory;
+}
+
+async function loadClubHistory(){
+  const select = document.getElementById('clubSelect');
+  const teamId = select.value;
+  const btn = document.getElementById('loadHistBtn');
+  const area = document.getElementById('histArea');
+  const formArea = document.getElementById('formArea');
+  btn.disabled = true;
+  area.innerHTML = '';
+  formArea.innerHTML = '';
+
+  const currentYear = new Date().getFullYear();
+  const seasons = [];
+  for(let i=0;i<10;i++) seasons.push(currentYear - i);
+
+  const seasonResults = {};
+
+  for(let i=0;i<seasons.length;i++){
+    const season = seasons[i];
+    const cacheKey = `hist:${state.league}:${teamId}:${season}`;
+    area.insertAdjacentHTML('afterbegin', `<div class="progress" id="prog">Saison ${season} — ${i+1}/${seasons.length}…</div>`);
+
+    let matches = await getCachedOrFetch(cacheKey, async ()=>{
+      const data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/teams/${teamId}/schedule?season=${season}`);
+      return (data.events || []).map(ev=>{
+        const c = ev.competitions[0];
+        const home = c.competitors.find(x=>x.homeAway==='home');
+        const away = c.competitors.find(x=>x.homeAway==='away');
+        const isHome = String(home.team.id) === String(teamId);
+        const self = isHome ? home : away;
+        const opp = isHome ? away : home;
+        const done = ev.status.type.completed;
+        let result = null;
+        if(done){
+          const sf = Number(self.score), so = Number(opp.score);
+          result = sf>so ? 'W' : (sf<so ? 'L' : 'D');
+        }
+        return { date: ev.date, opp: opp.team.displayName, venue: isHome ? 'D' : 'E', score: done ? `${self.score}-${opp.score}` : '—', result };
+      }).filter(m=>m.result);
+    }, TWELVE_H);
+
+    seasonResults[season] = matches;
+    const prog = document.getElementById('prog');
+    if(prog) prog.remove();
+
+    const W = matches.filter(m=>m.result==='W').length;
+    const D = matches.filter(m=>m.result==='D').length;
+    const L = matches.filter(m=>m.result==='L').length;
+
+    const block = document.createElement('div');
+    block.className = 'season-block';
+    block.innerHTML = `
+      <div class="season-head">
+        <span>${season}–${String(season+1).slice(2)}</span>
+        <span class="rec">${matches.length} matchs · ${W}V ${D}N ${L}D</span>
+      </div>
+      <div class="season-body">
+        ${matches.length ? matches.map(m=>`
+          <div class="hist-row">
+            <span class="res ${m.result}">${m.result}</span>
+            <span class="opp">${m.venue==='D'?'vs':'@'} ${m.opp}</span>
+            <span class="sc">${m.score}</span>
+            <span class="dt">${new Date(m.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
+          </div>`).join('') : '<div class="hist-row"><span class="opp">Aucune donnée pour cette saison</span></div>'}
+      </div>
+    `;
+    block.querySelector('.season-head').onclick = ()=>{ block.querySelector('.season-body').classList.toggle('open'); };
+    area.appendChild(block);
+  }
+
+  // Forme actuelle = 5 derniers matchs joués de la saison en cours
+  const currentSeasonMatches = (seasonResults[currentYear] || []).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const last5 = currentSeasonMatches.slice(-5);
+  if(last5.length){
+    formArea.innerHTML = `
+      <div class="form-block">
+        <h3>Forme actuelle · 5 derniers matchs</h3>
+        <div class="dots-row">${last5.map(m=>`<span class="form-dot ${m.result}">${m.result}</span>`).join('')}</div>
+      </div>
+    `;
+  }
+
+  btn.disabled = false;
+}
+
+/* ============ Navigation ============ */
+function renderView(){
+  if(state.view==='scores') renderScores();
+  else if(state.view==='standings') renderStandings();
+  else if(state.view==='history') renderHistory();
+  else if(state.view==='news') renderNews();
+  state.forcedFresh = false;
+}
+
+document.querySelectorAll('.league-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.league = btn.dataset.league;
+    state.scoreDate = null;
+    renderView();
+  };
 });
 
-// ══════════════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════════════
-init();
+document.querySelectorAll('.subnav-btn').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.subnav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.view = btn.dataset.view;
+    renderView();
+  };
+});
+
+refreshBtn.onclick = ()=>{
+  state.forcedFresh = true;
+  refreshBtn.classList.add('spinning');
+  setTimeout(()=>refreshBtn.classList.remove('spinning'), 500);
+  renderView();
+};
+
+loadTicker();
+renderView();
 </script>
 </body>
 </html>
