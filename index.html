@@ -390,7 +390,7 @@
   <div class="leagues">
     <button class="league-pill active" data-league="fra.1"><span class="lg-flag">🇫🇷</span> Ligue 1</button>
     <button class="league-pill" data-league="esp.1"><span class="lg-flag">🇪🇸</span> La Liga</button>
-    <button class="league-pill" data-league="eng.1"><span class="lg-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Premier League</button>
+    <button class="league-pill" data-league="eng.1"><span class="lg-flag">🏴</span> Premier League</button>
     <span class="league-sep"></span>
     <button class="league-pill" data-league="uefa.champions"><span class="lg-flag">⭐</span> Champions</button>
     <button class="league-pill" data-league="uefa.europa"><span class="lg-flag">🥈</span> Europa</button>
@@ -462,7 +462,7 @@ const LEAGUES = {
   // Championnats — modèle complet
   'fra.1':            {name:'Ligue 1',             flag:'🇫🇷', type:'league',   ofCode:'fr.1', fdCode:'F1',  mdTotal:34, afId:61,  fdoCode:'FL1', displayShort:'L1'},
   'esp.1':            {name:'La Liga',             flag:'🇪🇸', type:'league',   ofCode:'es.1', fdCode:'SP1', mdTotal:38, afId:140, fdoCode:'PD',  displayShort:'LL'},
-  'eng.1':            {name:'Premier League',      flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', type:'league',   ofCode:'en.1', fdCode:'E0',  mdTotal:38, afId:39,  fdoCode:'PL',  displayShort:'PL'},
+  'eng.1':            {name:'Premier League',      flag:'🏴', type:'league',   ofCode:'en.1', fdCode:'E0',  mdTotal:38, afId:39,  fdoCode:'PL',  displayShort:'PL'},
   // Coupes de clubs — modèle simplifié (ClubElo + API-Football si dispo)
   'uefa.champions':   {name:'Ligue des Champions', flag:'⭐',   type:'clubCup',  afId:2,   fdoCode:'CL',  displayShort:'UCL'},
   'uefa.europa':      {name:'Ligue Europa',        flag:'🥈',   type:'clubCup',  afId:3,   fdoCode:'EL',  displayShort:'UEL'},
@@ -970,34 +970,20 @@ async function renderScores(){
       state.matchdayAnchorDate = evTs.length ? new Date(evTs[Math.floor(evTs.length/2)]).toISOString() : new Date().toISOString();
       state.matchdayAnchor = detectedMd;
     } else {
-      // Navigation : essai avec week (ann\u00e9e d\u00e9tect\u00e9e), puis ann\u00e9e alternative, puis plage de dates
-      const y = state.seasonYear || new Date().getFullYear();
-      const tryFetch = async (year) => {
-        try{
-          const d = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?seasontype=1&year=${year}&week=${state.matchday}`);
-          return d.events?.length ? d : null;
-        }catch(e){ return null; }
-      };
-      data = await tryFetch(y);
-      if(!data) data = await tryFetch(y + 1);      // ESPN utilise parfois l'ann\u00e9e de fin de saison
-      if(!data) data = await tryFetch(y - 1);
-      if(!data){
-        // Dernier recours : plage de dates calcul\u00e9e depuis la date-ancre + 7j par journ\u00e9e d'\u00e9cart
-        const anchor = state.matchdayAnchorDate ? new Date(state.matchdayAnchorDate) : new Date();
-        const anchorMd = state.matchdayAnchor || state.matchday;
-        const center = new Date(anchor);
-        center.setDate(center.getDate() + (state.matchday - anchorMd) * 7);
-        const from = new Date(center); from.setDate(from.getDate() - 3);
-        const to   = new Date(center); to.setDate(to.getDate() + 4);
-        const range = `${fmtDate(from)}-${fmtDate(to)}`;
-        try{
-          data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
-          usedFallback = true;
-        }catch(e){ data = {events:[]}; }
-      }
+      // Navigation : approche date-based pure — plus fiable que week+seasontype (ESPN incohérent en début de saison)
+      const anchor = state.matchdayAnchorDate ? new Date(state.matchdayAnchorDate) : new Date();
+      const anchorMd = state.matchdayAnchor || state.matchday;
+      const center = new Date(anchor);
+      center.setDate(center.getDate() + (state.matchday - anchorMd) * 7);
+      const from = new Date(center); from.setDate(from.getDate() - 3);
+      const to   = new Date(center); to.setDate(to.getDate() + 4);
+      const range = `${fmtDate(from)}-${fmtDate(to)}`;
+      try{
+        data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
+      }catch(e){ data = {events:[]}; }
     }
 
-    labelEl.textContent = `Journée ${state.matchday} sur ${total}${usedFallback ? ' · estimation' : ''}`;
+    labelEl.textContent = `Journée ${state.matchday} sur ${total}`;
     prevBtn.disabled = state.matchday <= 1;
     nextBtn.disabled = state.matchday >= total;
     prevBtn.onclick = ()=>{ if(state.matchday > 1){ state.matchday--; renderScores(); } };
@@ -1760,7 +1746,7 @@ async function renderForecast(){
   // Tentative d'utilisation des données pré-calculées par GitHub Actions
   main.innerHTML = `<div class="status-line">Chargement des pronostics…</div>`;
   try{
-    const ghPagesUrl = 'https://CorentinDeBritoCanica.github.io/Time-Work/data/predictions.json';
+    const ghPagesUrl = './data/predictions.json';  // chemin relatif = fonctionne sur n'importe quel domaine GitHub Pages
     const precomp = await getCachedOrFetch(`precomp:all`, async ()=>{
       const r = await fetch(ghPagesUrl);
       if(!r.ok) throw new Error('precomp http '+r.status);
