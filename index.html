@@ -77,16 +77,25 @@
   .update-label{font-size:12px; color:var(--text-3); text-align:right; margin-top:8px; height:16px;}
 
   .leagues{
-    display:flex; gap:2px; background:var(--surface-2);
-    padding:3px; border-radius:12px; margin-bottom:14px;
+    display:flex; gap:6px; overflow-x:auto; scroll-behavior:smooth;
+    padding:2px 0 8px; margin-bottom:14px;
+    -ms-overflow-style:none; scrollbar-width:none;
   }
-  .league-btn{
-    flex:1; background:none; border:none; color:var(--text-2);
-    font-family:inherit; font-size:14px; font-weight:600;
-    padding:9px 6px; cursor:pointer; border-radius:9px;
-    transition:background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
+  .leagues::-webkit-scrollbar{display:none;}
+  .league-pill{
+    flex:0 0 auto; background:var(--surface-2); border:none;
+    color:var(--text-2); font-family:inherit; font-size:13px; font-weight:600;
+    padding:9px 14px; cursor:pointer; border-radius:100px; white-space:nowrap;
+    transition:background .2s var(--ease), color .2s var(--ease);
+    display:inline-flex; align-items:center; gap:6px;
   }
-  .league-btn.active{color:var(--text); background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.1);}
+  .league-pill:hover{background:#e8e8ed;}
+  .league-pill.active{background:var(--text); color:#fff;}
+  .league-pill .lg-flag{font-size:14px; line-height:1;}
+  .league-sep{
+    flex:0 0 auto; width:1px; background:var(--border); margin:6px 4px;
+    align-self:stretch;
+  }
 
   .subnav{
     display:flex; gap:2px; background:var(--surface-2);
@@ -249,6 +258,92 @@
   .conf-badge.med{background:#fff4e0; color:#a3660a;}
   .conf-badge.low{background:#ffece9; color:#b52a20;}
 
+  /* ----- Panneau de diagnostic des sources (vue Pronostics) ----- */
+  .source-panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:16px; font-size:12px; color:var(--text-2);
+    display:flex; flex-wrap:wrap; gap:14px 20px; justify-content:flex-start;
+  }
+  .source-panel .src-stat{display:flex; align-items:center; gap:6px; white-space:nowrap;}
+  .source-panel .src-stat b{color:var(--text); font-weight:600;}
+  .source-panel .src-stat .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .source-panel .of  .dot{background:#0071e3;}
+  .source-panel .fd  .dot{background:#34c759;}
+  .source-panel .espn .dot{background:#ff9500;}
+  .source-panel .ce  .dot{background:#af52de;}
+  .consensus-tag{font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:100px; text-transform:uppercase; letter-spacing:.03em;}
+  .consensus-tag.strong{background:#e8f8ec; color:#227a3b;}
+  .consensus-tag.mixed {background:#fff4e0; color:#a3660a;}
+  .consensus-tag.weak  {background:#ffece9; color:#b52a20;}
+
+  /* ----- Réglages / API keys ----- */
+  .header-actions{display:flex; gap:8px; align-items:center;}
+  .icon-btn{
+    background:var(--surface-2); border:none; color:var(--text);
+    width:36px; height:36px; border-radius:100px; cursor:pointer;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+    transition:background .2s var(--ease);
+  }
+  .icon-btn:hover{background:#e8e8ed;}
+  .icon-btn.has-key::after{
+    content:''; position:absolute; width:8px; height:8px; border-radius:50%;
+    background:var(--win); transform:translate(12px,-12px); border:2px solid var(--surface);
+  }
+  .icon-btn{position:relative;}
+  .modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal.open{display:flex;}
+  .modal-body{
+    background:var(--surface); border-radius:var(--radius); max-width:480px;
+    width:100%; padding:26px; max-height:85vh; overflow:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);
+  }
+  .modal-body h3{margin:0 0 8px; font-size:22px; font-weight:700; letter-spacing:-.01em; color:var(--text);}
+  .modal-body > p{font-size:13.5px; color:var(--text-2); margin:0 0 20px; line-height:1.5;}
+  .modal-field{margin-bottom:18px;}
+  .modal-field label{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:12px; font-weight:600; color:var(--text-3);
+    text-transform:uppercase; letter-spacing:.03em; margin-bottom:8px;
+  }
+  .modal-field label a{color:var(--accent); text-transform:none; font-weight:500; letter-spacing:0;}
+  .modal-field input{
+    width:100%; padding:11px 14px; border-radius:var(--radius-sm);
+    border:1px solid var(--border); background:var(--surface-2);
+    font-family:inherit; font-size:14px; color:var(--text); font-variant-numeric:tabular-nums;
+  }
+  .modal-field .hint{font-size:11.5px; color:var(--text-3); margin-top:6px; display:block;}
+  .modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:24px;}
+  .modal-actions button{
+    padding:10px 22px; border-radius:var(--radius-sm); border:none;
+    font-family:inherit; font-weight:600; font-size:14px; cursor:pointer;
+    transition:background .2s var(--ease), transform .1s var(--ease);
+  }
+  .modal-actions .primary{background:var(--accent); color:#fff;}
+  .modal-actions .primary:hover{background:var(--accent-hover);}
+  .modal-actions .secondary{background:var(--surface-2); color:var(--text);}
+  .modal-actions button:active{transform:scale(.97);}
+
+  /* Panneau source élargi — statut on/off */
+  .source-panel .af  .dot{background:#ff2d55;}
+  .source-panel .fdo .dot{background:#5856d6;}
+  .source-panel .off-src{opacity:.35;}
+
+  /* Blessures affichées sous chaque carte de pronostic */
+  .injuries-block{margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:11.5px;}
+  .injuries-block .inj-title{font-size:10.5px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px;}
+  .injuries-block .inj-row{display:flex; align-items:center; gap:8px; padding:2px 0; color:var(--text-2);}
+  .injuries-block .inj-row b{color:var(--text); font-weight:600; min-width:70px;}
+  .injuries-block .inj-row .type{font-size:9.5px; padding:1px 5px; border-radius:4px; text-transform:uppercase; letter-spacing:.03em;}
+  .injuries-block .inj-row .type.miss{background:#ffece9; color:#b52a20;}
+  .injuries-block .inj-row .type.q   {background:#fff4e0; color:#a3660a;}
+
+  /* Ligne « conseil AF » */
+  .af-advice{margin-top:8px; font-size:12px; color:var(--text-2); padding:8px 12px; background:linear-gradient(90deg, rgba(255,45,85,.06), transparent); border-left:2px solid #ff2d55; border-radius:6px;}
+  .af-advice b{color:var(--text);}
+
   footer{text-align:center; padding:36px 20px 50px; font-size:12px; color:var(--text-3); line-height:1.6;}
   footer a{color:var(--accent);}
 
@@ -270,15 +365,24 @@
       <p class="eyebrow">Live · Classements · Actus · Historique 10 ans</p>
       <h1>Terrain</h1>
     </div>
-    <div>
+    <div class="header-actions">
+      <button class="icon-btn" id="settingsBtn" title="Réglages API">⚙</button>
       <button class="refresh-btn" id="refreshBtn"><span class="ic">↻</span> Actualiser</button>
     </div>
   </div>
-  <p class="subtitle">Ligue 1, La Liga et Premier League — données croisées ESPN & OpenFootball, modèle Dixon-Coles avec Elo pour les pronostics.</p>
+  <p class="subtitle">Championnats européens + <b>Ligue des Champions, Europa, Conférence, Coupe de France, Coupe du Monde, Euro</b>. Jusqu'à 6 sources croisées, modèle multi-signaux avec consensus par pronostic.</p>
   <div class="leagues">
-    <button class="league-btn active" data-league="fra.1">Ligue 1</button>
-    <button class="league-btn" data-league="esp.1">La Liga</button>
-    <button class="league-btn" data-league="eng.1">Premier League</button>
+    <button class="league-pill active" data-league="fra.1"><span class="lg-flag">🇫🇷</span> Ligue 1</button>
+    <button class="league-pill" data-league="esp.1"><span class="lg-flag">🇪🇸</span> La Liga</button>
+    <button class="league-pill" data-league="eng.1"><span class="lg-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Premier League</button>
+    <span class="league-sep"></span>
+    <button class="league-pill" data-league="uefa.champions"><span class="lg-flag">⭐</span> Champions</button>
+    <button class="league-pill" data-league="uefa.europa"><span class="lg-flag">🥈</span> Europa</button>
+    <button class="league-pill" data-league="uefa.europa.conf"><span class="lg-flag">🥉</span> Conférence</button>
+    <button class="league-pill" data-league="fra.fa"><span class="lg-flag">🏆</span> Coupe de France</button>
+    <span class="league-sep"></span>
+    <button class="league-pill" data-league="fifa.world"><span class="lg-flag">🌍</span> Coupe du Monde</button>
+    <button class="league-pill" data-league="uefa.euro"><span class="lg-flag">🇪🇺</span> Euro</button>
   </div>
 </header>
 
@@ -297,9 +401,37 @@
 </main>
 <div class="update-label" id="updateLabel" style="max-width:720px;margin:0 auto;padding:0 20px 20px;"></div>
 
+<div class="modal" id="settingsModal">
+  <div class="modal-body">
+    <h3>Sources API optionnelles</h3>
+    <p>Vos clés sont stockées <b>uniquement dans le localStorage de ce navigateur</b>. Elles activent des signaux additionnels dans le modèle de pronostic (prédictions API-Football, blessures…).</p>
+    <div class="modal-field">
+      <label>
+        <span>API-Football <span style="font-weight:500; text-transform:none;">— prédictions + blessures</span></span>
+        <a href="https://dashboard.api-football.com/register" target="_blank" rel="noopener">Créer un compte gratuit →</a>
+      </label>
+      <input id="keyAF" type="text" spellcheck="false" autocomplete="off" placeholder="x-apisports-key…">
+      <span class="hint">100 requêtes/jour gratuit — largement suffisant pour 3 championnats.</span>
+    </div>
+    <div class="modal-field">
+      <label>
+        <span>Football-Data.org <span style="font-weight:500; text-transform:none;">— vérification classement</span></span>
+        <a href="https://www.football-data.org/client/register" target="_blank" rel="noopener">Créer un compte gratuit →</a>
+      </label>
+      <input id="keyFD" type="text" spellcheck="false" autocomplete="off" placeholder="X-Auth-Token…">
+      <span class="hint">10 requêtes/minute gratuit.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" id="clearSettings">Effacer</button>
+      <button class="secondary" id="closeSettings">Annuler</button>
+      <button class="primary" id="saveSettings">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <footer>
-  Données croisées : <a href="https://github.com/openfootball/football.json" target="_blank" rel="noopener">OpenFootball</a> (historique, JSON statique) + API publique ESPN (live).<br>
-  Modèle Dixon-Coles + Elo — estimation statistique, aucune garantie. Cache local 12h.
+  Sources croisées : <a href="https://github.com/openfootball/football.json" target="_blank" rel="noopener">OpenFootball</a> + <a href="https://www.football-data.co.uk/" target="_blank" rel="noopener">Football-Data.co.uk</a> (cotes de clôture) + <a href="http://clubelo.com/" target="_blank" rel="noopener">ClubElo</a> (Elo académique) + API ESPN (live).<br>
+  Modèle multi-signaux — estimation statistique, aucune garantie. Cache local 12h.
 </footer>
 
 <script>
@@ -311,9 +443,25 @@
    ===================================================================== */
 
 const LEAGUES = {
-  'fra.1': {name:'Ligue 1',        flag:'🇫🇷', ofCode:'fr.1', displayShort:'L1'},
-  'esp.1': {name:'La Liga',        flag:'🇪🇸', ofCode:'es.1', displayShort:'LL'},
-  'eng.1': {name:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', ofCode:'en.1', displayShort:'PL'}
+  // Championnats — modèle complet
+  'fra.1':            {name:'Ligue 1',             flag:'🇫🇷', type:'league',   ofCode:'fr.1', fdCode:'F1',  mdTotal:34, afId:61,  fdoCode:'FL1', displayShort:'L1'},
+  'esp.1':            {name:'La Liga',             flag:'🇪🇸', type:'league',   ofCode:'es.1', fdCode:'SP1', mdTotal:38, afId:140, fdoCode:'PD',  displayShort:'LL'},
+  'eng.1':            {name:'Premier League',      flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', type:'league',   ofCode:'en.1', fdCode:'E0',  mdTotal:38, afId:39,  fdoCode:'PL',  displayShort:'PL'},
+  // Coupes de clubs — modèle simplifié (ClubElo + API-Football si dispo)
+  'uefa.champions':   {name:'Ligue des Champions', flag:'⭐',   type:'clubCup',  afId:2,   fdoCode:'CL',  displayShort:'UCL'},
+  'uefa.europa':      {name:'Ligue Europa',        flag:'🥈',   type:'clubCup',  afId:3,   fdoCode:'EL',  displayShort:'UEL'},
+  'uefa.europa.conf': {name:'Ligue Conférence',    flag:'🥉',   type:'clubCup',  afId:848,                displayShort:'UECL'},
+  'fra.fa':           {name:'Coupe de France',     flag:'🏆',   type:'clubCup',  afId:66,                 displayShort:'CDF'},
+  // Compétitions de sélections nationales — modèle limité (pas de ClubElo)
+  'fifa.world':       {name:'Coupe du Monde',      flag:'🌍',   type:'nationCup', afId:1,                  displayShort:'WC'},
+  'uefa.euro':        {name:'Euro',                flag:'🇪🇺', type:'nationCup', afId:4,                  displayShort:'EURO'}
+};
+
+// Onglets disponibles selon le type de compétition (les autres sont masqués)
+const LEAGUE_FEATURES = {
+  league:    ['scores','standings','history','forecast','news'],
+  clubCup:   ['scores','standings','forecast','news'],
+  nationCup: ['scores','standings','news']
 };
 
 const TWELVE_H = 12 * 60 * 60 * 1000;
@@ -330,10 +478,24 @@ const CORS_PROXIES = [
 let state = {
   league: 'fra.1',
   view: 'scores',
-  scoreDate: null,
+  matchday: null,        // journée courante (null = auto-détecter au 1er appel) — uniquement pour type 'league'
+  seasonYear: null,      // année de saison ESPN (ex: 2026 pour 2026-27)
+  scoreDate: null,       // date visible pour les coupes (navigation jour par jour)
   teamsCache: {},
   forcedFresh: false
 };
+
+/* ============ Clés API (localStorage, panneau Réglages) ============ */
+function loadApiKeys(){
+  try{
+    const stored = JSON.parse(localStorage.getItem('terrain2:apikeys') || '{}');
+    return { apiFootball:'', footballData:'', ...stored };
+  }catch(e){ return { apiFootball:'', footballData:'' }; }
+}
+function saveApiKeys(keys){
+  try{ localStorage.setItem('terrain2:apikeys', JSON.stringify(keys)); }catch(e){}
+}
+let API_KEYS = loadApiKeys();
 
 const main = document.getElementById('main');
 const updateLabel = document.getElementById('updateLabel');
@@ -392,6 +554,25 @@ async function espnFetch(path){
   return await robustFetch('https://site.api.espn.com' + path);
 }
 
+/* Variante texte (pour CSV Football-Data.co.uk) */
+async function robustFetchText(url){
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('http '+r.status);
+    return await r.text();
+  }catch(e){
+    let lastErr = e;
+    for(const proxy of CORS_PROXIES){
+      try{
+        const r = await fetch(proxy(url));
+        if(!r.ok){ lastErr = new Error('proxy '+r.status); continue; }
+        return await r.text();
+      }catch(err){ lastErr = err; }
+    }
+    throw lastErr;
+  }
+}
+
 /* ============ OpenFootball : historique fiable ============ */
 /* Format : https://raw.githubusercontent.com/openfootball/football.json/master/YYYY-YY/xx.1.json
    Contient : { matches: [{ date, team1, team2, score:{ ft:[h,a] } }] } */
@@ -405,35 +586,255 @@ async function openFootballFetch(ofCode, seasonStart){
   }
 }
 
-/* Normalisation légère pour matcher les noms d'équipes entre ESPN et OpenFootball */
+/* ============ Football-Data.co.uk : CSV historique avec cotes de clôture ============ */
+/* Format : https://www.football-data.co.uk/mmz4281/{SSNN}/{code}.csv
+   Colonnes utiles : Date (DD/MM/YY), HomeTeam, AwayTeam, FTHG, FTAG, FTR,
+   B365H/B365D/B365A (cotes Bet365), PSCH/PSCD/PSCA (cotes de clôture Pinnacle — meilleur signal) */
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(',').map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    const cols = line.split(',');
+    const obj = {};
+    headers.forEach((h,i)=> obj[h] = cols[i]);
+    return obj;
+  });
+}
+async function fetchFDCoUkSeason(league, seasonStart){
+  const code = LEAGUES[league].fdCode;
+  const ssnn = String(seasonStart).slice(-2) + String(seasonStart+1).slice(-2);
+  const url = `https://www.football-data.co.uk/mmz4281/${ssnn}/${code}.csv`;
+  const cacheKey = `fd:${code}:${seasonStart}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    try{
+      const text = await robustFetchText(url);
+      const rows = parseCSV(text);
+      return rows.map(r=>{
+        if(!r.HomeTeam || !r.AwayTeam || r.FTHG === '' || r.FTHG == null) return null;
+        const dateStr = r.Date || '';
+        const [d,m,y] = dateStr.split('/');
+        if(!d || !m || !y) return null;
+        const year = y.length===2 ? (Number(y) > 50 ? '19'+y : '20'+y) : y;
+        // Cotes de clôture Pinnacle (PSC*) — plus précises que les cotes d'ouverture ;
+        // repli sur Bet365 puis moyenne du marché (Avg*) si Pinnacle absente
+        const oh = Number(r.PSCH || r.B365H || r.AvgH) || null;
+        const od = Number(r.PSCD || r.B365D || r.AvgD) || null;
+        const oa = Number(r.PSCA || r.B365A || r.AvgA) || null;
+        return {
+          date: `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+          team1: r.HomeTeam, team2: r.AwayTeam,
+          team1Key: teamKey(r.HomeTeam), team2Key: teamKey(r.AwayTeam),
+          h: Number(r.FTHG), a: Number(r.FTAG),
+          odds: (oh && od && oa) ? {h:oh, d:od, a:oa} : null,
+          src: 'fd'
+        };
+      }).filter(m=> m && !isNaN(m.h) && !isNaN(m.a));
+    }catch(e){ return []; }
+  }, ONE_WEEK);
+}
+
+/* ============ ClubElo : rating professionnel externe ============ */
+/* API : https://api.clubelo.com/YYYY-MM-DD renvoie un CSV du classement mondial
+   des clubs à cette date. On l'utilise comme 3e signal (Elo calibré académiquement). */
+async function fetchClubEloSnapshot(){
+  const cacheKey = 'clubelo:snapshot';
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    const today = new Date().toISOString().slice(0,10);
+    try{
+      const text = await robustFetchText(`https://api.clubelo.com/${today}`);
+      const rows = parseCSV(text);
+      return rows.filter(r=>r.Club).map(r=>({
+        club: r.Club, country: r.Country, elo: Number(r.Elo)
+      })).filter(x=>!isNaN(x.elo));
+    }catch(e){ return []; }
+  }, ONE_WEEK);
+}
+
+function buildClubEloLookup(snapshot){
+  const map = {};
+  (snapshot||[]).forEach(s=>{
+    const k = teamKey(s.club);
+    if(k && (!map[k] || s.elo > map[k])) map[k] = s.elo;
+  });
+  return map;
+}
+
+/* ============ API-Football (clé optionnelle) ============ */
+/* Endpoints utilisés :
+   /fixtures?league=X&season=Y&from=D&to=D  → fixtures avec IDs internes
+   /predictions?fixture=ID                  → pronostic pré-calculé par API-Football
+   /injuries?fixture=ID                     → blessures par match (les deux équipes)
+*/
+async function apiFootballFetch(path){
+  if(!API_KEYS.apiFootball) throw new Error('no_key');
+  const url = 'https://v3.football.api-sports.io' + path;
+  const headers = {'x-apisports-key': API_KEYS.apiFootball};
+  try{
+    const r = await fetch(url, {headers});
+    if(!r.ok) throw new Error('http '+r.status);
+    return await r.json();
+  }catch(e){
+    for(const proxy of CORS_PROXIES){
+      try{
+        const r = await fetch(proxy(url), {headers});
+        if(!r.ok) continue;
+        return await r.json();
+      }catch(err){}
+    }
+    throw e;
+  }
+}
+
+async function fetchApiFootballFixtures(league){
+  if(!API_KEYS.apiFootball) return [];
+  const cfg = LEAGUES[league];
+  const season = state.seasonYear || new Date().getFullYear();
+  const from = new Date().toISOString().slice(0,10);
+  const to = new Date(Date.now()+14*86400000).toISOString().slice(0,10);
+  const cacheKey = `af:fx:${league}:${season}:${from}:${to}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    try{
+      const data = await apiFootballFetch(`/fixtures?league=${cfg.afId}&season=${season}&from=${from}&to=${to}`);
+      return (data.response || []).map(f => ({
+        id: f.fixture.id,
+        date: f.fixture.date,
+        team1: f.teams.home.name, team2: f.teams.away.name,
+        team1Key: teamKey(f.teams.home.name), team2Key: teamKey(f.teams.away.name)
+      }));
+    }catch(e){ return []; }
+  }, TWELVE_H);
+}
+
+async function fetchApiFootballPrediction(fixtureId){
+  const cacheKey = `af:pred:${fixtureId}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    try{
+      const data = await apiFootballFetch(`/predictions?fixture=${fixtureId}`);
+      const p = data.response?.[0];
+      if(!p) return null;
+      const pct = s => s ? Number(String(s).replace('%',''))/100 : null;
+      return {
+        home: pct(p.predictions?.percent?.home),
+        draw: pct(p.predictions?.percent?.draw),
+        away: pct(p.predictions?.percent?.away),
+        advice: p.predictions?.advice || null,
+        goalsHome: p.predictions?.goals?.home || null,
+        goalsAway: p.predictions?.goals?.away || null
+      };
+    }catch(e){ return null; }
+  }, TWELVE_H);
+}
+
+async function fetchApiFootballInjuries(fixtureId){
+  const cacheKey = `af:inj:${fixtureId}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    try{
+      const data = await apiFootballFetch(`/injuries?fixture=${fixtureId}`);
+      return (data.response || []).map(i => ({
+        team: i.team.name,
+        player: i.player.name,
+        type: i.player.type,     // "Missing Fixture" | "Questionable" | …
+        reason: i.player.reason
+      }));
+    }catch(e){ return []; }
+  }, TWELVE_H);
+}
+
+/* ============ Football-Data.org (clé optionnelle) ============ */
+/* Utilisé pour valider le classement ESPN (croisé avec source officielle-like). */
+async function fdOrgFetch(path){
+  if(!API_KEYS.footballData) throw new Error('no_key');
+  const url = 'https://api.football-data.org/v4' + path;
+  const headers = {'X-Auth-Token': API_KEYS.footballData};
+  try{
+    const r = await fetch(url, {headers});
+    if(!r.ok) throw new Error('http '+r.status);
+    return await r.json();
+  }catch(e){
+    for(const proxy of CORS_PROXIES){
+      try{
+        const r = await fetch(proxy(url), {headers});
+        if(!r.ok) continue;
+        return await r.json();
+      }catch(err){}
+    }
+    throw e;
+  }
+}
+
+async function fetchFdOrgStandings(league){
+  if(!API_KEYS.footballData) return null;
+  const code = LEAGUES[league].fdoCode;
+  const cacheKey = `fdo:st:${code}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    try{
+      const data = await fdOrgFetch(`/competitions/${code}/standings`);
+      const table = data.standings?.find(s=>s.type==='TOTAL')?.table || [];
+      return table.map(row => ({
+        position: row.position,
+        team: row.team.shortName || row.team.name,
+        teamKey: teamKey(row.team.name),
+        points: row.points,
+        played: row.playedGames,
+        w: row.won, d: row.draw, l: row.lost,
+        gd: row.goalDifference
+      }));
+    }catch(e){ return null; }
+  }, TWELVE_H);
+}
+
+/* Normalisation légère : on retire uniquement les préfixes/suffixes génériques
+   (fc, cf, ac, sc, afc, club, "1"). On garde les mots discriminants (Real, Paris,
+   Athletic, Olympique, Manchester…) sinon on perd la spécificité du nom. */
 function normalizeTeamName(name){
   if(!name) return '';
   return name.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')  // diacritiques
-    .replace(/\b(fc|cf|ac|as|sc|sd|rc|cd|ud|cp|afc|1\.?|club|deportivo|real|athletic|atletico|racing|olympique|paris|saint|the|de|la|el|le|les|los|and|&)\b/g,'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\b(fc|cf|ac|afc|sc|club|1)\b/g,'')
     .replace(/[^a-z0-9]/g,'')
     .trim();
 }
 
-// Alias manuels pour les cas où la normalisation ne suffit pas
+// Table d'alias : forme raccourcie → clé canonique (même que le nom long normalisé).
+// Couvre les variantes ESPN, OpenFootball, Football-Data.co.uk et ClubElo.
 const TEAM_ALIASES = {
   // Ligue 1
-  'psg':'parissaintgermain', 'parissaintgermain':'parissaintgermain', 'paris':'parissaintgermain',
-  'ol':'olympiquelyonnais', 'lyon':'olympiquelyonnais', 'olympiquelyonnais':'olympiquelyonnais',
-  'om':'olympiquemarseille', 'marseille':'olympiquemarseille', 'olympiquemarseille':'olympiquemarseille',
-  'asmonaco':'monaco', 'monaco':'monaco',
-  'lillelosc':'lille', 'losc':'lille', 'lille':'lille',
-  'stadederennais':'rennes', 'rennes':'rennes',
+  'psg':'parissaintgermain', 'paris':'parissaintgermain', 'parissg':'parissaintgermain',
+  'ol':'olympiquelyonnais', 'lyon':'olympiquelyonnais',
+  'om':'olympiquemarseille', 'marseille':'olympiquemarseille',
+  'asmonaco':'monaco',
+  'lillelosc':'lille', 'losc':'lille',
+  'stadederennais':'rennes', 'stadereims':'reims', 'stadedereims':'reims',
+  'ognice':'nice',
+  'racingclubdelens':'lens',
+  'racingstrasbourg':'strasbourg', 'strasbourgalsace':'strasbourg',
+  'saintetienne':'saintetienne', 'stetienne':'saintetienne',
+  'girondinsdebordeaux':'bordeaux',
   // La Liga
-  'realmadrid':'realmadrid', 'realmadridcf':'realmadrid',
-  'fcbarcelona':'barcelona', 'barcelona':'barcelona', 'barca':'barcelona',
-  'atleticomadrid':'atleticomadrid', 'atlmadrid':'atleticomadrid',
-  'athleticbilbao':'athleticclub', 'athleticclub':'athleticclub',
+  'realmadridcf':'realmadrid', 'realmad':'realmadrid',
+  'barca':'barcelona', 'fcbarcelona':'barcelona',
+  'atlmadrid':'atleticomadrid', 'atletico':'atleticomadrid', 'atmadrid':'atleticomadrid', 'atleticode':'atleticomadrid',
+  'athletic':'athleticclub', 'athleticbilbao':'athleticclub', 'athbilbao':'athleticclub',
+  'sociedad':'realsociedad',
+  'betis':'realbetis',
+  'espanyol':'espanyol', 'rcdespanyol':'espanyol',
+  'celta':'celtavigo', 'celtade':'celtavigo', 'rccelta':'celtavigo',
+  'rayovallecano':'rayovallecano', 'vallecano':'rayovallecano',
+  'valladolid':'realvalladolid',
   // Premier League
-  'manutd':'manchesterunited', 'manchesterunited':'manchesterunited', 'mufc':'manchesterunited',
-  'mancity':'manchestercity', 'manchestercity':'manchestercity', 'mcfc':'manchestercity',
-  'spurs':'tottenham', 'tottenhamhotspur':'tottenham', 'tottenham':'tottenham',
-  'wolves':'wolverhampton', 'wolverhamptonwanderers':'wolverhampton'
+  'manutd':'manchesterunited', 'mufc':'manchesterunited', 'manunited':'manchesterunited', 'manunt':'manchesterunited',
+  'mancity':'manchestercity', 'mcfc':'manchestercity',
+  'spurs':'tottenham', 'tottenhamhotspur':'tottenham',
+  'wolves':'wolverhampton', 'wolverhamptonwanderers':'wolverhampton',
+  'newcastleunited':'newcastle',
+  'westhamunited':'westham',
+  'brightonhovealbion':'brighton', 'brightonhove':'brighton',
+  'nottmforest':'nottinghamforest',
+  'sheffieldutd':'sheffieldunited',
+  'leedsunited':'leeds',
+  'leicestercity':'leicester',
+  'norwichcity':'norwich',
+  'crystalpalace':'crystalpalace', 'crypalace':'crystalpalace'
 };
 
 function teamKey(name){
@@ -466,65 +867,139 @@ async function loadTicker(){
   }
 }
 
-/* ============ Vue Matchs ============ */
+/* ============ Vue Matchs (par journée pour championnats, par date pour coupes) ============ */
 function fmtDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}${m}${day}`; }
 function fmtDateLabel(d){ return d.toLocaleDateString('fr-FR',{weekday:'short', day:'numeric', month:'short'}); }
 
+// Rendu commun d'une liste d'événements ESPN dans un container, groupés par jour calendaire
+function renderEventsInto(container, events){
+  const sorted = (events||[]).slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  let lastDayKey = null;
+  sorted.forEach(ev=>{
+    const c = ev.competitions[0];
+    const home = c.competitors.find(x=>x.homeAway==='home') || c.competitors[0];
+    const away = c.competitors.find(x=>x.homeAway==='away') || c.competitors[1];
+    const st = ev.status.type;
+    const live = st.state === 'in';
+    const done = st.completed;
+    const homeWin = done && Number(home.score) > Number(away.score);
+    const awayWin = done && Number(away.score) > Number(home.score);
+    const evDate = new Date(ev.date);
+    const dayKey = evDate.toDateString();
+    if(dayKey !== lastDayKey){
+      lastDayKey = dayKey;
+      const dayLabel = evDate.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+      const sep = document.createElement('p');
+      sep.className = 'day-title';
+      sep.style.marginTop = container.children.length ? '18px' : '0';
+      sep.textContent = dayLabel;
+      container.appendChild(sep);
+    }
+    const metaText = live ? (st.shortDetail || 'EN DIRECT').toUpperCase()
+      : (done ? 'TERMINÉ' : evDate.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}));
+    const div = document.createElement('div');
+    div.className = 'match';
+    div.innerHTML = `
+      <div class="teams">
+        <div class="team-row ${homeWin?'winner':''}"><img src="${home.team.logo||''}" onerror="this.style.display='none'"><span class="name">${home.team.displayName}</span></div>
+        <div class="team-row ${awayWin?'winner':''}"><img src="${away.team.logo||''}" onerror="this.style.display='none'"><span class="name">${away.team.displayName}</span></div>
+      </div>
+      <div class="score-col"><div>${home.score ?? '–'}</div><div>${away.score ?? '–'}</div></div>
+      <div class="match-meta ${live?'live':''}">${metaText}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
 async function renderScores(){
-  const label = state.scoreDate ? fmtDateLabel(state.scoreDate) : 'Journée en cours';
+  const cfg = LEAGUES[state.league];
+  if(cfg.type !== 'league') return renderScoresByDate();
+
+  const total = cfg.mdTotal;
+  main.innerHTML = `
+    <div class="date-picker">
+      <button id="prevMd">&larr;</button>
+      <span class="date-label" id="dateLabel">Chargement…</span>
+      <button id="nextMd">&rarr;</button>
+    </div>
+    <div class="status-line">Chargement des matchs…</div>
+  `;
+  const prevBtn = document.getElementById('prevMd');
+  const nextBtn = document.getElementById('nextMd');
+  const labelEl = document.getElementById('dateLabel');
+  try{
+    let path = `/apis/site/v2/sports/soccer/${state.league}/scoreboard`;
+    if(state.matchday){
+      const year = state.seasonYear || new Date().getFullYear();
+      path += `?seasontype=1&year=${year}&week=${state.matchday}`;
+    }
+    const data = await espnFetch(path);
+    const detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? state.matchday ?? 1;
+    const detectedYear = data.season?.year ?? data.leagues?.[0]?.season?.year ?? new Date().getFullYear();
+    if(state.matchday == null) state.matchday = detectedMd;
+    if(state.seasonYear == null) state.seasonYear = detectedYear;
+
+    labelEl.textContent = `Journée ${state.matchday} sur ${total}`;
+    prevBtn.disabled = state.matchday <= 1;
+    nextBtn.disabled = state.matchday >= total;
+    prevBtn.onclick = ()=>{ if(state.matchday > 1){ state.matchday--; renderScores(); } };
+    nextBtn.onclick = ()=>{ if(state.matchday < total){ state.matchday++; renderScores(); } };
+
+    const events = data.events || [];
+    const statusEl = document.querySelector('.status-line');
+    if(events.length === 0){ statusEl.textContent = 'Aucun match programmé pour cette journée.'; return; }
+    statusEl.remove();
+    const wrap = document.createElement('div');
+    renderEventsInto(wrap, events);
+    main.appendChild(wrap);
+  }catch(e){
+    labelEl.textContent = `Journée ${state.matchday || '?'} sur ${total}`;
+    const s = document.querySelector('.status-line');
+    if(s){ s.textContent = 'Erreur de chargement des matchs.'; s.classList.add('error'); }
+  }
+}
+
+// Coupes / sélections : navigation jour par jour + affichage du tour ESPN si dispo
+async function renderScoresByDate(){
+  const cfg = LEAGUES[state.league];
+  const label = state.scoreDate ? fmtDateLabel(state.scoreDate) : 'Prochains matchs';
   main.innerHTML = `
     <div class="date-picker">
       <button id="prevDay">&larr;</button>
-      <span class="date-label" id="dateLabel">${label}</span>
+      <span class="date-label" id="dateLabel">${cfg.name} · ${label}</span>
       <button id="nextDay">&rarr;</button>
     </div>
-    <div class="status-line">Chargement…</div>
+    <div class="status-line">Chargement des matchs…</div>
   `;
   document.getElementById('prevDay').onclick = ()=>{
     const base = state.scoreDate ? new Date(state.scoreDate) : new Date();
-    base.setDate(base.getDate()-1); state.scoreDate = base; renderScores();
+    base.setDate(base.getDate()-1); state.scoreDate = base; renderScoresByDate();
   };
   document.getElementById('nextDay').onclick = ()=>{
     const base = state.scoreDate ? new Date(state.scoreDate) : new Date();
-    base.setDate(base.getDate()+1); state.scoreDate = base; renderScores();
+    base.setDate(base.getDate()+1); state.scoreDate = base; renderScoresByDate();
   };
   try{
-    const path = state.scoreDate
-      ? `/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(state.scoreDate)}`
-      : `/apis/site/v2/sports/soccer/${state.league}/scoreboard`;
+    // Pour les coupes on élargit la plage (5 jours) si aucune date : on montre les prochains matchs
+    let path;
+    if(state.scoreDate){
+      path = `/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(state.scoreDate)}`;
+    } else {
+      const start = new Date();
+      const end = new Date(); end.setDate(end.getDate()+7);
+      path = `/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(start)}-${fmtDate(end)}&limit=100`;
+    }
     const data = await espnFetch(path);
     const events = data.events || [];
-    const list = document.querySelector('.status-line');
-    if(events.length===0){ list.textContent = 'Aucun match trouvé pour cette période.'; return; }
-    list.remove();
+    const statusEl = document.querySelector('.status-line');
+    if(events.length === 0){ statusEl.textContent = 'Aucun match programmé pour cette période.'; return; }
+    statusEl.remove();
     const wrap = document.createElement('div');
-    events.forEach(ev=>{
-      const c = ev.competitions[0];
-      const home = c.competitors.find(x=>x.homeAway==='home');
-      const away = c.competitors.find(x=>x.homeAway==='away');
-      const st = ev.status.type;
-      const live = st.state === 'in';
-      const done = st.completed;
-      const homeWin = done && Number(home.score) > Number(away.score);
-      const awayWin = done && Number(away.score) > Number(home.score);
-      const metaText = live ? (st.shortDetail || 'EN DIRECT').toUpperCase()
-        : (done ? 'TERMINÉ' : new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' · ' + new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
-      const div = document.createElement('div');
-      div.className = 'match';
-      div.innerHTML = `
-        <div class="teams">
-          <div class="team-row ${homeWin?'winner':''}"><img src="${home.team.logo||''}" onerror="this.style.display='none'"><span class="name">${home.team.displayName}</span></div>
-          <div class="team-row ${awayWin?'winner':''}"><img src="${away.team.logo||''}" onerror="this.style.display='none'"><span class="name">${away.team.displayName}</span></div>
-        </div>
-        <div class="score-col"><div>${home.score ?? '–'}</div><div>${away.score ?? '–'}</div></div>
-        <div class="match-meta ${live?'live':''}">${metaText}</div>
-      `;
-      wrap.appendChild(div);
-    });
+    renderEventsInto(wrap, events);
     main.appendChild(wrap);
   }catch(e){
-    document.querySelector('.status-line').textContent = 'Erreur de chargement des matchs.';
-    document.querySelector('.status-line').classList.add('error');
+    const s = document.querySelector('.status-line');
+    if(s){ s.textContent = 'Erreur de chargement des matchs.'; s.classList.add('error'); }
   }
 }
 
@@ -615,7 +1090,8 @@ async function fetchOFHistoricalSeason(league, seasonStart){
         date: m.date,
         team1: m.team1, team2: m.team2,
         team1Key: teamKey(m.team1), team2Key: teamKey(m.team2),
-        h: Number(ft[0]), a: Number(ft[1])
+        h: Number(ft[0]), a: Number(ft[1]),
+        src: 'of'
       };
     }).filter(Boolean);
   }, ONE_WEEK);
@@ -801,7 +1277,7 @@ function decayWeight(dateStr){
   return Math.pow(0.5, ageDays / DECAY_HALF_LIFE_DAYS);
 }
 
-// Charge un dataset combiné 2 saisons OpenFootball + saison en cours ESPN
+// Charge un dataset combiné : OpenFootball + Football-Data.co.uk (2 saisons closes) + saison en cours ESPN
 async function buildLeagueDataset(league){
   const cacheKey = `dataset:${league}`;
   return await getCachedOrFetch(cacheKey, async ()=>{
@@ -810,18 +1286,29 @@ async function buildLeagueDataset(league){
     const seasons = [currentSeasonStart-2, currentSeasonStart-1];
 
     let matches = [];
+
+    // 1) OpenFootball (2 saisons closes)
     for(const s of seasons){
       const rows = await fetchOFHistoricalSeason(league, s);
       matches = matches.concat(rows);
     }
 
-    // Saison en cours via ESPN scoreboard (par date) — on récupère les résultats terminés
-    // via l'endpoint schedule/team n'est pas idéal ici, on utilise scoreboard sur une plage.
+    // 2) Football-Data.co.uk : mêmes saisons + saison en cours (fournit les cotes de clôture)
+    for(const s of [...seasons, currentSeasonStart]){
+      const rows = await fetchFDCoUkSeason(league, s);
+      // Déduplication avec OpenFootball : même date + mêmes équipes
+      const seen = new Set(matches.map(m=> `${m.date.slice(0,10)}|${m.team1Key}|${m.team2Key}`));
+      rows.forEach(m=>{
+        const k = `${m.date.slice(0,10)}|${m.team1Key}|${m.team2Key}`;
+        if(!seen.has(k)) matches.push(m);
+      });
+    }
+
+    // 3) Saison en cours via ESPN scoreboard par plage mensuelle (couvre ce que FD.co.uk n'a pas encore)
     try{
       const start = new Date(currentSeasonStart, 6, 1);
       const end = new Date();
-      // ESPN limite les plages : on découpe par mois
-      const monthly = [];
+      const seen = new Set(matches.map(m=> `${m.date.slice(0,10)}|${m.team1Key}|${m.team2Key}`));
       let cursor = new Date(start);
       while(cursor < end){
         const monthEnd = new Date(cursor); monthEnd.setMonth(monthEnd.getMonth()+1); monthEnd.setDate(0);
@@ -834,18 +1321,24 @@ async function buildLeagueDataset(league){
             const c = ev.competitions[0];
             const home = c.competitors.find(x=>x.homeAway==='home');
             const away = c.competitors.find(x=>x.homeAway==='away');
-            monthly.push({
-              date: ev.date,
+            const iso = new Date(ev.date).toISOString();
+            const t1k = teamKey(home.team.displayName), t2k = teamKey(away.team.displayName);
+            const k = `${iso.slice(0,10)}|${t1k}|${t2k}`;
+            if(seen.has(k)) return;
+            seen.add(k);
+            matches.push({
+              date: iso,
               team1: home.team.displayName, team2: away.team.displayName,
-              team1Key: teamKey(home.team.displayName), team2Key: teamKey(away.team.displayName),
-              h: Number(home.score), a: Number(away.score)
+              team1Key: t1k, team2Key: t2k,
+              h: Number(home.score), a: Number(away.score),
+              odds: null,
+              src: 'espn'
             });
           });
         }catch(e){ /* on continue */ }
         cursor.setMonth(cursor.getMonth()+1); cursor.setDate(1);
       }
-      matches = matches.concat(monthly);
-    }catch(e){ /* la saison en cours restera basée sur OF si elle existe */ }
+    }catch(e){ /* la saison en cours restera basée sur OF/FD si elle existe */ }
 
     return matches;
   }, TWELVE_H);
@@ -890,7 +1383,10 @@ function computeTeamStrengths(matches){
   return { strengths, avgHome, avgAway };
 }
 
-// Calcule le rating Elo de chaque équipe à partir de la chronologie des matchs
+// Calcule le rating Elo de chaque équipe à partir de la chronologie des matchs.
+// Quand des cotes de clôture sont disponibles (Football-Data.co.uk), on s'en sert
+// comme prior de marché : l'écart entre attendu-marché et résultat pilote l'update,
+// ce qui accélère la convergence et surpondère les vraies surprises.
 function computeElo(matches){
   const K = 20;
   const HOME_ADV_ELO = 65;
@@ -899,9 +1395,15 @@ function computeElo(matches){
   const sorted = matches.slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
   sorted.forEach(m=>{
     const rh = get(m.team1Key), ra = get(m.team2Key);
-    const expH = 1/(1 + Math.pow(10, -((rh + HOME_ADV_ELO) - ra)/400));
+    const expH_elo = 1/(1 + Math.pow(10, -((rh + HOME_ADV_ELO) - ra)/400));
     const actualH = m.h>m.a ? 1 : (m.h===m.a ? 0.5 : 0);
-    // Ajustement K par écart de buts (méthode FIFA / World Football Elo)
+    let expH = expH_elo;
+    if(m.odds && m.odds.h && m.odds.d && m.odds.a){
+      const invH = 1/m.odds.h, invD = 1/m.odds.d, invA = 1/m.odds.a;
+      const margin = invH + invD + invA;
+      const marketExpH = (invH + 0.5*invD) / margin;
+      expH = 0.5 * expH_elo + 0.5 * marketExpH;
+    }
     const goalDiff = Math.abs(m.h - m.a);
     const gMult = goalDiff <= 1 ? 1 : (goalDiff === 2 ? 1.5 : (1.5 + (goalDiff-2)/8));
     const delta = K * gMult * (actualH - expH);
@@ -909,6 +1411,11 @@ function computeElo(matches){
     elo[m.team2Key] = ra - delta;
   });
   return elo;
+}
+
+// Compte de matchs avec cotes disponibles (pour info dans l'UI de confiance)
+function countOddsCoverage(matches){
+  return matches.reduce((n,m)=> n + (m.odds ? 1 : 0), 0);
 }
 
 /* Modèle Dixon-Coles : proba V/N/D à partir des deux forces */
@@ -957,16 +1464,38 @@ function eloProbabilities(rHome, rAway){
   return { home:pHome, draw:pDraw, away:pAway };
 }
 
-// Ensemble : moyenne pondérée Dixon-Coles + Elo
-function ensemble(dc, elo, sampleN){
-  // Plus l'échantillon est petit, plus on fait confiance à Elo (plus stable)
-  const wDC = Math.min(0.65, 0.35 + sampleN/200);
-  const wElo = 1 - wDC;
-  const home = dc.home*wDC + elo.home*wElo;
-  const draw = dc.draw*wDC + elo.draw*wElo;
-  const away = dc.away*wDC + elo.away*wElo;
-  const sum = home+draw+away;
-  return { home:home/sum, draw:draw/sum, away:away/sum };
+// Ensemble : moyenne pondérée de N signaux V/N/D
+// Chaque signal = { home, draw, away, weight }. On normalise à la fin.
+function ensembleN(signals){
+  let totalW = 0, home = 0, draw = 0, away = 0;
+  signals.forEach(s=>{
+    if(s == null) return;
+    const w = s.weight ?? 1;
+    home += s.home * w;
+    draw += s.draw * w;
+    away += s.away * w;
+    totalW += w;
+  });
+  if(!totalW) return {home:1/3, draw:1/3, away:1/3};
+  const sum = home + draw + away;
+  return { home: home/sum, draw: draw/sum, away: away/sum };
+}
+
+// Écart max entre 2 signaux sur la proba du favori — mesure du consensus
+function consensusOf(signals){
+  const valid = signals.filter(s=>s);
+  if(valid.length < 2) return {level:'weak', label:'Modèle unique', spread:1};
+  const homeProbs = valid.map(s=>s.home);
+  const drawProbs = valid.map(s=>s.draw);
+  const awayProbs = valid.map(s=>s.away);
+  const spread = Math.max(
+    Math.max(...homeProbs) - Math.min(...homeProbs),
+    Math.max(...drawProbs) - Math.min(...drawProbs),
+    Math.max(...awayProbs) - Math.min(...awayProbs)
+  );
+  if(spread < 0.10) return {level:'strong', label:`Consensus fort (${valid.length}/${valid.length})`, spread};
+  if(spread < 0.20) return {level:'mixed',  label:`Signaux divergents`, spread};
+  return {level:'weak', label:`Signaux contradictoires`, spread};
 }
 
 function confidence(sampleN, favProb){
@@ -977,14 +1506,18 @@ function confidence(sampleN, favProb){
 }
 
 async function renderForecast(){
+  const cfg = LEAGUES[state.league];
+  if(cfg.type === 'nationCup') return renderForecastNationCup();
+  if(cfg.type === 'clubCup')   return renderForecastClubCup();
+  // Championnats : modèle complet (existant)
   main.innerHTML = `
     <div class="disclaimer">
-      <b>Modèle Dixon-Coles + Elo</b> — construit sur 2 saisons closes (OpenFootball) + saison en cours (ESPN), avec décroissance temporelle exponentielle et correction basse-score. Ne prend pas en compte blessures/compositions/H2H individuel : ce reste une estimation, jamais une garantie. Le pari sportif comporte un risque réel de perte. En cas de besoin : <b>Joueurs Info Service 09 74 75 13 13</b>.
+      <b>Modèle multi-sources</b> — Dixon-Coles + Elo interne (avec prior de marché des cotes de clôture) + <b>ClubElo</b> (Elo académique externe)${API_KEYS.apiFootball ? ' + <b>API-Football</b> (pronostic professionnel pré-calculé)' : ''}. Historique croisé OpenFootball + Football-Data.co.uk (cotes Pinnacle/Bet365) + ESPN${API_KEYS.apiFootball ? ' + API-Football (blessures affichées par match)' : ''}. Décroissance temporelle exponentielle et correction basse-score. Le pari sportif comporte un risque réel de perte. En cas de besoin : <b>Joueurs Info Service 09 74 75 13 13</b>.
     </div>
-    <div class="status-line">Construction du modèle sur 2 saisons + saison en cours…</div>
+    <div class="status-line">Construction du modèle multi-sources…</div>
   `;
   try{
-    const [matches, fixtures] = await Promise.all([
+    const [matches, fixtures, clubEloSnap] = await Promise.all([
       buildLeagueDataset(state.league),
       (async ()=>{
         const start = new Date();
@@ -993,7 +1526,8 @@ async function renderForecast(){
         return await getCachedOrFetch(`fixtures:${state.league}:${range}`, async ()=>{
           return await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
         }, TWELVE_H);
-      })()
+      })(),
+      fetchClubEloSnapshot()
     ]);
 
     if(!matches.length){
@@ -1003,9 +1537,64 @@ async function renderForecast(){
 
     const { strengths, avgHome, avgAway } = computeTeamStrengths(matches);
     const elo = computeElo(matches);
+    const clubEloLookup = buildClubEloLookup(clubEloSnap);
+    const events = (fixtures.events || []).filter(ev => !ev.status.type.completed);
+
+    // === Enrichissement API-Football (pronostic + blessures par match) ===
+    // On matche chaque fixture ESPN à un fixture API-Football par date+équipes,
+    // puis on récupère prédiction et blessures en parallèle (max 100 req/j gratuit).
+    const afEnrichment = {};   // key = `${date}|${kH}|${kA}` → { pred, injuries }
+    let afMatched = 0, afTotal = 0;
+    if(API_KEYS.apiFootball && events.length){
+      try{
+        const afFixtures = await fetchApiFootballFixtures(state.league);
+        afTotal = afFixtures.length;
+        const jobs = [];
+        events.forEach(ev=>{
+          const c = ev.competitions[0];
+          const home = c.competitors.find(x=>x.homeAway==='home');
+          const away = c.competitors.find(x=>x.homeAway==='away');
+          const evDate = new Date(ev.date).toISOString().slice(0,10);
+          const kH = teamKey(home.team.displayName), kA = teamKey(away.team.displayName);
+          const af = afFixtures.find(f => f.date.slice(0,10) === evDate && f.team1Key === kH && f.team2Key === kA);
+          if(!af) return;
+          afMatched++;
+          jobs.push((async ()=>{
+            const [pred, injuries] = await Promise.all([
+              fetchApiFootballPrediction(af.id),
+              fetchApiFootballInjuries(af.id)
+            ]);
+            afEnrichment[`${evDate}|${kH}|${kA}`] = { pred, injuries, afId: af.id, homeName: home.team.displayName, awayName: away.team.displayName };
+          })());
+        });
+        await Promise.all(jobs);
+      }catch(e){ console.warn('API-Football indisponible', e); }
+    }
+
+    // Diagnostic des sources
+    const byOf   = matches.filter(m=>m.src==='of').length;
+    const byFd   = matches.filter(m=>m.src==='fd').length;
+    const byEspn = matches.filter(m=>m.src==='espn').length;
+    const withOdds = matches.filter(m=>m.odds).length;
+    const oddsPct = matches.length ? Math.round(withOdds/matches.length*100) : 0;
+    const ceCount = Object.keys(clubEloLookup).length;
 
     document.querySelector('.status-line')?.remove();
-    const events = (fixtures.events || []).filter(ev => !ev.status.type.completed);
+
+    const panel = document.createElement('div');
+    panel.className = 'source-panel';
+    panel.innerHTML = `
+      <div class="src-stat"><span>Dataset</span><b>${matches.length}</b><span>matchs</span></div>
+      <div class="src-stat of"><span class="dot"></span><span>OpenFootball</span><b>${byOf}</b></div>
+      <div class="src-stat fd"><span class="dot"></span><span>Football-Data.co.uk</span><b>${byFd}</b></div>
+      <div class="src-stat espn"><span class="dot"></span><span>ESPN</span><b>${byEspn}</b></div>
+      <div class="src-stat"><span>Cotes clôture</span><b>${oddsPct}%</b></div>
+      <div class="src-stat ce"><span class="dot"></span><span>ClubElo</span><b>${ceCount}</b><span>clubs</span></div>
+      <div class="src-stat af ${API_KEYS.apiFootball ? '' : 'off-src'}"><span class="dot"></span><span>API-Football</span><b>${API_KEYS.apiFootball ? `${afMatched} match${afMatched>1?'es':''} enrichis` : 'clé requise'}</b></div>
+      <div class="src-stat fdo ${API_KEYS.footballData ? '' : 'off-src'}"><span class="dot"></span><span>Football-Data.org</span><b>${API_KEYS.footballData ? 'actif' : 'clé requise'}</b></div>
+    `;
+    main.appendChild(panel);
+
     if(!events.length){
       main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>');
       return;
@@ -1031,22 +1620,83 @@ async function renderForecast(){
         const kA = teamKey(away.team.displayName);
         const sH = strengths[kH];
         const sA = strengths[kA];
+        const evDate = new Date(ev.date).toISOString().slice(0,10);
+        const af = afEnrichment[`${evDate}|${kH}|${kA}`];
 
         let probsHtml = '';
-        let metaHtml = '';
 
         if(sH && sA){
+          // Signal 1 : Dixon-Coles
           const lambdaHome = sH.attackHome * sA.defenseAway * avgHome;
           const lambdaAway = sA.attackAway * sH.defenseHome * avgAway;
           const dc = dixonColesMatch(lambdaHome, lambdaAway);
-          const eloProbs = eloProbabilities(elo[kH] || 1500, elo[kA] || 1500);
+
+          // Signal 2 : Elo interne
+          const rH = elo[kH] ?? 1500, rA = elo[kA] ?? 1500;
+          const eloProbs = eloProbabilities(rH, rA);
+
+          // Signal 3 : ClubElo
+          const ceH = clubEloLookup[kH];
+          const ceA = clubEloLookup[kA];
+          const ceProbs = (ceH && ceA) ? eloProbabilities(ceH, ceA) : null;
+
+          // Signal 4 : API-Football (pronostic professionnel)
+          const afProbs = (af?.pred && af.pred.home != null && af.pred.draw != null && af.pred.away != null)
+            ? {home: af.pred.home, draw: af.pred.draw, away: af.pred.away}
+            : null;
+
           const sample = Math.min(sH.n, sA.n);
-          const ens = ensemble(dc, eloProbs, sample);
+          // Pondération : plus il y a de signaux externes, plus on baisse le poids interne
+          const externals = [ceProbs, afProbs].filter(Boolean).length;
+          let wDC, wElo, wCE, wAF;
+          if(externals === 2){       wDC=0.32; wElo=0.18; wCE=0.25; wAF=0.25; }
+          else if(externals === 1){  wDC=0.42; wElo=0.23; wCE=ceProbs?0.35:0; wAF=afProbs?0.35:0; }
+          else {                     wDC=Math.min(0.65,0.35+sample/200); wElo=1-wDC; wCE=0; wAF=0; }
+
+          const signals = [
+            {...dc, weight: wDC},
+            {...eloProbs, weight: wElo},
+            ceProbs ? {...ceProbs, weight: wCE} : null,
+            afProbs ? {...afProbs, weight: wAF} : null
+          ].filter(Boolean);
+
+          const ens = ensembleN(signals);
+          const cons = consensusOf(signals);
+
           const pHome = Math.round(ens.home*100);
           const pDraw = Math.round(ens.draw*100);
           const pAway = 100 - pHome - pDraw;
           const favProb = Math.max(ens.home, ens.draw, ens.away);
           const conf = confidence(sample, favProb);
+
+          const signalLines = [
+            `DC ${Math.round(dc.home*100)}/${Math.round(dc.draw*100)}/${Math.round(dc.away*100)}`,
+            `Elo ${Math.round(eloProbs.home*100)}/${Math.round(eloProbs.draw*100)}/${Math.round(eloProbs.away*100)}`,
+            ceProbs ? `CE ${Math.round(ceProbs.home*100)}/${Math.round(ceProbs.draw*100)}/${Math.round(ceProbs.away*100)}` : null,
+            afProbs ? `AF ${Math.round(afProbs.home*100)}/${Math.round(afProbs.draw*100)}/${Math.round(afProbs.away*100)}` : null
+          ].filter(Boolean).join(' · ');
+
+          const ceLine = ceProbs
+            ? `ClubElo : <b>${Math.round(ceH)}</b> vs <b>${Math.round(ceA)}</b>`
+            : `ClubElo : <b>indisponible pour ces clubs</b>`;
+
+          // Blessures API-Football
+          let injuriesHtml = '';
+          if(af?.injuries?.length){
+            const byTeam = {};
+            af.injuries.forEach(i => { (byTeam[i.team] = byTeam[i.team] || []).push(i); });
+            const rows = Object.entries(byTeam).slice(0,2).map(([teamName, list])=>{
+              const shown = list.slice(0,4);
+              return shown.map(i=>{
+                const isMissing = /miss/i.test(i.type || '');
+                return `<div class="inj-row"><b>${teamName}</b><span>${i.player}</span><span class="type ${isMissing?'miss':'q'}">${isMissing?'absent':'incertain'}</span></div>`;
+              }).join('') + (list.length > shown.length ? `<div class="inj-row"><b>${teamName}</b><span style="color:var(--text-3)">+${list.length-shown.length} autre${list.length-shown.length>1?'s':''}</span></div>` : '');
+            }).join('');
+            injuriesHtml = `<div class="injuries-block"><div class="inj-title">Blessures / absents (API-Football)</div>${rows}</div>`;
+          }
+
+          const adviceHtml = af?.pred?.advice
+            ? `<div class="af-advice">💡 <b>API-Football :</b> ${af.pred.advice}</div>` : '';
 
           probsHtml = `
             <div class="fx-bar">
@@ -1061,12 +1711,18 @@ async function renderForecast(){
             </div>
             <div class="fx-meta-line">
               <span>Score probable <b>${dc.score}</b> · buts attendus <b>${dc.lambdaHome.toFixed(2)}</b> – <b>${dc.lambdaAway.toFixed(2)}</b></span>
+              <span class="consensus-tag ${cons.level}">${cons.label}</span>
+            </div>
+            <div class="fx-meta-line">
+              <span>${signalLines}</span>
               <span class="conf-badge ${conf.level}">${conf.label}</span>
             </div>
             <div class="fx-meta-line">
-              <span>Elo : <b>${Math.round(elo[kH]||1500)}</b> vs <b>${Math.round(elo[kA]||1500)}</b></span>
+              <span>Elo interne : <b>${Math.round(rH)}</b> vs <b>${Math.round(rA)}</b> · ${ceLine}</span>
               <span>Échantillon : ${sample} matchs</span>
-            </div>`;
+            </div>
+            ${adviceHtml}
+            ${injuriesHtml}`;
         } else {
           probsHtml = `<div class="fx-nodata">Données insuffisantes pour ce match (équipe promue ou historique manquant).</div>`;
         }
@@ -1097,7 +1753,260 @@ async function renderForecast(){
 }
 
 /* ============ Navigation ============ */
+function updateSubnavVisibility(){
+  const cfg = LEAGUES[state.league];
+  const features = LEAGUE_FEATURES[cfg.type] || LEAGUE_FEATURES.league;
+  document.querySelectorAll('.subnav-btn').forEach(b=>{
+    const ok = features.includes(b.dataset.view);
+    b.style.display = ok ? '' : 'none';
+  });
+  // Si l'onglet actuel n'est plus disponible pour cette ligue, on retombe sur 'scores'
+  if(!features.includes(state.view)) state.view = 'scores';
+  document.querySelectorAll('.subnav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view === state.view);
+  });
+}
+
+/* ============ Pronostic simplifié pour les coupes de clubs ============ */
+// Sans historique de championnat exploitable (l'équipe joue peu de matchs de la compétition),
+// on s'appuie sur ClubElo (Elo académique externe) + API-Football si dispo.
+async function renderForecastClubCup(){
+  const cfg = LEAGUES[state.league];
+  main.innerHTML = `
+    <div class="disclaimer">
+      <b>Modèle simplifié pour ${cfg.name}</b> — pas d'historique de championnat exploitable, on utilise <b>ClubElo</b> (rating académique)${API_KEYS.apiFootball ? ' + <b>API-Football</b> (pronostic pré-calculé + blessures)' : ''}. Les coupes restent moins prévisibles que les championnats (matchs uniques, forte variance). Le pari sportif comporte un risque réel de perte.
+    </div>
+    <div class="status-line">Chargement des matchs et ratings…</div>
+  `;
+  try{
+    const [fixturesData, clubEloSnap] = await Promise.all([
+      (async ()=>{
+        const start = new Date();
+        const end = new Date(); end.setDate(end.getDate()+14);
+        const range = `${fmtDate(start)}-${fmtDate(end)}`;
+        return await getCachedOrFetch(`fixtures:${state.league}:${range}`, async ()=>{
+          return await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
+        }, TWELVE_H);
+      })(),
+      fetchClubEloSnapshot()
+    ]);
+    const clubEloLookup = buildClubEloLookup(clubEloSnap);
+    const events = (fixturesData.events || []).filter(ev => !ev.status.type.completed);
+
+    // Enrichissement API-Football si clé présente
+    const afEnrichment = {};
+    let afMatched = 0;
+    if(API_KEYS.apiFootball && events.length){
+      try{
+        const afFixtures = await fetchApiFootballFixtures(state.league);
+        const jobs = [];
+        events.forEach(ev=>{
+          const c = ev.competitions[0];
+          const home = c.competitors.find(x=>x.homeAway==='home') || c.competitors[0];
+          const away = c.competitors.find(x=>x.homeAway==='away') || c.competitors[1];
+          const evDate = new Date(ev.date).toISOString().slice(0,10);
+          const kH = teamKey(home.team.displayName), kA = teamKey(away.team.displayName);
+          const af = afFixtures.find(f => f.date.slice(0,10) === evDate && f.team1Key === kH && f.team2Key === kA);
+          if(!af) return;
+          afMatched++;
+          jobs.push((async ()=>{
+            const [pred, injuries] = await Promise.all([
+              fetchApiFootballPrediction(af.id),
+              fetchApiFootballInjuries(af.id)
+            ]);
+            afEnrichment[`${evDate}|${kH}|${kA}`] = { pred, injuries };
+          })());
+        });
+        await Promise.all(jobs);
+      }catch(e){ console.warn('API-Football indisponible', e); }
+    }
+
+    document.querySelector('.status-line')?.remove();
+
+    const panel = document.createElement('div');
+    panel.className = 'source-panel';
+    panel.innerHTML = `
+      <div class="src-stat ce"><span class="dot"></span><span>ClubElo</span><b>${Object.keys(clubEloLookup).length}</b><span>clubs</span></div>
+      <div class="src-stat af ${API_KEYS.apiFootball ? '' : 'off-src'}"><span class="dot"></span><span>API-Football</span><b>${API_KEYS.apiFootball ? `${afMatched} match${afMatched>1?'es':''} enrichis` : 'clé requise'}</b></div>
+    `;
+    main.appendChild(panel);
+
+    if(!events.length){ main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>'); return; }
+
+    const byDate = {};
+    events.forEach(ev=>{
+      const d = new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long'});
+      (byDate[d] = byDate[d] || []).push(ev);
+    });
+    const wrap = document.createElement('div');
+    Object.entries(byDate).forEach(([dateLabel, evs])=>{
+      const group = document.createElement('div');
+      group.className = 'day-group';
+      const cardsHtml = evs.map(ev=>{
+        const c = ev.competitions[0];
+        const home = c.competitors.find(x=>x.homeAway==='home') || c.competitors[0];
+        const away = c.competitors.find(x=>x.homeAway==='away') || c.competitors[1];
+        const time = new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        const kH = teamKey(home.team.displayName), kA = teamKey(away.team.displayName);
+        const ceH = clubEloLookup[kH], ceA = clubEloLookup[kA];
+        const evDate = new Date(ev.date).toISOString().slice(0,10);
+        const af = afEnrichment[`${evDate}|${kH}|${kA}`];
+        const afProbs = (af?.pred && af.pred.home != null) ? {home: af.pred.home, draw: af.pred.draw, away: af.pred.away} : null;
+        const ceProbs = (ceH && ceA) ? eloProbabilities(ceH, ceA) : null;
+
+        let probsHtml;
+        if(!ceProbs && !afProbs){
+          probsHtml = `<div class="fx-nodata">Aucun rating disponible pour ces deux clubs (équipe hors circuit européen ?).</div>`;
+        } else {
+          const signals = [
+            ceProbs ? {...ceProbs, weight: afProbs ? 0.5 : 1} : null,
+            afProbs ? {...afProbs, weight: ceProbs ? 0.5 : 1} : null
+          ].filter(Boolean);
+          const ens = ensembleN(signals);
+          const cons = consensusOf(signals);
+          const pHome = Math.round(ens.home*100);
+          const pDraw = Math.round(ens.draw*100);
+          const pAway = 100 - pHome - pDraw;
+
+          const signalLines = [
+            ceProbs ? `CE ${Math.round(ceProbs.home*100)}/${Math.round(ceProbs.draw*100)}/${Math.round(ceProbs.away*100)}` : null,
+            afProbs ? `AF ${Math.round(afProbs.home*100)}/${Math.round(afProbs.draw*100)}/${Math.round(afProbs.away*100)}` : null
+          ].filter(Boolean).join(' · ');
+
+          let injuriesHtml = '';
+          if(af?.injuries?.length){
+            const byTeam = {};
+            af.injuries.forEach(i => { (byTeam[i.team] = byTeam[i.team] || []).push(i); });
+            const rows = Object.entries(byTeam).slice(0,2).map(([teamName, list])=>{
+              const shown = list.slice(0,4);
+              return shown.map(i=>{
+                const isMissing = /miss/i.test(i.type || '');
+                return `<div class="inj-row"><b>${teamName}</b><span>${i.player}</span><span class="type ${isMissing?'miss':'q'}">${isMissing?'absent':'incertain'}</span></div>`;
+              }).join('');
+            }).join('');
+            injuriesHtml = `<div class="injuries-block"><div class="inj-title">Blessures / absents</div>${rows}</div>`;
+          }
+          const adviceHtml = af?.pred?.advice ? `<div class="af-advice">💡 <b>API-Football :</b> ${af.pred.advice}</div>` : '';
+
+          probsHtml = `
+            <div class="fx-bar">
+              <div class="seg home" style="width:${pHome}%"></div>
+              <div class="seg draw" style="width:${pDraw}%"></div>
+              <div class="seg away" style="width:${pAway}%"></div>
+            </div>
+            <div class="fx-probs">
+              <div class="p-item home"><span class="pct">${pHome}%</span><span class="lbl">${home.team.shortDisplayName}</span></div>
+              <div class="p-item draw"><span class="pct">${pDraw}%</span><span class="lbl">Nul</span></div>
+              <div class="p-item away"><span class="pct">${pAway}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
+            </div>
+            <div class="fx-meta-line">
+              <span>${signalLines}</span>
+              <span class="consensus-tag ${cons.level}">${cons.label}</span>
+            </div>
+            ${ceProbs ? `<div class="fx-meta-line"><span>ClubElo : <b>${Math.round(ceH)}</b> vs <b>${Math.round(ceA)}</b></span></div>` : ''}
+            ${adviceHtml}
+            ${injuriesHtml}`;
+        }
+
+        return `
+          <div class="fx-card">
+            <div class="fx-top">
+              <div class="fx-teams">
+                <img src="${home.team.logo||''}" onerror="this.style.display='none'">
+                <span>${home.team.shortDisplayName}</span>
+                <span class="vs">vs</span>
+                <span>${away.team.shortDisplayName}</span>
+                <img src="${away.team.logo||''}" onerror="this.style.display='none'">
+              </div>
+              <div class="fx-time">${time}</div>
+            </div>
+            ${probsHtml}
+          </div>`;
+      }).join('');
+      group.innerHTML = `<p class="day-title">${dateLabel}</p>${cardsHtml}`;
+      wrap.appendChild(group);
+    });
+    main.appendChild(wrap);
+  }catch(e){
+    console.error(e);
+    main.innerHTML = '<div class="status-line error">Erreur de chargement des pronostics.</div>';
+  }
+}
+
+// Sélections nationales : modèle encore plus limité (ni ClubElo ni FD.co.uk ne couvrent les sélections nationales de façon utile).
+async function renderForecastNationCup(){
+  const cfg = LEAGUES[state.league];
+  main.innerHTML = `
+    <div class="disclaimer">
+      Pour ${cfg.name}, aucune source publique gratuite ne fournit d'Elo fiable des sélections nationales exploitable côté client. Le pronostic se limite à <b>API-Football</b> si votre clé est configurée ci-dessus (⚙️ Réglages).
+    </div>
+    <div class="status-line">Chargement…</div>
+  `;
+  if(!API_KEYS.apiFootball){
+    document.querySelector('.status-line').textContent = 'Ajoutez votre clé API-Football dans les Réglages pour activer les pronostics.';
+    return;
+  }
+  try{
+    const start = new Date();
+    const end = new Date(); end.setDate(end.getDate()+14);
+    const range = `${fmtDate(start)}-${fmtDate(end)}`;
+    const [fixturesData, afFixtures] = await Promise.all([
+      espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`),
+      fetchApiFootballFixtures(state.league)
+    ]);
+    const events = (fixturesData.events || []).filter(ev => !ev.status.type.completed);
+    document.querySelector('.status-line')?.remove();
+    if(!events.length){ main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>'); return; }
+
+    const wrap = document.createElement('div');
+    for(const ev of events){
+      const c = ev.competitions[0];
+      const home = c.competitors.find(x=>x.homeAway==='home') || c.competitors[0];
+      const away = c.competitors.find(x=>x.homeAway==='away') || c.competitors[1];
+      const evDate = new Date(ev.date).toISOString().slice(0,10);
+      const kH = teamKey(home.team.displayName), kA = teamKey(away.team.displayName);
+      const af = afFixtures.find(f => f.date.slice(0,10) === evDate && f.team1Key === kH && f.team2Key === kA);
+      let pred = null;
+      if(af){ pred = await fetchApiFootballPrediction(af.id); }
+      const time = new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const probsHtml = (pred && pred.home != null)
+        ? `<div class="fx-bar">
+            <div class="seg home" style="width:${Math.round(pred.home*100)}%"></div>
+            <div class="seg draw" style="width:${Math.round(pred.draw*100)}%"></div>
+            <div class="seg away" style="width:${100-Math.round(pred.home*100)-Math.round(pred.draw*100)}%"></div>
+          </div>
+          <div class="fx-probs">
+            <div class="p-item home"><span class="pct">${Math.round(pred.home*100)}%</span><span class="lbl">${home.team.shortDisplayName}</span></div>
+            <div class="p-item draw"><span class="pct">${Math.round(pred.draw*100)}%</span><span class="lbl">Nul</span></div>
+            <div class="p-item away"><span class="pct">${100-Math.round(pred.home*100)-Math.round(pred.draw*100)}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
+          </div>
+          ${pred.advice ? `<div class="af-advice">💡 <b>API-Football :</b> ${pred.advice}</div>` : ''}`
+        : `<div class="fx-nodata">Aucun pronostic disponible pour ce match.</div>`;
+      const card = document.createElement('div');
+      card.className = 'fx-card';
+      card.innerHTML = `
+        <div class="fx-top">
+          <div class="fx-teams">
+            <img src="${home.team.logo||''}" onerror="this.style.display='none'">
+            <span>${home.team.shortDisplayName}</span>
+            <span class="vs">vs</span>
+            <span>${away.team.shortDisplayName}</span>
+            <img src="${away.team.logo||''}" onerror="this.style.display='none'">
+          </div>
+          <div class="fx-time">${time}</div>
+        </div>
+        ${probsHtml}`;
+      wrap.appendChild(card);
+    }
+    main.appendChild(wrap);
+  }catch(e){
+    console.error(e);
+    main.innerHTML = '<div class="status-line error">Erreur de chargement des pronostics.</div>';
+  }
+}
+
 function renderView(){
+  updateSubnavVisibility();
   if(state.view==='scores') renderScores();
   else if(state.view==='standings') renderStandings();
   else if(state.view==='history') renderHistory();
@@ -1106,11 +2015,13 @@ function renderView(){
   state.forcedFresh = false;
 }
 
-document.querySelectorAll('.league-btn').forEach(btn=>{
+document.querySelectorAll('.league-pill').forEach(btn=>{
   btn.onclick = ()=>{
-    document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.league-pill').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     state.league = btn.dataset.league;
+    state.matchday = null;
+    state.seasonYear = null;
     state.scoreDate = null;
     renderView();
   };
@@ -1131,6 +2042,39 @@ refreshBtn.onclick = ()=>{
   setTimeout(()=>refreshBtn.classList.remove('spinning'), 500);
   renderView();
 };
+
+/* ============ Panneau Réglages (clés API) ============ */
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const keyAFInput = document.getElementById('keyAF');
+const keyFDInput = document.getElementById('keyFD');
+
+function refreshSettingsIndicator(){
+  const hasAny = !!(API_KEYS.apiFootball || API_KEYS.footballData);
+  settingsBtn.classList.toggle('has-key', hasAny);
+}
+refreshSettingsIndicator();
+
+settingsBtn.onclick = ()=>{
+  keyAFInput.value = API_KEYS.apiFootball || '';
+  keyFDInput.value = API_KEYS.footballData || '';
+  settingsModal.classList.add('open');
+};
+document.getElementById('closeSettings').onclick = ()=> settingsModal.classList.remove('open');
+document.getElementById('clearSettings').onclick = ()=>{
+  keyAFInput.value = '';
+  keyFDInput.value = '';
+};
+document.getElementById('saveSettings').onclick = ()=>{
+  API_KEYS = { apiFootball: keyAFInput.value.trim(), footballData: keyFDInput.value.trim() };
+  saveApiKeys(API_KEYS);
+  refreshSettingsIndicator();
+  settingsModal.classList.remove('open');
+  // Recharger la vue pour appliquer les nouvelles clés
+  state.forcedFresh = true;
+  renderView();
+};
+settingsModal.onclick = (e)=>{ if(e.target === settingsModal) settingsModal.classList.remove('open'); };
 
 loadTicker();
 renderView();
