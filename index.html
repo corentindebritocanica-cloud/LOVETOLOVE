@@ -932,12 +932,24 @@ async function renderScores(){
     let usedFallback = false;
 
     if(state.matchday == null){
-      // 1er appel : on prend la journée en cours d'ESPN et on m\u00e9morise l'ann\u00e9e/date-ancre
+      // 1er appel : on prend la journée en cours d'ESPN et on mémorise l'année/date-ancre
       data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard`);
-      const detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? 1;
-      state.matchday = detectedMd;
+      let detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? 1;
       state.seasonYear = data.season?.year ?? data.leagues?.[0]?.season?.year ?? new Date().getFullYear();
-      // Date-ancre = date m\u00e9diane des \u00e9v\u00e9nements de cette journ\u00e9e (sert au repli calendaire)
+
+      // Si toute la journée est terminée, avancer jusqu'à la prochaine avec des matchs à venir
+      let allDone = (data.events||[]).length > 0 && (data.events||[]).every(ev => ev.status.type.completed);
+      while(allDone && detectedMd < cfg.mdTotal){
+        detectedMd++;
+        try{
+          const next = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?seasontype=1&year=${state.seasonYear}&week=${detectedMd}`);
+          if(next.events?.length){ data = next; allDone = next.events.every(ev => ev.status.type.completed); }
+          else { break; } // ESPN ne connaît pas encore cette journée, on reste là
+        }catch(e){ break; }
+      }
+      state.matchday = detectedMd;
+
+      // Date-ancre = date médiane des événements de cette journée (sert au repli calendaire)
       const evTs = (data.events || []).map(e => new Date(e.date).getTime()).sort((a,b)=>a-b);
       state.matchdayAnchorDate = evTs.length ? new Date(evTs[Math.floor(evTs.length/2)]).toISOString() : new Date().toISOString();
       state.matchdayAnchor = detectedMd;
