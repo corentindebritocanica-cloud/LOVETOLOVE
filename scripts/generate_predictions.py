@@ -85,7 +85,7 @@ def generer_predictions():
         })
         
     # Sauvegarde dans le fichier JSON
-    with open('../data/predictions.json', 'w', encoding='utf-8') as f:
+    with open('data/predictions.json', 'w', encoding='utf-8') as f:
         json.dump(resultats, f, ensure_ascii=False, indent=4)
         
     print("Prédictions générées avec succès dans data/predictions.json !")
