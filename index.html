@@ -258,6 +258,22 @@
   .conf-badge.med{background:#fff4e0; color:#a3660a;}
   .conf-badge.low{background:#ffece9; color:#b52a20;}
 
+  /* Badge GitHub Actions */
+  .ga-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600;
+    padding:3px 9px; border-radius:100px; background:#e8f0fe; color:#1a56db; border:1px solid #c3d3f5;}
+  .ga-badge.live{background:#e8f8ec; color:#1e7e34; border-color:#a8dcb8;}
+
+  /* Marchés dérivés (Over/Under, BTTS, Double Chance, HT) */
+  .markets-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .mkt-pill{
+    font-size:11px; font-weight:600; padding:4px 9px; border-radius:100px;
+    display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--text-2);
+  }
+  .mkt-pill.hot{background:rgba(52,199,89,.12); border-color:rgba(52,199,89,.35); color:#1e7e34;}
+  .mkt-pill.cold{background:rgba(0,113,227,.10); border-color:rgba(0,113,227,.3); color:#0055aa;}
+  .mkt-pill .mpct{font-weight:700; color:var(--text);}  
+
   /* ----- Panneau de diagnostic des sources (vue Pronostics) ----- */
   .source-panel{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
@@ -1576,17 +1592,190 @@ function consensusOf(signals){
 }
 
 function confidence(sampleN, favProb){
-  if(sampleN < 20) return {level:'low', label:'Confiance faible'};
-  if(favProb > 0.55 && sampleN >= 40) return {level:'high', label:'Confiance forte'};
-  if(favProb > 0.42) return {level:'med', label:'Confiance modérée'};
-  return {level:'low', label:'Match ouvert'};
+  // Bands calibrés empiriquement (FutbolTipster : log-loss ~0.99, précision ~52%)
+  if(sampleN < 20) return {level:'low', label:'Incertain'};
+  if(favProb > 0.60 && sampleN >= 40) return {level:'high', label:'Sûr'};
+  if(favProb > 0.50) return {level:'high', label:'Probable'};
+  if(favProb > 0.42) return {level:'med', label:'Serré'};
+  return {level:'low', label:'Ouvert'};
+}
+
+/* Marchés dérivés — calculés depuis les lambdas de Poisson (comme FutbolTipster) */
+function derivedMarkets(lambdaHome, lambdaAway){
+  const MAX = 8;
+  // P(nb total buts >= 3)
+  let pUnder = 0;
+  for(let i=0;i<=MAX;i++) for(let j=0;j<=MAX;j++){
+    if(i+j <= 2) pUnder += poissonP(lambdaHome,i) * poissonP(lambdaAway,j);
+  }
+  const ou25 = 1 - pUnder; // Over 2.5
+
+  // BTTS : P(home >= 1) * P(away >= 1)
+  const btts = (1 - poissonP(lambdaHome,0)) * (1 - poissonP(lambdaAway,0));
+
+  // Double chance (from Poisson directement, sans correction DC pour simplicité)
+  let pHome=0, pDraw=0, pAway=0;
+  for(let i=0;i<=MAX;i++) for(let j=0;j<=MAX;j++){
+    const p = poissonP(lambdaHome,i)*poissonP(lambdaAway,j);
+    if(i>j) pHome+=p; else if(i===j) pDraw+=p; else pAway+=p;
+  }
+  const sum = pHome+pDraw+pAway;
+  const dc1x = (pHome+pDraw)/sum, dcx2 = (pDraw+pAway)/sum, dc12 = (pHome+pAway)/sum;
+
+  // Score mi-temps estimé (lambda/2, arrondi logique)
+  const htHome = lambdaHome * 0.475, htAway = lambdaAway * 0.475;
+  let htBest={i:0,j:0,p:0};
+  for(let i=0;i<=4;i++) for(let j=0;j<=4;j++){
+    const p=poissonP(htHome,i)*poissonP(htAway,j);
+    if(p>htBest.p) htBest={i,j,p};
+  }
+
+  return { ou25, btts, dc1x, dcx2, dc12, htScore:`${htBest.i}-${htBest.j}`, htProb:Math.round(htBest.p*100) };
+}
+
+function marketsHtml(lambdaHome, lambdaAway, homeName, awayName){
+  const m = derivedMarkets(lambdaHome, lambdaAway);
+  const pills = [
+    `<span class="mkt-pill ${m.ou25>0.55?'hot':m.ou25<0.45?'cold':''}">Over 2.5 <span class="mpct">${Math.round(m.ou25*100)}%</span></span>`,
+    `<span class="mkt-pill ${m.btts>0.55?'hot':m.btts<0.45?'cold':''}">BTTS <span class="mpct">${Math.round(m.btts*100)}%</span></span>`,
+    `<span class="mkt-pill">1X <span class="mpct">${Math.round(m.dc1x*100)}%</span></span>`,
+    `<span class="mkt-pill">X2 <span class="mpct">${Math.round(m.dcx2*100)}%</span></span>`,
+    `<span class="mkt-pill cold">HT <span class="mpct">${m.htScore}</span> (${m.htProb}%)</span>`
+  ].join('');
+  return `<div class="markets-row">${pills}</div>`;
+}
+
+/* Rendu depuis données pré-calculées par GitHub Actions (data/predictions.json) */
+function renderForecastFromPrecomputed(precomp, league){
+  const preds = precomp.predictions[league] || [];
+  const genAt = precomp.generatedAt ? new Date(precomp.generatedAt) : null;
+  const ageMin = genAt ? Math.round((Date.now() - genAt.getTime()) / 60000) : null;
+  const ageLabel = ageMin != null
+    ? (ageMin < 60 ? `il y a ${ageMin} min` : `il y a ${Math.round(ageMin/60)} h`)
+    : '';
+
+  const notice = document.createElement('div');
+  notice.className = 'disclaimer';
+  notice.innerHTML = `
+    <span class="ga-badge">⚡ GitHub Actions</span>
+    Pronostics générés côté serveur ${ageLabel ? '· ' + ageLabel : ''} —
+    modèle Dixon-Coles + Elo + ClubElo, sans contrainte CORS. 
+    <b style="cursor:pointer;color:var(--accent);" id="forceLiveBtn">Recalculer en direct →</b>
+  `;
+  main.innerHTML = '';
+  main.appendChild(notice);
+
+  document.getElementById('forceLiveBtn').onclick = ()=>{
+    // Vider le cache precomp et recalculer
+    try{ localStorage.removeItem('terrain2:precomp:all'); }catch(e){}
+    state.forcedFresh = true;
+    renderForecast();
+  };
+
+  if(!preds.length){
+    main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>');
+    return;
+  }
+
+  const byDate = {};
+  preds.forEach(p => {
+    const d = new Date(p.date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+    (byDate[d] = byDate[d] || []).push(p);
+  });
+
+  const wrap = document.createElement('div');
+  Object.entries(byDate).forEach(([dateLabel, evs]) => {
+    const group = document.createElement('div');
+    group.className = 'day-group';
+    const cardsHtml = evs.map(p => {
+      const time = new Date(p.date).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+      let probsHtml = '';
+
+      if(p.hasModel){
+        const signalLines = [
+          `DC ${p.dc.home}/${p.dc.draw}/${p.dc.away}`,
+          `Elo ${p.elo.home}/${p.elo.draw}/${p.elo.away}`,
+          p.ce ? `CE ${p.ce.home}/${p.ce.draw}/${p.ce.away}` : null,
+        ].filter(Boolean).join(' · ');
+
+        const ceLine = p.ceHome
+          ? `ClubElo : <b>${p.ceHome}</b> vs <b>${p.ceAway}</b>`
+          : `ClubElo : <b>indisponible pour ces clubs</b>`;
+
+        probsHtml = `
+          <div class="fx-bar">
+            <div class="seg home" style="width:${p.pHome}%"></div>
+            <div class="seg draw" style="width:${p.pDraw}%"></div>
+            <div class="seg away" style="width:${p.pAway}%"></div>
+          </div>
+          <div class="fx-probs">
+            <div class="p-item home"><span class="pct">${p.pHome}%</span><span class="lbl">${p.home.shortName}</span></div>
+            <div class="p-item draw"><span class="pct">${p.pDraw}%</span><span class="lbl">Nul</span></div>
+            <div class="p-item away"><span class="pct">${p.pAway}%</span><span class="lbl">${p.away.shortName}</span></div>
+          </div>
+          <div class="markets-row">
+            <span class="mkt-pill ${p.ou25>55?'hot':p.ou25<45?'cold':''}">Over 2.5 <span class="mpct">${p.ou25}%</span></span>
+            <span class="mkt-pill ${p.btts>55?'hot':p.btts<45?'cold':''}">BTTS <span class="mpct">${p.btts}%</span></span>
+            <span class="mkt-pill cold">HT <span class="mpct">${p.htScore}</span></span>
+          </div>
+          <div class="fx-meta-line">
+            <span>Score FT <b>${p.score}</b> · buts attendus <b>${p.lh}</b>–<b>${p.la}</b></span>
+            <span class="conf-badge ${p.conf}">${p.confLabel}</span>
+          </div>
+          <div class="fx-meta-line">
+            <span>${signalLines}</span>
+            <span style="font-size:10px;">Échantillon : ${p.sample}</span>
+          </div>
+          <div class="fx-meta-line"><span>Elo interne : <b>${p.eloHome}</b> vs <b>${p.eloAway}</b> · ${ceLine}</span></div>`;
+      } else {
+        probsHtml = `<div class="fx-nodata">Données insuffisantes pour ce match.</div>`;
+      }
+
+      return `
+        <div class="fx-card">
+          <div class="fx-top">
+            <div class="fx-teams">
+              <img src="${p.home.logo||''}" onerror="this.style.display='none'">
+              <span>${p.home.shortName || p.home.name}</span>
+              <span class="vs">vs</span>
+              <span>${p.away.shortName || p.away.name}</span>
+              <img src="${p.away.logo||''}" onerror="this.style.display='none'">
+            </div>
+            <div class="fx-time">${time}</div>
+          </div>
+          ${probsHtml}
+        </div>`;
+    }).join('');
+    group.innerHTML = `<p class="day-title">${dateLabel}</p>${cardsHtml}`;
+    wrap.appendChild(group);
+  });
+  main.appendChild(wrap);
 }
 
 async function renderForecast(){
   const cfg = LEAGUES[state.league];
   if(cfg.type === 'nationCup') return renderForecastNationCup();
   if(cfg.type === 'clubCup')   return renderForecastClubCup();
-  // Championnats : modèle complet (existant)
+
+  // Tentative d'utilisation des données pré-calculées par GitHub Actions
+  main.innerHTML = `<div class="status-line">Chargement des pronostics…</div>`;
+  try{
+    const ghPagesUrl = 'https://CorentinDeBritoCanica.github.io/Time-Work/data/predictions.json';
+    const precomp = await getCachedOrFetch(`precomp:all`, async ()=>{
+      const r = await fetch(ghPagesUrl);
+      if(!r.ok) throw new Error('precomp http '+r.status);
+      return await r.json();
+    }, TWELVE_H);
+
+    if(precomp?.predictions?.[state.league]?.length){
+      document.querySelector('.status-line')?.remove();
+      return renderForecastFromPrecomputed(precomp, state.league);
+    }
+  }catch(e){
+    console.info('Données pré-calculées non disponibles, calcul en direct…', e.message);
+  }
+
+  // Fallback : calcul en direct (modèle complet côté navigateur)
   main.innerHTML = `
     <div class="disclaimer">
       <b>Modèle multi-sources</b> — Dixon-Coles + Elo interne (avec prior de marché des cotes de clôture) + <b>ClubElo</b> (Elo académique externe)${API_KEYS.apiFootball ? ' + <b>API-Football</b> (pronostic professionnel pré-calculé)' : ''}. Historique croisé OpenFootball + Football-Data.co.uk (cotes Pinnacle/Bet365) + ESPN${API_KEYS.apiFootball ? ' + API-Football (blessures affichées par match)' : ''}. Décroissance temporelle exponentielle et correction basse-score. Le pari sportif comporte un risque réel de perte. En cas de besoin : <b>Joueurs Info Service 09 74 75 13 13</b>.
@@ -1786,8 +1975,9 @@ async function renderForecast(){
               <div class="p-item draw"><span class="pct">${pDraw}%</span><span class="lbl">Nul</span></div>
               <div class="p-item away"><span class="pct">${pAway}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
             </div>
+            ${marketsHtml(dc.lambdaHome, dc.lambdaAway, home.team.shortDisplayName, away.team.shortDisplayName)}
             <div class="fx-meta-line">
-              <span>Score probable <b>${dc.score}</b> · buts attendus <b>${dc.lambdaHome.toFixed(2)}</b> – <b>${dc.lambdaAway.toFixed(2)}</b></span>
+              <span>Score FT <b>${dc.score}</b> · HT est. <b>${derivedMarkets(dc.lambdaHome,dc.lambdaAway).htScore}</b> · buts attendus <b>${dc.lambdaHome.toFixed(2)}</b>–<b>${dc.lambdaAway.toFixed(2)}</b></span>
               <span class="consensus-tag ${cons.level}">${cons.label}</span>
             </div>
             <div class="fx-meta-line">
@@ -1976,6 +2166,7 @@ async function renderForecastClubCup(){
               <div class="p-item draw"><span class="pct">${pDraw}%</span><span class="lbl">Nul</span></div>
               <div class="p-item away"><span class="pct">${pAway}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
             </div>
+            ${ceProbs ? marketsHtml(eloProbabilities(ceH,ceA).home*2, eloProbabilities(ceH,ceA).away*2, home.team.shortDisplayName, away.team.shortDisplayName) : ''}
             <div class="fx-meta-line">
               <span>${signalLines}</span>
               <span class="consensus-tag ${cons.level}">${cons.label}</span>
