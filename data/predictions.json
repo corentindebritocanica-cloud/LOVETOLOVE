@@ -2,19 +2,19 @@
     {
         "match": "Portugal vs Corée du Sud",
         "pronostic": "Victoire Portugal",
-        "score_confiance": 66.7,
+        "score_confiance": 65.7,
         "est_chaud": false
     },
     {
         "match": "France vs Australie",
         "pronostic": "Victoire France",
-        "score_confiance": 65.5,
+        "score_confiance": 66.5,
         "est_chaud": false
     },
     {
         "match": "Mexique vs Pologne",
         "pronostic": "Victoire Mexique",
-        "score_confiance": 66.7,
+        "score_confiance": 65.9,
         "est_chaud": false
     }
 ]
