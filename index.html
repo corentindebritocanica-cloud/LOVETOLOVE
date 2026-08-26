@@ -953,6 +953,22 @@ async function renderScores(){
       let detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? 1;
       state.seasonYear = data.season?.year ?? data.leagues?.[0]?.season?.year ?? new Date().getFullYear();
 
+      // Correction début de saison : ESPN renvoie parfois week=1 pour J2 quand J1 vient d'être jouée.
+      // Si tous les matchs renvoyés sont dans le futur et week=1, on vérifie si J1 a déjà eu lieu.
+      if(detectedMd === 1 && (data.events||[]).length > 0 && (data.events||[]).every(ev => !ev.status.type.completed)){
+        try{
+          const weekBack = new Date(); weekBack.setDate(weekBack.getDate() - 14);
+          const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+          const recent = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(weekBack)}-${fmtDate(yesterday)}&limit=100`);
+          const recentCompleted = (recent.events||[]).filter(ev => ev.status.type.completed);
+          if(recentCompleted.length >= 3){
+            // J1 (ou plus) vient d'être jouée → les matchs sans paramètre sont en réalité J2+
+            const recentMd = recent.week?.number ?? recent.leagues?.[0]?.season?.type?.week;
+            detectedMd = recentMd ? recentMd + 1 : 2;
+          }
+        }catch(e){ /* garder detectedMd=1 en cas d'erreur */ }
+      }
+
       // Si toute la journée est terminée, avancer jusqu'à la prochaine avec des matchs à venir
       let allDone = (data.events||[]).length > 0 && (data.events||[]).every(ev => ev.status.type.completed);
       while(allDone && detectedMd < cfg.mdTotal){
