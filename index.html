@@ -212,6 +212,56 @@
   .news-item p{margin:0 0 10px; font-size:14px; color:var(--text-2); line-height:1.5;}
   .news-item .meta{font-size:11.5px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
 
+  /* ---------- Pronostics ---------- */
+  .disclaimer{
+    background:var(--surface-2); border-radius:var(--radius); padding:18px 20px;
+    margin-bottom:20px; font-size:13px; color:var(--text-2); line-height:1.55;
+  }
+  .disclaimer b{color:var(--text);}
+  .day-group{margin-bottom:24px;}
+  .day-title{font-size:13px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; margin:0 0 10px;}
+  .fx-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:10px;
+    transition:box-shadow .2s var(--ease), transform .2s var(--ease);
+  }
+  .fx-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.06); transform:translateY(-1px);}
+  .fx-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .fx-teams{display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600;}
+  .fx-teams img{width:20px; height:20px; object-fit:contain;}
+  .fx-teams .vs{color:var(--text-3); font-weight:400; font-size:13px;}
+  .fx-time{font-size:12px; color:var(--text-3); font-weight:600; white-space:nowrap;}
+  .fx-bar{display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--surface-2); margin-bottom:8px;}
+  .fx-bar .seg{height:100%;}
+  .fx-bar .seg.home{background:var(--accent);}
+  .fx-bar .seg.draw{background:#d2d2d7;}
+  .fx-bar .seg.away{background:#ff9500;}
+  .fx-probs{display:flex; justify-content:space-between; font-size:12px; color:var(--text-2);}
+  .fx-probs .p-item{display:flex; flex-direction:column; align-items:center; gap:2px; flex:1;}
+  .fx-probs .p-item.home{align-items:flex-start;}
+  .fx-probs .p-item.away{align-items:flex-end;}
+  .fx-probs .pct{font-size:16px; font-weight:700; color:var(--text);}
+  .fx-probs .lbl{font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--text-3);}
+  .fx-nodata{font-size:12.5px; color:var(--text-3); font-style:italic;}
+
+  .deep-btn{
+    width:100%; margin-top:12px; background:none; border:1px dashed var(--border); color:var(--accent);
+    font-family:inherit; font-size:12.5px; font-weight:600; padding:9px; border-radius:var(--radius-sm);
+    cursor:pointer; transition:background .2s var(--ease), border-color .2s var(--ease);
+  }
+  .deep-btn:hover{background:var(--surface-2); border-color:var(--accent);}
+  .deep-btn:disabled{opacity:.5;}
+  .deep-panel{display:none;}
+  .deep-panel.open{display:block; margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+  .deep-loading{font-size:12.5px; color:var(--text-3); text-align:center; margin:4px 0;}
+  .deep-bar{display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--surface-2); margin-bottom:8px;}
+  .deep-bar .seg{height:100%;}
+  .deep-bar .seg.home{background:var(--accent);}
+  .deep-bar .seg.draw{background:#d2d2d7;}
+  .deep-bar .seg.away{background:#ff9500;}
+  .deep-meta{font-size:11.5px; color:var(--text-3); line-height:1.5; margin:10px 0 0;}
+  .deep-meta b{color:var(--text);}
+
   footer{text-align:center; padding:36px 20px 50px; font-size:12px; color:var(--text-3); line-height:1.6;}
 
   @media (prefers-reduced-motion:reduce){
@@ -249,6 +299,7 @@
     <button class="subnav-btn active" data-view="scores">Matchs</button>
     <button class="subnav-btn" data-view="standings">Classement</button>
     <button class="subnav-btn" data-view="history">Historique</button>
+    <button class="subnav-btn" data-view="forecast">Pronostics</button>
     <button class="subnav-btn" data-view="news">Actus</button>
   </div>
 </div>
@@ -606,11 +657,278 @@ async function loadClubHistory(){
   btn.disabled = false;
 }
 
+/* ============ Vue Pronostics (14 jours) ============ */
+const HOME_ADV = 4; // avantage du terrain, en points de force (constante heuristique)
+
+async function getStandingsMap(league){
+  const data = await getCachedOrFetch(`standings:${league}`, async ()=>{
+    return await espnFetch(`/apis/v2/sports/soccer/${league}/standings`);
+  });
+  let entries = [];
+  if(data.children){ data.children.forEach(g=>{ if(g.standings?.entries) entries = entries.concat(g.standings.entries); }); }
+  else if(data.standings?.entries){ entries = data.standings.entries; }
+
+  const map = {};
+  const getStat = (entry,names)=>{
+    for(const n of names){ const s = entry.stats.find(s=>s.name===n || s.type===n); if(s) return Number(s.value); }
+    return null;
+  };
+  entries.forEach(e=>{
+    const gp = getStat(e,['gamesPlayed']) || 0;
+    const pts = getStat(e,['points']) || 0;
+    const gd = getStat(e,['pointDifferential','goalDifferential']) || 0;
+    const gf = getStat(e,['pointsFor','goalsFor']) || 0;
+    const ga = getStat(e,['pointsAgainst','goalsAgainst']) || 0;
+    map[String(e.team.id)] = {
+      ppg: gp>0 ? pts/gp : 1.3,      // valeur neutre si saison pas encore commencée
+      gdpg: gp>0 ? gd/gp : 0,
+      gf, ga, gp
+    };
+  });
+  return map;
+}
+
+// Moyenne de buts marqués par équipe et par match, sur l'ensemble de la ligue —
+// sert de référence neutre pour le modèle de Poisson.
+function leagueAvgGoals(standingsMap){
+  let totalGf = 0, totalGp = 0;
+  Object.values(standingsMap).forEach(s=>{ totalGf += s.gf||0; totalGp += s.gp||0; });
+  return totalGp>0 ? totalGf/totalGp : 1.35; // repli raisonnable si data indisponible
+}
+
+/* ---------- Analyse approfondie (modèle de Poisson) ---------- */
+// Récupère les matchs joués par une équipe sur une saison, avec buts marqués/encaissés
+// et le lieu (D=domicile, E=extérieur). Réutilise le même cache 12h que l'historique.
+async function fetchTeamGoalsBySeason(league, teamId, season){
+  const cacheKey = `goalsdata:${league}:${teamId}:${season}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule?season=${season}`);
+    return (data.events || []).map(ev=>{
+      const c = ev.competitions[0];
+      const home = c.competitors.find(x=>x.homeAway==='home');
+      const away = c.competitors.find(x=>x.homeAway==='away');
+      const isHome = String(home.team.id) === String(teamId);
+      const self = isHome ? home : away;
+      const opp = isHome ? away : home;
+      const done = ev.status.type.completed;
+      if(!done) return null;
+      return { venue: isHome ? 'home' : 'away', gf: Number(self.score), ga: Number(opp.score) };
+    }).filter(Boolean);
+  }, TWELVE_H);
+}
+
+// Moyenne buts marqués / encaissés d'une équipe sur un lieu donné (domicile ou extérieur).
+// Complète avec la saison précédente si l'échantillon de la saison en cours est trop petit.
+async function teamVenueAverage(league, teamId, venue){
+  const currentYear = new Date().getFullYear();
+  let matches = (await fetchTeamGoalsBySeason(league, teamId, currentYear)).filter(m=>m.venue===venue);
+  if(matches.length < 4){
+    const prev = (await fetchTeamGoalsBySeason(league, teamId, currentYear-1)).filter(m=>m.venue===venue);
+    matches = matches.concat(prev);
+  }
+  if(!matches.length) return null;
+  const gf = matches.reduce((s,m)=>s+m.gf,0)/matches.length;
+  const ga = matches.reduce((s,m)=>s+m.ga,0)/matches.length;
+  return {gf, ga, n: matches.length};
+}
+
+function poissonP(lambda, k){
+  let fact = 1; for(let i=2;i<=k;i++) fact *= i;
+  return Math.exp(-lambda) * Math.pow(lambda, k) / fact;
+}
+
+// Calcule Victoire/Nul/Défaite + score le plus probable à partir de deux moyennes de buts
+// (loi de Poisson à deux variables indépendantes — modèle standard simplifié type Dixon-Coles).
+function poissonMatch(lambdaHome, lambdaAway){
+  const MAX = 6;
+  let pHome=0, pDraw=0, pAway=0;
+  let best = {i:0, j:0, p:0};
+  for(let i=0;i<=MAX;i++){
+    for(let j=0;j<=MAX;j++){
+      const p = poissonP(lambdaHome,i) * poissonP(lambdaAway,j);
+      if(i>j) pHome+=p; else if(i===j) pDraw+=p; else pAway+=p;
+      if(p>best.p) best = {i,j,p};
+    }
+  }
+  const total = pHome+pDraw+pAway;
+  return {
+    home: Math.round(pHome/total*100),
+    draw: Math.round(pDraw/total*100),
+    away: Math.round(pAway/total*100),
+    score: `${best.i}-${best.j}`,
+    lambdaHome, lambdaAway
+  };
+}
+
+async function runDeepAnalysis(league, homeId, awayId, standingsMap){
+  const avgGoals = leagueAvgGoals(standingsMap);
+  const [homeStats, awayStats] = await Promise.all([
+    teamVenueAverage(league, homeId, 'home'),
+    teamVenueAverage(league, awayId, 'away')
+  ]);
+  if(!homeStats || !awayStats) return null;
+
+  const homeAttack = homeStats.gf / avgGoals;
+  const homeDefense = homeStats.ga / avgGoals;
+  const awayAttack = awayStats.gf / avgGoals;
+  const awayDefense = awayStats.ga / avgGoals;
+
+  const lambdaHome = homeAttack * awayDefense * avgGoals;
+  const lambdaAway = awayAttack * homeDefense * avgGoals;
+
+  const result = poissonMatch(lambdaHome, lambdaAway);
+  result.sampleHome = homeStats.n;
+  result.sampleAway = awayStats.n;
+  return result;
+}
+
+function strengthOf(stat){
+  if(!stat) return null;
+  return stat.ppg*10 + stat.gdpg*3;
+}
+
+// Convertit un écart de force en probabilités Victoire / Nul / Défaite.
+// Heuristique simple (pas un modèle statistique validé) : plus l'écart est
+// grand, plus le nul devient improbable et plus le favori est privilégié.
+function toProbabilities(strengthHome, strengthAway){
+  if(strengthHome==null || strengthAway==null) return null;
+  const diff = strengthHome - strengthAway + HOME_ADV;
+  const norm = diff/10;
+  const pHomeRaw = 1/(1+Math.exp(-norm));
+  const pAwayRaw = 1 - pHomeRaw;
+  const drawBase = Math.max(0.12, 0.26 - Math.min(Math.abs(norm)*0.05, 0.14));
+  let pHome = pHomeRaw*(1-drawBase);
+  let pAway = pAwayRaw*(1-drawBase);
+  let pDraw = drawBase;
+  // arrondi en pourcentage, on rattrape l'arrondi sur le plus fort
+  let h = Math.round(pHome*100), d = Math.round(pDraw*100), a = 100-h-d;
+  return {home:h, draw:d, away:a};
+}
+
+async function renderForecast(){
+  main.innerHTML = `
+    <div class="disclaimer">
+      <b>Estimation statistique simplifiée</b>, calculée à partir du classement actuel (points par match, différence de buts) et d'un bonus fixe pour l'avantage du terrain. Elle ne tient compte ni des blessures, ni des compositions, ni de l'historique face-à-face — ce n'est pas une martingale, et un bookmaker intègre toujours sa marge dans ses cotes. Le pari sportif comporte un risque réel de perte d'argent. En cas de besoin : Joueurs Info Service, 09 74 75 13 13 (France, appel non surtaxé).
+    </div>
+    <div class="status-line">Chargement des probabilités…</div>
+  `;
+  try{
+    const [standings, data] = await Promise.all([
+      getStandingsMap(state.league),
+      (async ()=>{
+        const start = new Date();
+        const end = new Date(); end.setDate(end.getDate()+14);
+        const range = `${fmtDate(start)}-${fmtDate(end)}`;
+        return await getCachedOrFetch(`fixtures:${state.league}:${range}`, async ()=>{
+          return await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
+        }, TWELVE_H);
+      })()
+    ]);
+
+    document.querySelector('.status-line')?.remove();
+    const events = (data.events || []).filter(ev => !ev.status.type.completed);
+    if(!events.length){ main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>'); return; }
+
+    const byDate = {};
+    events.forEach(ev=>{
+      const d = new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long'});
+      (byDate[d] = byDate[d] || []).push(ev);
+    });
+
+    const wrap = document.createElement('div');
+    Object.entries(byDate).forEach(([dateLabel, evs])=>{
+      const group = document.createElement('div');
+      group.className = 'day-group';
+      const cardsHtml = evs.map(ev=>{
+        const c = ev.competitions[0];
+        const home = c.competitors.find(x=>x.homeAway==='home');
+        const away = c.competitors.find(x=>x.homeAway==='away');
+        const time = new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        const sHome = strengthOf(standings[String(home.team.id)]);
+        const sAway = strengthOf(standings[String(away.team.id)]);
+        const probs = toProbabilities(sHome, sAway);
+        const probsHtml = probs ? `
+          <div class="fx-bar">
+            <div class="seg home" style="width:${probs.home}%"></div>
+            <div class="seg draw" style="width:${probs.draw}%"></div>
+            <div class="seg away" style="width:${probs.away}%"></div>
+          </div>
+          <div class="fx-probs">
+            <div class="p-item home"><span class="pct">${probs.home}%</span><span class="lbl">${home.team.shortDisplayName}</span></div>
+            <div class="p-item draw"><span class="pct">${probs.draw}%</span><span class="lbl">Nul</span></div>
+            <div class="p-item away"><span class="pct">${probs.away}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
+          </div>
+        ` : `<div class="fx-nodata">Données de classement insuffisantes pour estimer ce match (début de saison probable).</div>`;
+        return `
+          <div class="fx-card" data-home="${home.team.id}" data-away="${away.team.id}" data-home-name="${home.team.shortDisplayName}" data-away-name="${away.team.shortDisplayName}">
+            <div class="fx-top">
+              <div class="fx-teams">
+                <img src="${home.team.logo||''}" onerror="this.style.display='none'">
+                <span>${home.team.shortDisplayName}</span>
+                <span class="vs">vs</span>
+                <span>${away.team.shortDisplayName}</span>
+                <img src="${away.team.logo||''}" onerror="this.style.display='none'">
+              </div>
+              <div class="fx-time">${time}</div>
+            </div>
+            ${probsHtml}
+            <button class="deep-btn">Analyse approfondie (buts marqués/encaissés)</button>
+            <div class="deep-panel"></div>
+          </div>
+        `;
+      }).join('');
+      group.innerHTML = `<p class="day-title">${dateLabel}</p>${cardsHtml}`;
+      wrap.appendChild(group);
+    });
+    main.appendChild(wrap);
+
+    wrap.querySelectorAll('.deep-btn').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const card = btn.closest('.fx-card');
+        const panel = card.querySelector('.deep-panel');
+        const homeId = card.dataset.home, awayId = card.dataset.away;
+        const homeName = card.dataset.homeName, awayName = card.dataset.awayName;
+        if(panel.classList.contains('open')){ panel.classList.remove('open'); panel.innerHTML=''; return; }
+        btn.disabled = true;
+        panel.classList.add('open');
+        panel.innerHTML = '<p class="deep-loading">Calcul à partir des buts marqués/encaissés cette saison…</p>';
+        try{
+          const res = await runDeepAnalysis(state.league, homeId, awayId, standings);
+          if(!res){
+            panel.innerHTML = '<p class="deep-loading">Échantillon de matchs insuffisant pour ce club cette saison — pas assez de données pour affiner le calcul.</p>';
+          }else{
+            panel.innerHTML = `
+              <div class="deep-bar">
+                <div class="seg home" style="width:${res.home}%"></div>
+                <div class="seg draw" style="width:${res.draw}%"></div>
+                <div class="seg away" style="width:${res.away}%"></div>
+              </div>
+              <div class="fx-probs">
+                <div class="p-item home"><span class="pct">${res.home}%</span><span class="lbl">${homeName}</span></div>
+                <div class="p-item draw"><span class="pct">${res.draw}%</span><span class="lbl">Nul</span></div>
+                <div class="p-item away"><span class="pct">${res.away}%</span><span class="lbl">${awayName}</span></div>
+              </div>
+              <p class="deep-meta">Score le plus probable : <b>${res.score}</b> · buts attendus ${res.lambdaHome.toFixed(2)} – ${res.lambdaAway.toFixed(2)} · basé sur ${res.sampleHome} matchs à domicile et ${res.sampleAway} à l'extérieur.</p>
+              <p class="deep-meta">Modèle de Poisson à partir des buts marqués/encaissés — reste une estimation, pas une garantie.</p>
+            `;
+          }
+        }catch(e){
+          panel.innerHTML = '<p class="deep-loading">Erreur pendant le calcul.</p>';
+        }
+        btn.disabled = false;
+      };
+    });
+  }catch(e){
+    main.innerHTML += '<div class="status-line error">Erreur de chargement des pronostics.</div>';
+  }
+}
+
 /* ============ Navigation ============ */
 function renderView(){
   if(state.view==='scores') renderScores();
   else if(state.view==='standings') renderStandings();
   else if(state.view==='history') renderHistory();
+  else if(state.view==='forecast') renderForecast();
   else if(state.view==='news') renderNews();
   state.forcedFresh = false;
 }
