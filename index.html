@@ -35,7 +35,6 @@
   a{color:inherit; text-decoration:none;}
   ::selection{background:var(--accent); color:#fff;}
 
-  /* ---------- Ticker : bandeau noir façon annonce Apple ---------- */
   .ticker-wrap{
     background:#000;
     overflow:hidden;
@@ -56,10 +55,7 @@
   .ticker b{color:#fff; font-weight:600;}
   @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
 
-  /* ---------- Header ---------- */
-  header{
-    max-width:720px; margin:0 auto; padding:44px 20px 0;
-  }
+  header{max-width:720px; margin:0 auto; padding:44px 20px 0;}
   .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:16px;}
   .eyebrow{font-size:13px; font-weight:600; color:var(--accent); letter-spacing:.01em; margin:0 0 6px;}
   h1{font-size:40px; font-weight:700; letter-spacing:-.022em; margin:0 0 8px; color:var(--text);}
@@ -80,7 +76,6 @@
 
   .update-label{font-size:12px; color:var(--text-3); text-align:right; margin-top:8px; height:16px;}
 
-  /* ---------- Segmented control (ligues) ---------- */
   .leagues{
     display:flex; gap:2px; background:var(--surface-2);
     padding:3px; border-radius:12px; margin-bottom:14px;
@@ -111,7 +106,6 @@
   .status-line{font-size:15px; color:var(--text-2); padding:60px 0; text-align:center;}
   .status-line.error{color:var(--loss);}
 
-  /* ---------- Date picker ---------- */
   .date-picker{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
   .date-picker button{
     background:var(--surface-2); border:none; color:var(--text);
@@ -121,7 +115,6 @@
   .date-picker button:hover{background:#e8e8ed;}
   .date-label{color:var(--text); font-size:15px; font-weight:600;}
 
-  /* ---------- Match cards ---------- */
   .match{
     display:flex; align-items:center; background:var(--surface);
     border:1px solid var(--border); border-radius:var(--radius);
@@ -139,7 +132,6 @@
   .match-meta.live{color:var(--loss);}
   .match-meta.live::before{content:'● '; font-size:8px;}
 
-  /* ---------- Standings ---------- */
   .table-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
   table{width:100%; border-collapse:collapse; font-size:13.5px;}
   th{text-align:left; color:var(--text-3); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:12px 8px; border-bottom:1px solid var(--border);}
@@ -154,7 +146,6 @@
   tr.top4 td.rank{color:var(--win); font-weight:700;}
   tr.releg td.rank{color:var(--loss); font-weight:700;}
 
-  /* ---------- History ---------- */
   .club-select{display:flex; gap:10px; margin-bottom:20px;}
   select{
     flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text);
@@ -181,7 +172,14 @@
   .form-dot.D{background:var(--draw);}
   .form-dot.L{background:var(--loss);}
 
-  .progress{font-size:13px; color:var(--text-2); margin-bottom:12px;}
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px;}
+  .kpi{background:var(--surface-2); border-radius:10px; padding:10px 8px; text-align:center;}
+  .kpi .k-val{font-size:16px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
+  .kpi .k-lbl{font-size:10.5px; color:var(--text-3); text-transform:uppercase; letter-spacing:.03em; margin-top:2px;}
+
+  .progress{font-size:13px; color:var(--text-2); margin-bottom:12px; padding:14px; background:var(--surface-2); border-radius:var(--radius-sm);}
+  .progress .bar{height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:8px;}
+  .progress .bar span{display:block; height:100%; background:var(--accent); transition:width .3s var(--ease);}
 
   .season-block{margin-bottom:8px; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:var(--surface);}
   .season-head{
@@ -200,8 +198,10 @@
   .hist-row .opp{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2);}
   .hist-row .sc{font-weight:600; color:var(--text); font-variant-numeric:tabular-nums;}
   .hist-row .dt{font-size:11.5px; color:var(--text-3); width:52px; text-align:right;}
+  .src-badge{display:inline-block; padding:1px 6px; font-size:9.5px; font-weight:700; border-radius:4px; margin-left:6px; text-transform:uppercase; letter-spacing:.03em;}
+  .src-badge.of{background:#e0f0ff; color:#0071e3;}
+  .src-badge.espn{background:#fff2e0; color:#c47600;}
 
-  /* ---------- News ---------- */
   .news-item{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
     padding:20px; margin-bottom:12px; display:block;
@@ -212,7 +212,6 @@
   .news-item p{margin:0 0 10px; font-size:14px; color:var(--text-2); line-height:1.5;}
   .news-item .meta{font-size:11.5px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
 
-  /* ---------- Pronostics ---------- */
   .disclaimer{
     background:var(--surface-2); border-radius:var(--radius); padding:18px 20px;
     margin-bottom:20px; font-size:13px; color:var(--text-2); line-height:1.55;
@@ -242,27 +241,16 @@
   .fx-probs .p-item.away{align-items:flex-end;}
   .fx-probs .pct{font-size:16px; font-weight:700; color:var(--text);}
   .fx-probs .lbl{font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--text-3);}
+  .fx-meta-line{margin-top:10px; font-size:11.5px; color:var(--text-3); display:flex; justify-content:space-between; gap:8px;}
+  .fx-meta-line b{color:var(--text); font-weight:600;}
   .fx-nodata{font-size:12.5px; color:var(--text-3); font-style:italic;}
-
-  .deep-btn{
-    width:100%; margin-top:12px; background:none; border:1px dashed var(--border); color:var(--accent);
-    font-family:inherit; font-size:12.5px; font-weight:600; padding:9px; border-radius:var(--radius-sm);
-    cursor:pointer; transition:background .2s var(--ease), border-color .2s var(--ease);
-  }
-  .deep-btn:hover{background:var(--surface-2); border-color:var(--accent);}
-  .deep-btn:disabled{opacity:.5;}
-  .deep-panel{display:none;}
-  .deep-panel.open{display:block; margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
-  .deep-loading{font-size:12.5px; color:var(--text-3); text-align:center; margin:4px 0;}
-  .deep-bar{display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--surface-2); margin-bottom:8px;}
-  .deep-bar .seg{height:100%;}
-  .deep-bar .seg.home{background:var(--accent);}
-  .deep-bar .seg.draw{background:#d2d2d7;}
-  .deep-bar .seg.away{background:#ff9500;}
-  .deep-meta{font-size:11.5px; color:var(--text-3); line-height:1.5; margin:10px 0 0;}
-  .deep-meta b{color:var(--text);}
+  .conf-badge{font-size:10px; font-weight:700; padding:2px 7px; border-radius:100px; text-transform:uppercase; letter-spacing:.03em;}
+  .conf-badge.high{background:#e8f8ec; color:#227a3b;}
+  .conf-badge.med{background:#fff4e0; color:#a3660a;}
+  .conf-badge.low{background:#ffece9; color:#b52a20;}
 
   footer{text-align:center; padding:36px 20px 50px; font-size:12px; color:var(--text-3); line-height:1.6;}
+  footer a{color:var(--accent);}
 
   @media (prefers-reduced-motion:reduce){
     .ticker{animation:none;}
@@ -279,14 +267,14 @@
 <header>
   <div class="top-row">
     <div>
-      <p class="eyebrow">Live · Classements · Actus · Historique</p>
+      <p class="eyebrow">Live · Classements · Actus · Historique 10 ans</p>
       <h1>Terrain</h1>
     </div>
     <div>
       <button class="refresh-btn" id="refreshBtn"><span class="ic">↻</span> Actualiser</button>
     </div>
   </div>
-  <p class="subtitle">Ligue 1, La Liga et Premier League — scores en direct, classements, actualités et dix ans d'historique par club.</p>
+  <p class="subtitle">Ligue 1, La Liga et Premier League — données croisées ESPN & OpenFootball, modèle Dixon-Coles avec Elo pour les pronostics.</p>
   <div class="leagues">
     <button class="league-btn active" data-league="fra.1">Ligue 1</button>
     <button class="league-btn" data-league="esp.1">La Liga</button>
@@ -309,20 +297,40 @@
 </main>
 <div class="update-label" id="updateLabel" style="max-width:720px;margin:0 auto;padding:0 20px 20px;"></div>
 
-<footer>Données non-officielles via l'API publique ESPN — usage personnel, peut se casser sans préavis.<br>Cache local 12h par appareil, rafraîchissement manuel possible à tout moment.</footer>
+<footer>
+  Données croisées : <a href="https://github.com/openfootball/football.json" target="_blank" rel="noopener">OpenFootball</a> (historique, JSON statique) + API publique ESPN (live).<br>
+  Modèle Dixon-Coles + Elo — estimation statistique, aucune garantie. Cache local 12h.
+</footer>
 
 <script>
+/* =====================================================================
+   TERRAIN — v2
+   Sources : ESPN (live) + OpenFootball GitHub (historique 10 ans)
+   Modèle  : Dixon-Coles avec correction basse-score + Elo + décroissance
+             temporelle exponentielle + mélange pondéré (ensemble)
+   ===================================================================== */
+
 const LEAGUES = {
-  'fra.1': {name:'Ligue 1', flag:'🇫🇷'},
-  'esp.1': {name:'La Liga', flag:'🇪🇸'},
-  'eng.1': {name:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'}
+  'fra.1': {name:'Ligue 1',        flag:'🇫🇷', ofCode:'fr.1', displayShort:'L1'},
+  'esp.1': {name:'La Liga',        flag:'🇪🇸', ofCode:'es.1', displayShort:'LL'},
+  'eng.1': {name:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', ofCode:'en.1', displayShort:'PL'}
 };
+
 const TWELVE_H = 12 * 60 * 60 * 1000;
+const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+const HALF_YEAR = 180 * 24 * 60 * 60 * 1000;
+
+// Proxys CORS de secours (essayés en cascade si l'appel direct échoue)
+const CORS_PROXIES = [
+  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  url => 'https://cors.eu.org/' + url
+];
 
 let state = {
   league: 'fra.1',
   view: 'scores',
-  scoreDate: null,     // null = journée en cours par défaut (vue ESPN)
+  scoreDate: null,
   teamsCache: {},
   forcedFresh: false
 };
@@ -331,19 +339,14 @@ const main = document.getElementById('main');
 const updateLabel = document.getElementById('updateLabel');
 const refreshBtn = document.getElementById('refreshBtn');
 
-/* ============ Cache localStorage (12h) ============ */
-/* localStorage est synchrone et pris en charge par tout navigateur / GitHub Pages,
-   contrairement à window.storage qui n'existe que dans l'environnement Claude. */
+/* ============ Cache localStorage (12h par défaut) ============ */
 function cacheGet(key){
-  try{
-    const raw = localStorage.getItem('terrain:'+key);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; } // ex: navigation privée qui bloque localStorage
+  try{ const raw = localStorage.getItem('terrain2:'+key); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
 }
 function cacheSet(key, value){
-  try{
-    localStorage.setItem('terrain:'+key, JSON.stringify(value));
-  }catch(e){ /* stockage indisponible ou plein : on continue sans cache */ }
+  try{ localStorage.setItem('terrain2:'+key, JSON.stringify(value)); }
+  catch(e){ /* stockage plein / navigation privée : on continue */ }
 }
 async function getCachedOrFetch(key, fetchFn, maxAge = TWELVE_H){
   if(!state.forcedFresh){
@@ -361,30 +364,81 @@ async function getCachedOrFetch(key, fetchFn, maxAge = TWELVE_H){
 }
 function showUpdateLabel(ts){
   const mins = Math.round((Date.now()-ts)/60000);
-  updateLabel.textContent = mins < 1 ? "Mis à jour à l'instant" : mins < 60 ? `Mis à jour il y a ${mins} min` : `Mis à jour il y a ${Math.round(mins/60)} h`;
+  updateLabel.textContent = mins < 1 ? "Mis à jour à l'instant"
+    : mins < 60 ? `Mis à jour il y a ${mins} min`
+    : `Mis à jour il y a ${Math.round(mins/60)} h`;
 }
 
-/* ============ Fetch ESPN avec repli CORS ============ */
-async function espnFetch(path, base='https://site.api.espn.com'){
-  const direct = base + path;
+/* ============ Fetch générique avec fallback CORS ============ */
+async function robustFetch(url){
   try{
-    const r = await fetch(direct);
+    const r = await fetch(url);
     if(!r.ok) throw new Error('http '+r.status);
     return await r.json();
   }catch(e){
-    const proxied = 'https://corsproxy.io/?url=' + encodeURIComponent(direct);
-    const r2 = await fetch(proxied);
-    if(!r2.ok) throw new Error('proxy http '+r2.status);
-    return await r2.json();
+    let lastErr = e;
+    for(const proxy of CORS_PROXIES){
+      try{
+        const r = await fetch(proxy(url));
+        if(!r.ok){ lastErr = new Error('proxy '+r.status); continue; }
+        return await r.json();
+      }catch(err){ lastErr = err; }
+    }
+    throw lastErr;
   }
 }
 
-function fmtDate(d){
-  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
-  return `${y}${m}${day}`;
+async function espnFetch(path){
+  return await robustFetch('https://site.api.espn.com' + path);
 }
-function fmtDateLabel(d){
-  return d.toLocaleDateString('fr-FR',{weekday:'short', day:'numeric', month:'short'});
+
+/* ============ OpenFootball : historique fiable ============ */
+/* Format : https://raw.githubusercontent.com/openfootball/football.json/master/YYYY-YY/xx.1.json
+   Contient : { matches: [{ date, team1, team2, score:{ ft:[h,a] } }] } */
+async function openFootballFetch(ofCode, seasonStart){
+  const seasonStr = `${seasonStart}-${String(seasonStart+1).slice(-2)}`;
+  const url = `https://raw.githubusercontent.com/openfootball/football.json/master/${seasonStr}/${ofCode}.json`;
+  try{
+    return await robustFetch(url);
+  }catch(e){
+    return null;
+  }
+}
+
+/* Normalisation légère pour matcher les noms d'équipes entre ESPN et OpenFootball */
+function normalizeTeamName(name){
+  if(!name) return '';
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')  // diacritiques
+    .replace(/\b(fc|cf|ac|as|sc|sd|rc|cd|ud|cp|afc|1\.?|club|deportivo|real|athletic|atletico|racing|olympique|paris|saint|the|de|la|el|le|les|los|and|&)\b/g,'')
+    .replace(/[^a-z0-9]/g,'')
+    .trim();
+}
+
+// Alias manuels pour les cas où la normalisation ne suffit pas
+const TEAM_ALIASES = {
+  // Ligue 1
+  'psg':'parissaintgermain', 'parissaintgermain':'parissaintgermain', 'paris':'parissaintgermain',
+  'ol':'olympiquelyonnais', 'lyon':'olympiquelyonnais', 'olympiquelyonnais':'olympiquelyonnais',
+  'om':'olympiquemarseille', 'marseille':'olympiquemarseille', 'olympiquemarseille':'olympiquemarseille',
+  'asmonaco':'monaco', 'monaco':'monaco',
+  'lillelosc':'lille', 'losc':'lille', 'lille':'lille',
+  'stadederennais':'rennes', 'rennes':'rennes',
+  // La Liga
+  'realmadrid':'realmadrid', 'realmadridcf':'realmadrid',
+  'fcbarcelona':'barcelona', 'barcelona':'barcelona', 'barca':'barcelona',
+  'atleticomadrid':'atleticomadrid', 'atlmadrid':'atleticomadrid',
+  'athleticbilbao':'athleticclub', 'athleticclub':'athleticclub',
+  // Premier League
+  'manutd':'manchesterunited', 'manchesterunited':'manchesterunited', 'mufc':'manchesterunited',
+  'mancity':'manchestercity', 'manchestercity':'manchestercity', 'mcfc':'manchestercity',
+  'spurs':'tottenham', 'tottenhamhotspur':'tottenham', 'tottenham':'tottenham',
+  'wolves':'wolverhampton', 'wolverhamptonwanderers':'wolverhampton'
+};
+
+function teamKey(name){
+  const norm = normalizeTeamName(name);
+  return TEAM_ALIASES[norm] || norm;
 }
 
 /* ============ Ticker ============ */
@@ -393,24 +447,29 @@ async function loadTicker(){
   try{
     const chunks = [];
     for(const lg of Object.keys(LEAGUES)){
-      const data = await espnFetch(`/apis/site/v2/sports/soccer/${lg}/scoreboard`);
-      (data.events||[]).forEach(ev=>{
-        const c = ev.competitions[0];
-        const home = c.competitors.find(x=>x.homeAway==='home');
-        const away = c.competitors.find(x=>x.homeAway==='away');
-        const live = ev.status.type.state === 'in';
-        const done = ev.status.type.completed;
-        const scoreStr = (home.score!=null && (live||done)) ? `${home.score}-${away.score}` : ev.status.type.shortDetail;
-        chunks.push(`<span>${live?'<span class="dot">●</span> ':''}${LEAGUES[lg].flag} <b>${home.team.shortDisplayName}</b> ${scoreStr} <b>${away.team.shortDisplayName}</b></span>`);
-      });
+      try{
+        const data = await espnFetch(`/apis/site/v2/sports/soccer/${lg}/scoreboard`);
+        (data.events||[]).forEach(ev=>{
+          const c = ev.competitions[0];
+          const home = c.competitors.find(x=>x.homeAway==='home');
+          const away = c.competitors.find(x=>x.homeAway==='away');
+          const live = ev.status.type.state === 'in';
+          const done = ev.status.type.completed;
+          const scoreStr = (home.score!=null && (live||done)) ? `${home.score}-${away.score}` : ev.status.type.shortDetail;
+          chunks.push(`<span>${live?'<span class="dot">●</span> ':''}${LEAGUES[lg].flag} <b>${home.team.shortDisplayName}</b> ${scoreStr} <b>${away.team.shortDisplayName}</b></span>`);
+        });
+      }catch(e){ /* on continue avec les autres ligues */ }
     }
-    el.innerHTML = chunks.length ? chunks.join('') + chunks.join('') : '<span>Aucun match en cours sur les 3 championnats actuellement</span>';
+    el.innerHTML = chunks.length ? chunks.join('') + chunks.join('') : '<span>Aucun match en cours actuellement</span>';
   }catch(e){
     el.innerHTML = '<span>Direct indisponible pour le moment</span>';
   }
 }
 
 /* ============ Vue Matchs ============ */
+function fmtDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}${m}${day}`; }
+function fmtDateLabel(d){ return d.toLocaleDateString('fr-FR',{weekday:'short', day:'numeric', month:'short'}); }
+
 async function renderScores(){
   const label = state.scoreDate ? fmtDateLabel(state.scoreDate) : 'Journée en cours';
   main.innerHTML = `
@@ -429,7 +488,6 @@ async function renderScores(){
     const base = state.scoreDate ? new Date(state.scoreDate) : new Date();
     base.setDate(base.getDate()+1); state.scoreDate = base; renderScores();
   };
-
   try{
     const path = state.scoreDate
       ? `/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${fmtDate(state.scoreDate)}`
@@ -449,7 +507,8 @@ async function renderScores(){
       const done = st.completed;
       const homeWin = done && Number(home.score) > Number(away.score);
       const awayWin = done && Number(away.score) > Number(home.score);
-      const metaText = live ? (st.shortDetail || 'EN DIRECT').toUpperCase() : (done ? 'TERMINÉ' : new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' · ' + new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+      const metaText = live ? (st.shortDetail || 'EN DIRECT').toUpperCase()
+        : (done ? 'TERMINÉ' : new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' · ' + new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
       const div = document.createElement('div');
       div.className = 'match';
       div.innerHTML = `
@@ -474,26 +533,16 @@ async function renderStandings(){
   main.innerHTML = `<div class="status-line">Chargement du classement…</div>`;
   try{
     const data = await getCachedOrFetch(`standings:${state.league}`, async ()=>{
-      // /apis/site/v2/ renvoie {} pour standings sur cette API — il faut /apis/v2/
-      return await espnFetch(`/apis/v2/sports/soccer/${state.league}/standings`);
+      return await robustFetch(`https://site.api.espn.com/apis/v2/sports/soccer/${state.league}/standings`);
     });
-
     let entries = [];
-    if(data.children){
-      data.children.forEach(g=>{ if(g.standings && g.standings.entries) entries = entries.concat(g.standings.entries); });
-    } else if(data.standings && data.standings.entries){
-      entries = data.standings.entries;
-    }
-    if(!entries.length){ main.innerHTML = '<div class="status-line">Classement indisponible pour cette ligue actuellement.</div>'; return; }
-
+    if(data.children){ data.children.forEach(g=>{ if(g.standings && g.standings.entries) entries = entries.concat(g.standings.entries); }); }
+    else if(data.standings && data.standings.entries){ entries = data.standings.entries; }
+    if(!entries.length){ main.innerHTML = '<div class="status-line">Classement indisponible actuellement.</div>'; return; }
     const getStat = (entry,names)=>{
-      for(const n of names){
-        const s = entry.stats.find(s=>s.name===n || s.type===n);
-        if(s) return s.displayValue ?? s.value;
-      }
+      for(const n of names){ const s = entry.stats.find(s=>s.name===n || s.type===n); if(s) return s.displayValue ?? s.value; }
       return '–';
     };
-
     let rows = entries.map((e,i)=>{
       const rank = i+1;
       const cls = rank<=4 ? 'top4' : (rank>entries.length-3 ? 'releg' : '');
@@ -508,15 +557,13 @@ async function renderStandings(){
         <td class="num pts">${getStat(e,['points'])}</td>
       </tr>`;
     }).join('');
-
     main.innerHTML = `
       <div class="table-card">
         <table>
           <thead><tr><th>#</th><th>Club</th><th class="num">MJ</th><th class="num">V</th><th class="num">N</th><th class="num">D</th><th class="num">Diff</th><th class="num">Pts</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-      </div>
-    `;
+      </div>`;
   }catch(e){
     main.innerHTML = '<div class="status-line error">Erreur de chargement du classement.</div>';
   }
@@ -530,20 +577,22 @@ async function renderNews(){
       return await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/news`);
     });
     const articles = data.articles || [];
-    if(!articles.length){ main.innerHTML = '<div class="status-line">Aucune actualité disponible pour le moment.</div>'; return; }
+    if(!articles.length){ main.innerHTML = '<div class="status-line">Aucune actualité disponible.</div>'; return; }
     main.innerHTML = articles.slice(0,20).map(a=>`
       <a class="news-item" href="${a.links?.web?.href || '#'}" target="_blank" rel="noopener">
         <h4>${a.headline || ''}</h4>
         <p>${a.description || ''}</p>
         <span class="meta">${a.published ? new Date(a.published).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : ''}</span>
-      </a>
-    `).join('');
+      </a>`).join('');
   }catch(e){
     main.innerHTML = '<div class="status-line error">Erreur de chargement des actus.</div>';
   }
 }
 
-/* ============ Vue Historique ============ */
+/* =====================================================================
+   HISTORIQUE — combinaison OpenFootball (10 ans) + ESPN (saison en cours)
+   ===================================================================== */
+
 async function loadTeams(league){
   if(state.teamsCache[league]) return state.teamsCache[league];
   const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/teams?limit=50`);
@@ -552,30 +601,66 @@ async function loadTeams(league){
   return teams;
 }
 
+// Charge les matchs historiques via OpenFootball, avec cache 1 semaine (saisons closes)
+async function fetchOFHistoricalSeason(league, seasonStart){
+  const ofCode = LEAGUES[league].ofCode;
+  const cacheKey = `of:${ofCode}:${seasonStart}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    const data = await openFootballFetch(ofCode, seasonStart);
+    if(!data || !data.matches) return [];
+    return data.matches.map(m=>{
+      const ft = m.score?.ft;
+      if(!ft) return null;
+      return {
+        date: m.date,
+        team1: m.team1, team2: m.team2,
+        team1Key: teamKey(m.team1), team2Key: teamKey(m.team2),
+        h: Number(ft[0]), a: Number(ft[1])
+      };
+    }).filter(Boolean);
+  }, ONE_WEEK);
+}
+
+// Charge la saison en cours via ESPN (cache court)
+async function fetchESPNTeamSeason(league, teamId, season){
+  const cacheKey = `espnHist:${league}:${teamId}:${season}`;
+  return await getCachedOrFetch(cacheKey, async ()=>{
+    const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule?season=${season}`);
+    return (data.events || []).map(ev=>{
+      const c = ev.competitions[0];
+      const home = c.competitors.find(x=>x.homeAway==='home');
+      const away = c.competitors.find(x=>x.homeAway==='away');
+      if(!ev.status.type.completed) return null;
+      return {
+        date: ev.date,
+        team1: home.team.displayName, team2: away.team.displayName,
+        team1Key: teamKey(home.team.displayName), team2Key: teamKey(away.team.displayName),
+        h: Number(home.score), a: Number(away.score)
+      };
+    }).filter(Boolean);
+  }, TWELVE_H);
+}
+
 async function renderHistory(){
   main.innerHTML = `<div class="status-line">Chargement des clubs…</div>`;
   let teams;
-  try{
-    teams = await loadTeams(state.league);
-  }catch(e){
-    main.innerHTML = '<div class="status-line error">Impossible de charger la liste des clubs.</div>';
-    return;
-  }
-  const options = teams.map(t=>`<option value="${t.id}">${t.displayName}</option>`).join('');
+  try{ teams = await loadTeams(state.league); }
+  catch(e){ main.innerHTML = '<div class="status-line error">Impossible de charger la liste des clubs.</div>'; return; }
+  const options = teams.map(t=>`<option value="${t.id}" data-name="${t.displayName}">${t.displayName}</option>`).join('');
   main.innerHTML = `
     <div class="club-select">
       <select id="clubSelect">${options}</select>
       <button class="load-btn" id="loadHistBtn">Charger 10 ans</button>
     </div>
     <div id="formArea"></div>
-    <div id="histArea"></div>
-  `;
+    <div id="histArea"></div>`;
   document.getElementById('loadHistBtn').onclick = loadClubHistory;
 }
 
 async function loadClubHistory(){
   const select = document.getElementById('clubSelect');
   const teamId = select.value;
+  const teamName = select.selectedOptions[0].dataset.name;
   const btn = document.getElementById('loadHistBtn');
   const area = document.getElementById('histArea');
   const formArea = document.getElementById('formArea');
@@ -584,237 +669,323 @@ async function loadClubHistory(){
   formArea.innerHTML = '';
 
   const currentYear = new Date().getFullYear();
+  // Saison "footballistique" : celle qui a débuté en août
+  const currentSeasonStart = new Date().getMonth() >= 6 ? currentYear : currentYear - 1;
   const seasons = [];
-  for(let i=0;i<10;i++) seasons.push(currentYear - i);
+  for(let i=0;i<10;i++) seasons.push(currentSeasonStart - i);
+
+  const key = teamKey(teamName);
+  const progEl = document.createElement('div');
+  progEl.className = 'progress';
+  progEl.innerHTML = `Chargement de l'historique…<div class="bar"><span style="width:0%"></span></div>`;
+  area.appendChild(progEl);
 
   const seasonResults = {};
+  let done = 0;
 
-  for(let i=0;i<seasons.length;i++){
-    const season = seasons[i];
-    const cacheKey = `hist:${state.league}:${teamId}:${season}`;
-    area.insertAdjacentHTML('afterbegin', `<div class="progress" id="prog">Saison ${season} — ${i+1}/${seasons.length}…</div>`);
+  for(const seasonStart of seasons){
+    let matches;
+    let src = 'of';
+    // Saison en cours : ESPN (données à jour) ; saisons closes : OpenFootball
+    if(seasonStart === currentSeasonStart){
+      try{
+        const raw = await fetchESPNTeamSeason(state.league, teamId, seasonStart);
+        matches = raw.map(m=>{
+          const isHome = m.team1Key === key;
+          const gf = isHome ? m.h : m.a;
+          const ga = isHome ? m.a : m.h;
+          const opp = isHome ? m.team2 : m.team1;
+          const result = gf > ga ? 'W' : (gf < ga ? 'L' : 'D');
+          return { date:m.date, opp, venue:isHome?'D':'E', gf, ga, score:`${gf}-${ga}`, result, src:'espn' };
+        });
+        src = 'espn';
+      }catch(e){ matches = []; }
+    } else {
+      const raw = await fetchOFHistoricalSeason(state.league, seasonStart);
+      matches = raw.filter(m=> m.team1Key === key || m.team2Key === key).map(m=>{
+        const isHome = m.team1Key === key;
+        const gf = isHome ? m.h : m.a;
+        const ga = isHome ? m.a : m.h;
+        const opp = isHome ? m.team2 : m.team1;
+        const result = gf > ga ? 'W' : (gf < ga ? 'L' : 'D');
+        return { date:m.date, opp, venue:isHome?'D':'E', gf, ga, score:`${gf}-${ga}`, result, src:'of' };
+      });
+    }
+    seasonResults[seasonStart] = { matches, src };
+    done++;
+    progEl.querySelector('.bar span').style.width = (done/seasons.length*100)+'%';
+    progEl.firstChild.textContent = `Saison ${seasonStart}–${String(seasonStart+1).slice(-2)} chargée (${done}/${seasons.length})`;
+  }
+  progEl.remove();
 
-    let matches = await getCachedOrFetch(cacheKey, async ()=>{
-      const data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/teams/${teamId}/schedule?season=${season}`);
-      return (data.events || []).map(ev=>{
-        const c = ev.competitions[0];
-        const home = c.competitors.find(x=>x.homeAway==='home');
-        const away = c.competitors.find(x=>x.homeAway==='away');
-        const isHome = String(home.team.id) === String(teamId);
-        const self = isHome ? home : away;
-        const opp = isHome ? away : home;
-        const done = ev.status.type.completed;
-        let result = null;
-        if(done){
-          const sf = Number(self.score), so = Number(opp.score);
-          result = sf>so ? 'W' : (sf<so ? 'L' : 'D');
-        }
-        return { date: ev.date, opp: opp.team.displayName, venue: isHome ? 'D' : 'E', score: done ? `${self.score}-${opp.score}` : '—', result };
-      }).filter(m=>m.result);
-    }, TWELVE_H);
+  // Bilan agrégé 10 ans
+  let totalW=0, totalD=0, totalL=0, totalGF=0, totalGA=0, totalM=0;
+  Object.values(seasonResults).forEach(s=>{
+    s.matches.forEach(m=>{
+      totalM++;
+      if(m.result==='W') totalW++; else if(m.result==='D') totalD++; else totalL++;
+      totalGF += m.gf; totalGA += m.ga;
+    });
+  });
+  const winPct = totalM ? Math.round(totalW/totalM*100) : 0;
 
-    seasonResults[season] = matches;
-    const prog = document.getElementById('prog');
-    if(prog) prog.remove();
+  // Forme actuelle (saison en cours triée + 5 derniers)
+  const currentMatches = (seasonResults[currentSeasonStart]?.matches || [])
+    .slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const last5 = currentMatches.slice(-5);
 
+  formArea.innerHTML = `
+    <div class="form-block">
+      <h3>Bilan 10 ans</h3>
+      <div class="kpi-row">
+        <div class="kpi"><div class="k-val">${totalM}</div><div class="k-lbl">Matchs</div></div>
+        <div class="kpi"><div class="k-val">${winPct}%</div><div class="k-lbl">% Victoires</div></div>
+        <div class="kpi"><div class="k-val">${totalM?(totalGF/totalM).toFixed(2):'–'}</div><div class="k-lbl">Buts/match</div></div>
+        <div class="kpi"><div class="k-val">${totalM?(totalGA/totalM).toFixed(2):'–'}</div><div class="k-lbl">Encaissés/m</div></div>
+      </div>
+      ${last5.length ? `<h3 style="margin-top:20px;">Forme · 5 derniers matchs</h3>
+      <div class="dots-row">${last5.map(m=>`<span class="form-dot ${m.result}">${m.result}</span>`).join('')}</div>` : ''}
+    </div>`;
+
+  // Blocs par saison
+  Object.entries(seasonResults).sort((a,b)=>b[0]-a[0]).forEach(([season, s])=>{
+    const seasonStart = Number(season);
+    const matches = s.matches;
     const W = matches.filter(m=>m.result==='W').length;
     const D = matches.filter(m=>m.result==='D').length;
     const L = matches.filter(m=>m.result==='L').length;
-
+    const badge = s.src === 'espn' ? '<span class="src-badge espn">Live</span>' : '<span class="src-badge of">OF</span>';
     const block = document.createElement('div');
     block.className = 'season-block';
     block.innerHTML = `
       <div class="season-head">
-        <span>${season}–${String(season+1).slice(2)}</span>
+        <span>${seasonStart}–${String(seasonStart+1).slice(-2)} ${badge}</span>
         <span class="rec">${matches.length} matchs · ${W}V ${D}N ${L}D</span>
       </div>
       <div class="season-body">
-        ${matches.length ? matches.map(m=>`
+        ${matches.length ? matches.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).map(m=>`
           <div class="hist-row">
             <span class="res ${m.result}">${m.result}</span>
             <span class="opp">${m.venue==='D'?'vs':'@'} ${m.opp}</span>
             <span class="sc">${m.score}</span>
             <span class="dt">${new Date(m.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
           </div>`).join('') : '<div class="hist-row"><span class="opp">Aucune donnée pour cette saison</span></div>'}
-      </div>
-    `;
-    block.querySelector('.season-head').onclick = ()=>{ block.querySelector('.season-body').classList.toggle('open'); };
+      </div>`;
+    block.querySelector('.season-head').onclick = ()=> block.querySelector('.season-body').classList.toggle('open');
     area.appendChild(block);
-  }
-
-  // Forme actuelle = 5 derniers matchs joués de la saison en cours
-  const currentSeasonMatches = (seasonResults[currentYear] || []).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
-  const last5 = currentSeasonMatches.slice(-5);
-  if(last5.length){
-    formArea.innerHTML = `
-      <div class="form-block">
-        <h3>Forme actuelle · 5 derniers matchs</h3>
-        <div class="dots-row">${last5.map(m=>`<span class="form-dot ${m.result}">${m.result}</span>`).join('')}</div>
-      </div>
-    `;
-  }
+  });
 
   btn.disabled = false;
 }
 
-/* ============ Vue Pronostics (14 jours) ============ */
-const HOME_ADV = 4; // avantage du terrain, en points de force (constante heuristique)
+/* =====================================================================
+   MOTEUR DE PRÉDICTION
+   -----
+   1. On construit un dataset global de matchs récents (2 saisons OF + saison
+      en cours ESPN) pour la ligue sélectionnée.
+   2. On calcule pour chaque équipe :
+        - attaque / défense normalisées à domicile/extérieur (Dixon-Coles)
+        - rating Elo mis à jour match par match
+   3. On applique une décroissance temporelle (matchs récents pondérés +)
+   4. Le pronostic = moyenne pondérée de deux modèles :
+        - Dixon-Coles (score-based) → probabilités V/N/D + score attendu
+        - Elo (rating-based)         → probabilités V/N/D
+      Confiance basée sur la taille d'échantillon.
+   ===================================================================== */
 
-async function getStandingsMap(league){
-  const data = await getCachedOrFetch(`standings:${league}`, async ()=>{
-    return await espnFetch(`/apis/v2/sports/soccer/${league}/standings`);
-  });
-  let entries = [];
-  if(data.children){ data.children.forEach(g=>{ if(g.standings?.entries) entries = entries.concat(g.standings.entries); }); }
-  else if(data.standings?.entries){ entries = data.standings.entries; }
+const DECAY_HALF_LIFE_DAYS = 365; // les matchs de plus d'1 an ont un poids /2
 
-  const map = {};
-  const getStat = (entry,names)=>{
-    for(const n of names){ const s = entry.stats.find(s=>s.name===n || s.type===n); if(s) return Number(s.value); }
-    return null;
-  };
-  entries.forEach(e=>{
-    const gp = getStat(e,['gamesPlayed']) || 0;
-    const pts = getStat(e,['points']) || 0;
-    const gd = getStat(e,['pointDifferential','goalDifferential']) || 0;
-    const gf = getStat(e,['pointsFor','goalsFor']) || 0;
-    const ga = getStat(e,['pointsAgainst','goalsAgainst']) || 0;
-    map[String(e.team.id)] = {
-      ppg: gp>0 ? pts/gp : 1.3,      // valeur neutre si saison pas encore commencée
-      gdpg: gp>0 ? gd/gp : 0,
-      gf, ga, gp
-    };
-  });
-  return map;
+function decayWeight(dateStr){
+  const d = new Date(dateStr);
+  const ageDays = (Date.now() - d.getTime()) / (1000*60*60*24);
+  return Math.pow(0.5, ageDays / DECAY_HALF_LIFE_DAYS);
 }
 
-// Moyenne de buts marqués par équipe et par match, sur l'ensemble de la ligue —
-// sert de référence neutre pour le modèle de Poisson.
-function leagueAvgGoals(standingsMap){
-  let totalGf = 0, totalGp = 0;
-  Object.values(standingsMap).forEach(s=>{ totalGf += s.gf||0; totalGp += s.gp||0; });
-  return totalGp>0 ? totalGf/totalGp : 1.35; // repli raisonnable si data indisponible
-}
-
-/* ---------- Analyse approfondie (modèle de Poisson) ---------- */
-// Récupère les matchs joués par une équipe sur une saison, avec buts marqués/encaissés
-// et le lieu (D=domicile, E=extérieur). Réutilise le même cache 12h que l'historique.
-async function fetchTeamGoalsBySeason(league, teamId, season){
-  const cacheKey = `goalsdata:${league}:${teamId}:${season}`;
+// Charge un dataset combiné 2 saisons OpenFootball + saison en cours ESPN
+async function buildLeagueDataset(league){
+  const cacheKey = `dataset:${league}`;
   return await getCachedOrFetch(cacheKey, async ()=>{
-    const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/teams/${teamId}/schedule?season=${season}`);
-    return (data.events || []).map(ev=>{
-      const c = ev.competitions[0];
-      const home = c.competitors.find(x=>x.homeAway==='home');
-      const away = c.competitors.find(x=>x.homeAway==='away');
-      const isHome = String(home.team.id) === String(teamId);
-      const self = isHome ? home : away;
-      const opp = isHome ? away : home;
-      const done = ev.status.type.completed;
-      if(!done) return null;
-      return { venue: isHome ? 'home' : 'away', gf: Number(self.score), ga: Number(opp.score) };
-    }).filter(Boolean);
+    const currentYear = new Date().getFullYear();
+    const currentSeasonStart = new Date().getMonth() >= 6 ? currentYear : currentYear - 1;
+    const seasons = [currentSeasonStart-2, currentSeasonStart-1];
+
+    let matches = [];
+    for(const s of seasons){
+      const rows = await fetchOFHistoricalSeason(league, s);
+      matches = matches.concat(rows);
+    }
+
+    // Saison en cours via ESPN scoreboard (par date) — on récupère les résultats terminés
+    // via l'endpoint schedule/team n'est pas idéal ici, on utilise scoreboard sur une plage.
+    try{
+      const start = new Date(currentSeasonStart, 6, 1);
+      const end = new Date();
+      // ESPN limite les plages : on découpe par mois
+      const monthly = [];
+      let cursor = new Date(start);
+      while(cursor < end){
+        const monthEnd = new Date(cursor); monthEnd.setMonth(monthEnd.getMonth()+1); monthEnd.setDate(0);
+        const rangeEnd = monthEnd < end ? monthEnd : end;
+        const range = `${fmtDate(cursor)}-${fmtDate(rangeEnd)}`;
+        try{
+          const data = await espnFetch(`/apis/site/v2/sports/soccer/${league}/scoreboard?dates=${range}&limit=100`);
+          (data.events||[]).forEach(ev=>{
+            if(!ev.status.type.completed) return;
+            const c = ev.competitions[0];
+            const home = c.competitors.find(x=>x.homeAway==='home');
+            const away = c.competitors.find(x=>x.homeAway==='away');
+            monthly.push({
+              date: ev.date,
+              team1: home.team.displayName, team2: away.team.displayName,
+              team1Key: teamKey(home.team.displayName), team2Key: teamKey(away.team.displayName),
+              h: Number(home.score), a: Number(away.score)
+            });
+          });
+        }catch(e){ /* on continue */ }
+        cursor.setMonth(cursor.getMonth()+1); cursor.setDate(1);
+      }
+      matches = matches.concat(monthly);
+    }catch(e){ /* la saison en cours restera basée sur OF si elle existe */ }
+
+    return matches;
   }, TWELVE_H);
 }
 
-// Moyenne buts marqués / encaissés d'une équipe sur un lieu donné (domicile ou extérieur).
-// Complète avec la saison précédente si l'échantillon de la saison en cours est trop petit.
-async function teamVenueAverage(league, teamId, venue){
-  const currentYear = new Date().getFullYear();
-  let matches = (await fetchTeamGoalsBySeason(league, teamId, currentYear)).filter(m=>m.venue===venue);
-  if(matches.length < 4){
-    const prev = (await fetchTeamGoalsBySeason(league, teamId, currentYear-1)).filter(m=>m.venue===venue);
-    matches = matches.concat(prev);
-  }
-  if(!matches.length) return null;
-  const gf = matches.reduce((s,m)=>s+m.gf,0)/matches.length;
-  const ga = matches.reduce((s,m)=>s+m.ga,0)/matches.length;
-  return {gf, ga, n: matches.length};
+// Calcule attaque/défense normalisée par ligue (Dixon-Coles simplifié)
+function computeTeamStrengths(matches){
+  // Moyennes globales pondérées
+  let totalWeight = 0, totalHomeGoals = 0, totalAwayGoals = 0;
+  matches.forEach(m=>{
+    const w = decayWeight(m.date);
+    totalWeight += w;
+    totalHomeGoals += m.h * w;
+    totalAwayGoals += m.a * w;
+  });
+  const avgHome = totalWeight ? totalHomeGoals/totalWeight : 1.5;
+  const avgAway = totalWeight ? totalAwayGoals/totalWeight : 1.15;
+
+  const stats = {}; // key -> { hg, ha, ag, aa, wh, wa, n }
+  const add = (key)=> stats[key] = stats[key] || { hg:0, ha:0, ag:0, aa:0, wh:0, wa:0, n:0, names:new Set() };
+
+  matches.forEach(m=>{
+    const w = decayWeight(m.date);
+    const h = add(m.team1Key); h.names.add(m.team1);
+    const a = add(m.team2Key); a.names.add(m.team2);
+    h.hg += m.h * w; h.ha += m.a * w; h.wh += w;
+    a.ag += m.a * w; a.aa += m.h * w; a.wa += w;
+    h.n++; a.n++;
+  });
+
+  const strengths = {};
+  Object.keys(stats).forEach(k=>{
+    const s = stats[k];
+    // attaque = buts marqués rapportés à la moyenne de ligue au même lieu
+    const attackHome = s.wh ? (s.hg/s.wh) / avgHome : 1;
+    const defenseHome = s.wh ? (s.ha/s.wh) / avgAway : 1;
+    const attackAway = s.wa ? (s.ag/s.wa) / avgAway : 1;
+    const defenseAway = s.wa ? (s.aa/s.wa) / avgHome : 1;
+    strengths[k] = { attackHome, defenseHome, attackAway, defenseAway, n:s.n, names:[...s.names] };
+  });
+
+  return { strengths, avgHome, avgAway };
 }
 
+// Calcule le rating Elo de chaque équipe à partir de la chronologie des matchs
+function computeElo(matches){
+  const K = 20;
+  const HOME_ADV_ELO = 65;
+  const elo = {};
+  const get = (k)=> elo[k] ?? (elo[k] = 1500);
+  const sorted = matches.slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  sorted.forEach(m=>{
+    const rh = get(m.team1Key), ra = get(m.team2Key);
+    const expH = 1/(1 + Math.pow(10, -((rh + HOME_ADV_ELO) - ra)/400));
+    const actualH = m.h>m.a ? 1 : (m.h===m.a ? 0.5 : 0);
+    // Ajustement K par écart de buts (méthode FIFA / World Football Elo)
+    const goalDiff = Math.abs(m.h - m.a);
+    const gMult = goalDiff <= 1 ? 1 : (goalDiff === 2 ? 1.5 : (1.5 + (goalDiff-2)/8));
+    const delta = K * gMult * (actualH - expH);
+    elo[m.team1Key] = rh + delta;
+    elo[m.team2Key] = ra - delta;
+  });
+  return elo;
+}
+
+/* Modèle Dixon-Coles : proba V/N/D à partir des deux forces */
 function poissonP(lambda, k){
   let fact = 1; for(let i=2;i<=k;i++) fact *= i;
   return Math.exp(-lambda) * Math.pow(lambda, k) / fact;
 }
-
-// Calcule Victoire/Nul/Défaite + score le plus probable à partir de deux moyennes de buts
-// (loi de Poisson à deux variables indépendantes — modèle standard simplifié type Dixon-Coles).
-function poissonMatch(lambdaHome, lambdaAway){
-  const MAX = 6;
+// Correction Dixon-Coles pour les scores bas — évite la sous-estimation des 0-0/1-0/0-1/1-1
+function dcTau(i, j, lambda, mu, rho = -0.1){
+  if(i===0 && j===0) return 1 - lambda*mu*rho;
+  if(i===0 && j===1) return 1 + lambda*rho;
+  if(i===1 && j===0) return 1 + mu*rho;
+  if(i===1 && j===1) return 1 - rho;
+  return 1;
+}
+function dixonColesMatch(lambdaHome, lambdaAway){
+  const MAX = 8;
   let pHome=0, pDraw=0, pAway=0;
   let best = {i:0, j:0, p:0};
   for(let i=0;i<=MAX;i++){
     for(let j=0;j<=MAX;j++){
-      const p = poissonP(lambdaHome,i) * poissonP(lambdaAway,j);
+      const tau = dcTau(i, j, lambdaHome, lambdaAway);
+      const p = tau * poissonP(lambdaHome,i) * poissonP(lambdaAway,j);
       if(i>j) pHome+=p; else if(i===j) pDraw+=p; else pAway+=p;
       if(p>best.p) best = {i,j,p};
     }
   }
   const total = pHome+pDraw+pAway;
   return {
-    home: Math.round(pHome/total*100),
-    draw: Math.round(pDraw/total*100),
-    away: Math.round(pAway/total*100),
+    home: pHome/total, draw: pDraw/total, away: pAway/total,
     score: `${best.i}-${best.j}`,
     lambdaHome, lambdaAway
   };
 }
 
-async function runDeepAnalysis(league, homeId, awayId, standingsMap){
-  const avgGoals = leagueAvgGoals(standingsMap);
-  const [homeStats, awayStats] = await Promise.all([
-    teamVenueAverage(league, homeId, 'home'),
-    teamVenueAverage(league, awayId, 'away')
-  ]);
-  if(!homeStats || !awayStats) return null;
-
-  const homeAttack = homeStats.gf / avgGoals;
-  const homeDefense = homeStats.ga / avgGoals;
-  const awayAttack = awayStats.gf / avgGoals;
-  const awayDefense = awayStats.ga / avgGoals;
-
-  const lambdaHome = homeAttack * awayDefense * avgGoals;
-  const lambdaAway = awayAttack * homeDefense * avgGoals;
-
-  const result = poissonMatch(lambdaHome, lambdaAway);
-  result.sampleHome = homeStats.n;
-  result.sampleAway = awayStats.n;
-  return result;
+// Elo : proba V/N/D (calibration empirique du nul)
+function eloProbabilities(rHome, rAway){
+  const HOME_ADV_ELO = 65;
+  const diff = (rHome + HOME_ADV_ELO) - rAway;
+  const pHomeWinOrDrawHalf = 1/(1 + Math.pow(10, -diff/400));
+  // Le nul suit une distribution ~ N centrée sur diff=0 (probabilité max ~28%)
+  const pDraw = 0.28 * Math.exp(-Math.pow(diff/220, 2));
+  const remain = 1 - pDraw;
+  const pHome = remain * pHomeWinOrDrawHalf;
+  const pAway = remain * (1 - pHomeWinOrDrawHalf);
+  return { home:pHome, draw:pDraw, away:pAway };
 }
 
-function strengthOf(stat){
-  if(!stat) return null;
-  return stat.ppg*10 + stat.gdpg*3;
+// Ensemble : moyenne pondérée Dixon-Coles + Elo
+function ensemble(dc, elo, sampleN){
+  // Plus l'échantillon est petit, plus on fait confiance à Elo (plus stable)
+  const wDC = Math.min(0.65, 0.35 + sampleN/200);
+  const wElo = 1 - wDC;
+  const home = dc.home*wDC + elo.home*wElo;
+  const draw = dc.draw*wDC + elo.draw*wElo;
+  const away = dc.away*wDC + elo.away*wElo;
+  const sum = home+draw+away;
+  return { home:home/sum, draw:draw/sum, away:away/sum };
 }
 
-// Convertit un écart de force en probabilités Victoire / Nul / Défaite.
-// Heuristique simple (pas un modèle statistique validé) : plus l'écart est
-// grand, plus le nul devient improbable et plus le favori est privilégié.
-function toProbabilities(strengthHome, strengthAway){
-  if(strengthHome==null || strengthAway==null) return null;
-  const diff = strengthHome - strengthAway + HOME_ADV;
-  const norm = diff/10;
-  const pHomeRaw = 1/(1+Math.exp(-norm));
-  const pAwayRaw = 1 - pHomeRaw;
-  const drawBase = Math.max(0.12, 0.26 - Math.min(Math.abs(norm)*0.05, 0.14));
-  let pHome = pHomeRaw*(1-drawBase);
-  let pAway = pAwayRaw*(1-drawBase);
-  let pDraw = drawBase;
-  // arrondi en pourcentage, on rattrape l'arrondi sur le plus fort
-  let h = Math.round(pHome*100), d = Math.round(pDraw*100), a = 100-h-d;
-  return {home:h, draw:d, away:a};
+function confidence(sampleN, favProb){
+  if(sampleN < 20) return {level:'low', label:'Confiance faible'};
+  if(favProb > 0.55 && sampleN >= 40) return {level:'high', label:'Confiance forte'};
+  if(favProb > 0.42) return {level:'med', label:'Confiance modérée'};
+  return {level:'low', label:'Match ouvert'};
 }
 
 async function renderForecast(){
   main.innerHTML = `
     <div class="disclaimer">
-      <b>Estimation statistique simplifiée</b>, calculée à partir du classement actuel (points par match, différence de buts) et d'un bonus fixe pour l'avantage du terrain. Elle ne tient compte ni des blessures, ni des compositions, ni de l'historique face-à-face — ce n'est pas une martingale, et un bookmaker intègre toujours sa marge dans ses cotes. Le pari sportif comporte un risque réel de perte d'argent. En cas de besoin : Joueurs Info Service, 09 74 75 13 13 (France, appel non surtaxé).
+      <b>Modèle Dixon-Coles + Elo</b> — construit sur 2 saisons closes (OpenFootball) + saison en cours (ESPN), avec décroissance temporelle exponentielle et correction basse-score. Ne prend pas en compte blessures/compositions/H2H individuel : ce reste une estimation, jamais une garantie. Le pari sportif comporte un risque réel de perte. En cas de besoin : <b>Joueurs Info Service 09 74 75 13 13</b>.
     </div>
-    <div class="status-line">Chargement des probabilités…</div>
+    <div class="status-line">Construction du modèle sur 2 saisons + saison en cours…</div>
   `;
   try{
-    const [standings, data] = await Promise.all([
-      getStandingsMap(state.league),
+    const [matches, fixtures] = await Promise.all([
+      buildLeagueDataset(state.league),
       (async ()=>{
         const start = new Date();
         const end = new Date(); end.setDate(end.getDate()+14);
@@ -825,9 +996,20 @@ async function renderForecast(){
       })()
     ]);
 
+    if(!matches.length){
+      main.innerHTML = '<div class="status-line error">Impossible de construire le modèle : historique indisponible.</div>';
+      return;
+    }
+
+    const { strengths, avgHome, avgAway } = computeTeamStrengths(matches);
+    const elo = computeElo(matches);
+
     document.querySelector('.status-line')?.remove();
-    const events = (data.events || []).filter(ev => !ev.status.type.completed);
-    if(!events.length){ main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>'); return; }
+    const events = (fixtures.events || []).filter(ev => !ev.status.type.completed);
+    if(!events.length){
+      main.insertAdjacentHTML('beforeend', '<div class="status-line">Aucun match programmé dans les 14 prochains jours.</div>');
+      return;
+    }
 
     const byDate = {};
     events.forEach(ev=>{
@@ -844,23 +1026,53 @@ async function renderForecast(){
         const home = c.competitors.find(x=>x.homeAway==='home');
         const away = c.competitors.find(x=>x.homeAway==='away');
         const time = new Date(ev.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        const sHome = strengthOf(standings[String(home.team.id)]);
-        const sAway = strengthOf(standings[String(away.team.id)]);
-        const probs = toProbabilities(sHome, sAway);
-        const probsHtml = probs ? `
-          <div class="fx-bar">
-            <div class="seg home" style="width:${probs.home}%"></div>
-            <div class="seg draw" style="width:${probs.draw}%"></div>
-            <div class="seg away" style="width:${probs.away}%"></div>
-          </div>
-          <div class="fx-probs">
-            <div class="p-item home"><span class="pct">${probs.home}%</span><span class="lbl">${home.team.shortDisplayName}</span></div>
-            <div class="p-item draw"><span class="pct">${probs.draw}%</span><span class="lbl">Nul</span></div>
-            <div class="p-item away"><span class="pct">${probs.away}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
-          </div>
-        ` : `<div class="fx-nodata">Données de classement insuffisantes pour estimer ce match (début de saison probable).</div>`;
+
+        const kH = teamKey(home.team.displayName);
+        const kA = teamKey(away.team.displayName);
+        const sH = strengths[kH];
+        const sA = strengths[kA];
+
+        let probsHtml = '';
+        let metaHtml = '';
+
+        if(sH && sA){
+          const lambdaHome = sH.attackHome * sA.defenseAway * avgHome;
+          const lambdaAway = sA.attackAway * sH.defenseHome * avgAway;
+          const dc = dixonColesMatch(lambdaHome, lambdaAway);
+          const eloProbs = eloProbabilities(elo[kH] || 1500, elo[kA] || 1500);
+          const sample = Math.min(sH.n, sA.n);
+          const ens = ensemble(dc, eloProbs, sample);
+          const pHome = Math.round(ens.home*100);
+          const pDraw = Math.round(ens.draw*100);
+          const pAway = 100 - pHome - pDraw;
+          const favProb = Math.max(ens.home, ens.draw, ens.away);
+          const conf = confidence(sample, favProb);
+
+          probsHtml = `
+            <div class="fx-bar">
+              <div class="seg home" style="width:${pHome}%"></div>
+              <div class="seg draw" style="width:${pDraw}%"></div>
+              <div class="seg away" style="width:${pAway}%"></div>
+            </div>
+            <div class="fx-probs">
+              <div class="p-item home"><span class="pct">${pHome}%</span><span class="lbl">${home.team.shortDisplayName}</span></div>
+              <div class="p-item draw"><span class="pct">${pDraw}%</span><span class="lbl">Nul</span></div>
+              <div class="p-item away"><span class="pct">${pAway}%</span><span class="lbl">${away.team.shortDisplayName}</span></div>
+            </div>
+            <div class="fx-meta-line">
+              <span>Score probable <b>${dc.score}</b> · buts attendus <b>${dc.lambdaHome.toFixed(2)}</b> – <b>${dc.lambdaAway.toFixed(2)}</b></span>
+              <span class="conf-badge ${conf.level}">${conf.label}</span>
+            </div>
+            <div class="fx-meta-line">
+              <span>Elo : <b>${Math.round(elo[kH]||1500)}</b> vs <b>${Math.round(elo[kA]||1500)}</b></span>
+              <span>Échantillon : ${sample} matchs</span>
+            </div>`;
+        } else {
+          probsHtml = `<div class="fx-nodata">Données insuffisantes pour ce match (équipe promue ou historique manquant).</div>`;
+        }
+
         return `
-          <div class="fx-card" data-home="${home.team.id}" data-away="${away.team.id}" data-home-name="${home.team.shortDisplayName}" data-away-name="${away.team.shortDisplayName}">
+          <div class="fx-card">
             <div class="fx-top">
               <div class="fx-teams">
                 <img src="${home.team.logo||''}" onerror="this.style.display='none'">
@@ -872,54 +1084,15 @@ async function renderForecast(){
               <div class="fx-time">${time}</div>
             </div>
             ${probsHtml}
-            <button class="deep-btn">Analyse approfondie (buts marqués/encaissés)</button>
-            <div class="deep-panel"></div>
-          </div>
-        `;
+          </div>`;
       }).join('');
       group.innerHTML = `<p class="day-title">${dateLabel}</p>${cardsHtml}`;
       wrap.appendChild(group);
     });
     main.appendChild(wrap);
-
-    wrap.querySelectorAll('.deep-btn').forEach(btn=>{
-      btn.onclick = async ()=>{
-        const card = btn.closest('.fx-card');
-        const panel = card.querySelector('.deep-panel');
-        const homeId = card.dataset.home, awayId = card.dataset.away;
-        const homeName = card.dataset.homeName, awayName = card.dataset.awayName;
-        if(panel.classList.contains('open')){ panel.classList.remove('open'); panel.innerHTML=''; return; }
-        btn.disabled = true;
-        panel.classList.add('open');
-        panel.innerHTML = '<p class="deep-loading">Calcul à partir des buts marqués/encaissés cette saison…</p>';
-        try{
-          const res = await runDeepAnalysis(state.league, homeId, awayId, standings);
-          if(!res){
-            panel.innerHTML = '<p class="deep-loading">Échantillon de matchs insuffisant pour ce club cette saison — pas assez de données pour affiner le calcul.</p>';
-          }else{
-            panel.innerHTML = `
-              <div class="deep-bar">
-                <div class="seg home" style="width:${res.home}%"></div>
-                <div class="seg draw" style="width:${res.draw}%"></div>
-                <div class="seg away" style="width:${res.away}%"></div>
-              </div>
-              <div class="fx-probs">
-                <div class="p-item home"><span class="pct">${res.home}%</span><span class="lbl">${homeName}</span></div>
-                <div class="p-item draw"><span class="pct">${res.draw}%</span><span class="lbl">Nul</span></div>
-                <div class="p-item away"><span class="pct">${res.away}%</span><span class="lbl">${awayName}</span></div>
-              </div>
-              <p class="deep-meta">Score le plus probable : <b>${res.score}</b> · buts attendus ${res.lambdaHome.toFixed(2)} – ${res.lambdaAway.toFixed(2)} · basé sur ${res.sampleHome} matchs à domicile et ${res.sampleAway} à l'extérieur.</p>
-              <p class="deep-meta">Modèle de Poisson à partir des buts marqués/encaissés — reste une estimation, pas une garantie.</p>
-            `;
-          }
-        }catch(e){
-          panel.innerHTML = '<p class="deep-loading">Erreur pendant le calcul.</p>';
-        }
-        btn.disabled = false;
-      };
-    });
   }catch(e){
-    main.innerHTML += '<div class="status-line error">Erreur de chargement des pronostics.</div>';
+    console.error(e);
+    main.innerHTML = '<div class="status-line error">Erreur de chargement des pronostics.</div>';
   }
 }
 
