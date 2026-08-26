@@ -928,18 +928,48 @@ async function renderScores(){
   const nextBtn = document.getElementById('nextMd');
   const labelEl = document.getElementById('dateLabel');
   try{
-    let path = `/apis/site/v2/sports/soccer/${state.league}/scoreboard`;
-    if(state.matchday){
-      const year = state.seasonYear || new Date().getFullYear();
-      path += `?seasontype=1&year=${year}&week=${state.matchday}`;
-    }
-    const data = await espnFetch(path);
-    const detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? state.matchday ?? 1;
-    const detectedYear = data.season?.year ?? data.leagues?.[0]?.season?.year ?? new Date().getFullYear();
-    if(state.matchday == null) state.matchday = detectedMd;
-    if(state.seasonYear == null) state.seasonYear = detectedYear;
+    let data = null;
+    let usedFallback = false;
 
-    labelEl.textContent = `Journée ${state.matchday} sur ${total}`;
+    if(state.matchday == null){
+      // 1er appel : on prend la journée en cours d'ESPN et on m\u00e9morise l'ann\u00e9e/date-ancre
+      data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard`);
+      const detectedMd = data.week?.number ?? data.leagues?.[0]?.season?.type?.week ?? 1;
+      state.matchday = detectedMd;
+      state.seasonYear = data.season?.year ?? data.leagues?.[0]?.season?.year ?? new Date().getFullYear();
+      // Date-ancre = date m\u00e9diane des \u00e9v\u00e9nements de cette journ\u00e9e (sert au repli calendaire)
+      const evTs = (data.events || []).map(e => new Date(e.date).getTime()).sort((a,b)=>a-b);
+      state.matchdayAnchorDate = evTs.length ? new Date(evTs[Math.floor(evTs.length/2)]).toISOString() : new Date().toISOString();
+      state.matchdayAnchor = detectedMd;
+    } else {
+      // Navigation : essai avec week (ann\u00e9e d\u00e9tect\u00e9e), puis ann\u00e9e alternative, puis plage de dates
+      const y = state.seasonYear || new Date().getFullYear();
+      const tryFetch = async (year) => {
+        try{
+          const d = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?seasontype=1&year=${year}&week=${state.matchday}`);
+          return d.events?.length ? d : null;
+        }catch(e){ return null; }
+      };
+      data = await tryFetch(y);
+      if(!data) data = await tryFetch(y + 1);      // ESPN utilise parfois l'ann\u00e9e de fin de saison
+      if(!data) data = await tryFetch(y - 1);
+      if(!data){
+        // Dernier recours : plage de dates calcul\u00e9e depuis la date-ancre + 7j par journ\u00e9e d'\u00e9cart
+        const anchor = state.matchdayAnchorDate ? new Date(state.matchdayAnchorDate) : new Date();
+        const anchorMd = state.matchdayAnchor || state.matchday;
+        const center = new Date(anchor);
+        center.setDate(center.getDate() + (state.matchday - anchorMd) * 7);
+        const from = new Date(center); from.setDate(from.getDate() - 3);
+        const to   = new Date(center); to.setDate(to.getDate() + 4);
+        const range = `${fmtDate(from)}-${fmtDate(to)}`;
+        try{
+          data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
+          usedFallback = true;
+        }catch(e){ data = {events:[]}; }
+      }
+    }
+
+    labelEl.textContent = `Journée ${state.matchday} sur ${total}${usedFallback ? ' · estimation' : ''}`;
     prevBtn.disabled = state.matchday <= 1;
     nextBtn.disabled = state.matchday >= total;
     prevBtn.onclick = ()=>{ if(state.matchday > 1){ state.matchday--; renderScores(); } };
@@ -947,13 +977,48 @@ async function renderScores(){
 
     const events = data.events || [];
     const statusEl = document.querySelector('.status-line');
-    if(events.length === 0){ statusEl.textContent = 'Aucun match programmé pour cette journée.'; return; }
+    if(events.length === 0){
+      statusEl.innerHTML = `Aucun match trouvé pour cette journée.<br><button class="load-btn" id="showUpcomingBtn" style="margin-top:14px;">Voir les matchs à venir (14 j)</button>`;
+      document.getElementById('showUpcomingBtn').onclick = renderUpcomingLeague;
+      return;
+    }
     statusEl.remove();
     const wrap = document.createElement('div');
     renderEventsInto(wrap, events);
     main.appendChild(wrap);
   }catch(e){
+    console.error(e);
     labelEl.textContent = `Journée ${state.matchday || '?'} sur ${total}`;
+    const s = document.querySelector('.status-line');
+    if(s){ s.textContent = 'Erreur de chargement des matchs.'; s.classList.add('error'); }
+  }
+}
+
+// Vue de secours : tous les matchs à venir sur 14 jours (utile quand ESPN ne mappe pas la journée demandée)
+async function renderUpcomingLeague(){
+  const cfg = LEAGUES[state.league];
+  main.innerHTML = `
+    <div class="date-picker">
+      <button id="backToMd">&larr; Journées</button>
+      <span class="date-label">${cfg.name} · Matchs à venir (14 j)</span>
+      <span style="width:34px;"></span>
+    </div>
+    <div class="status-line">Chargement…</div>
+  `;
+  document.getElementById('backToMd').onclick = ()=>{ renderScores(); };
+  try{
+    const start = new Date();
+    const end = new Date(); end.setDate(end.getDate()+14);
+    const range = `${fmtDate(start)}-${fmtDate(end)}`;
+    const data = await espnFetch(`/apis/site/v2/sports/soccer/${state.league}/scoreboard?dates=${range}&limit=100`);
+    const events = (data.events||[]).filter(ev => !ev.status.type.completed);
+    const s = document.querySelector('.status-line');
+    if(!events.length){ s.textContent = 'Aucun match programmé dans les 14 prochains jours.'; return; }
+    s.remove();
+    const wrap = document.createElement('div');
+    renderEventsInto(wrap, events);
+    main.appendChild(wrap);
+  }catch(e){
     const s = document.querySelector('.status-line');
     if(s){ s.textContent = 'Erreur de chargement des matchs.'; s.classList.add('error'); }
   }
