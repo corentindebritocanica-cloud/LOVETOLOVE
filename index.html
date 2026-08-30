@@ -18,14 +18,15 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{
-    margin:0; padding:0; height:100%;
+    margin:0; padding:0; min-height:100%;
     background:var(--bg); color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
     -webkit-font-smoothing:antialiased;
+    -webkit-overflow-scrolling: touch;
   }
   body{
     display:flex; flex-direction:column; min-height:100vh;
-    padding-bottom: 84px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   }
 
   /* HEADER */
@@ -69,9 +70,6 @@
   .day-btn.active{
     background:var(--accent); color:#fff; border-color:var(--accent);
   }
-  .day-btn.rest-day::after{
-    content:"·"; margin-left:4px; opacity:.6;
-  }
 
   /* MAIN */
   main{
@@ -82,19 +80,6 @@
   }
   .session-subtitle{
     font-size:13px; color:var(--text-dim); margin:0 2px 4px 2px;
-  }
-
-  .rest-card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
-    padding:32px 20px; text-align:center;
-  }
-  .rest-card .emoji{font-size:38px; display:block; margin-bottom:10px;}
-  .rest-card h3{margin:0 0 6px 0; font-size:19px;}
-  .rest-card p{margin:0; color:var(--text-dim); font-size:14px;}
-  .rest-note{
-    margin-top:16px; padding:12px 14px; border-radius:12px;
-    background:rgba(236,72,153,0.12); border:1px solid rgba(236,72,153,0.35);
-    color:var(--lisa); font-size:13.5px; font-weight:600;
   }
 
   .exercise-card{
@@ -230,7 +215,7 @@
 
 <main id="main-content"></main>
 
-<div class="bottom-bar">
+<div class="bottom-bar" id="bottom-bar">
   <button class="bottom-btn btn-reset" onclick="askReset()">🔄</button>
   <button class="bottom-btn btn-export" onclick="openExportModal()">Terminer &amp; Exporter 📤</button>
 </div>
@@ -279,11 +264,11 @@ const storage = {
 };
 
 /* ---------- DONNEES DU PROGRAMME ---------- */
-const DAYS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
-const REST_DAYS = { "Mercredi":true, "Jeudi":true, "Samedi":true };
-
-const PROGRAM = {
-  "Lundi": {
+/* Séances numérotées (indépendantes du jour de la semaine, pour s'adapter à un emploi du temps mobile) */
+const SESSIONS = [
+  {
+    id: "s1",
+    label: "Séance 1",
     title: "Bas du Corps (Quads & Fessiers)",
     cardio: { name: "30 min Tapis incliné Zone 2" },
     exercises: [
@@ -293,7 +278,9 @@ const PROGRAM = {
       { name:"Leg Curl (Machine)", sets:3, target:{corentin:"10-12 reps", lisa:"12-15 reps"} }
     ]
   },
-  "Mardi": {
+  {
+    id: "s2",
+    label: "Séance 2",
     title: "Haut du Corps & Abdos",
     cardio: { name: "30 min Tapis incliné Zone 2" },
     exercises: [
@@ -303,9 +290,9 @@ const PROGRAM = {
       { name:"Circuit Abdos (Relevés de jambes 12-15r + Gainage 45s)", sets:3, target:{corentin:"3 tours", lisa:"3 tours"} }
     ]
   },
-  "Mercredi": { rest:true },
-  "Jeudi": { rest:true },
-  "Vendredi": {
+  {
+    id: "s3",
+    label: "Séance 3",
     title: "Bas du Corps (Fessiers & Ischios)",
     cardio: { name: "30 min Tapis incliné Zone 2" },
     exercises: [
@@ -315,8 +302,9 @@ const PROGRAM = {
       { name:"Abducteurs à la machine", sets:3, target:{corentin:"15 reps", lisa:"15-20 reps (Pause 1s)"} }
     ]
   },
-  "Samedi": { rest:true },
-  "Dimanche": {
+  {
+    id: "s4",
+    label: "Séance 4",
     title: "Haut du Corps & Abdos",
     cardio: null,
     exercises: [
@@ -326,18 +314,22 @@ const PROGRAM = {
       { name:"Circuit Abdos (Crunchs 15-20r + Portefeuille 12-15r)", sets:3, target:{corentin:"3 tours", lisa:"3 tours"} }
     ]
   }
-};
+];
+
+function getSession(id){
+  return SESSIONS.find(s => s.id === id) || SESSIONS[0];
+}
 
 /* ---------- ETAT ---------- */
 let currentProfile = storage.get("duo_profile") || "corentin";
-let currentDay = storage.get("duo_day") || DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay()-1];
-if(!DAYS.includes(currentDay)) currentDay = DAYS[0];
+let currentSessionId = storage.get("duo_session") || SESSIONS[0].id;
+if(!SESSIONS.some(s => s.id === currentSessionId)) currentSessionId = SESSIONS[0].id;
 
-function dataKey(day, profile){
-  return `duo_data_${day}_${profile}`;
+function dataKey(sessionId, profile){
+  return `duo_data_${sessionId}_${profile}`;
 }
-function loadDayData(day, profile){
-  const raw = storage.get(dataKey(day, profile));
+function loadDayData(sessionId, profile){
+  const raw = storage.get(dataKey(sessionId, profile));
   if(!raw) return { sets:{}, cardioDone:false };
   try{ return JSON.parse(raw); }catch(e){ return { sets:{}, cardioDone:false }; }
 }
@@ -356,20 +348,20 @@ function setProfile(profile){
   render();
 }
 
-function setDay(day){
-  currentDay = day;
-  storage.set("duo_day", day);
+function setSession(sessionId){
+  currentSessionId = sessionId;
+  storage.set("duo_session", sessionId);
   render();
 }
 
 function renderDayBar(){
   const bar = document.getElementById('day-bar');
   bar.innerHTML = '';
-  DAYS.forEach(day => {
+  SESSIONS.forEach(session => {
     const btn = document.createElement('button');
-    btn.className = 'day-btn' + (day === currentDay ? ' active' : '') + (REST_DAYS[day] ? ' rest-day' : '');
-    btn.textContent = day.slice(0,3);
-    btn.onclick = () => setDay(day);
+    btn.className = 'day-btn' + (session.id === currentSessionId ? ' active' : '');
+    btn.textContent = session.label;
+    btn.onclick = () => setSession(session.id);
     bar.appendChild(btn);
   });
 }
@@ -386,31 +378,13 @@ function render(){
 
   const main = document.getElementById('main-content');
   main.innerHTML = '';
-  const dayProgram = PROGRAM[currentDay];
+  const dayProgram = getSession(currentSessionId);
 
-  if(dayProgram.rest){
-    const card = document.createElement('div');
-    card.className = 'rest-card';
-    card.innerHTML = `
-      <span class="emoji">😴</span>
-      <h3>Jour de repos</h3>
-      <p>Récupération complète — profite-en pour bien dormir et t'hydrater.</p>
-    `;
-    if(currentDay === 'Mercredi' && currentProfile === 'lisa'){
-      const note = document.createElement('div');
-      note.className = 'rest-note';
-      note.textContent = "Optionnel Lisa : 45 min Pilates / Yoga / TSE";
-      card.appendChild(note);
-    }
-    main.appendChild(card);
-    return;
-  }
-
-  const data = loadDayData(currentDay, currentProfile);
+  const data = loadDayData(currentSessionId, currentProfile);
 
   const titleEl = document.createElement('div');
   titleEl.className = 'session-title';
-  titleEl.textContent = dayProgram.title;
+  titleEl.textContent = `${dayProgram.label} — ${dayProgram.title}`;
   main.appendChild(titleEl);
 
   const subtitleEl = document.createElement('div');
@@ -453,10 +427,10 @@ function render(){
       weightInput.placeholder = 'kg';
       weightInput.value = savedSet.weight;
       weightInput.oninput = () => {
-        const d = loadDayData(currentDay, currentProfile);
+        const d = loadDayData(currentSessionId, currentProfile);
         d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
         d.sets[setKey].weight = weightInput.value;
-        saveDayData(currentDay, currentProfile, d);
+        saveDayData(currentSessionId, currentProfile, d);
       };
       row.appendChild(weightInput);
 
@@ -466,10 +440,10 @@ function render(){
       repsInput.placeholder = 'reps';
       repsInput.value = savedSet.reps;
       repsInput.oninput = () => {
-        const d = loadDayData(currentDay, currentProfile);
+        const d = loadDayData(currentSessionId, currentProfile);
         d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
         d.sets[setKey].reps = repsInput.value;
-        saveDayData(currentDay, currentProfile, d);
+        saveDayData(currentSessionId, currentProfile, d);
       };
       row.appendChild(repsInput);
 
@@ -477,10 +451,10 @@ function render(){
       checkBtn.className = 'check-btn' + (savedSet.done ? ' checked' : '');
       checkBtn.textContent = '✓';
       checkBtn.onclick = () => {
-        const d = loadDayData(currentDay, currentProfile);
+        const d = loadDayData(currentSessionId, currentProfile);
         d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
         d.sets[setKey].done = !d.sets[setKey].done;
-        saveDayData(currentDay, currentProfile, d);
+        saveDayData(currentSessionId, currentProfile, d);
         checkBtn.classList.toggle('checked', d.sets[setKey].done);
       };
       row.appendChild(checkBtn);
@@ -504,9 +478,9 @@ function render(){
     cardioBtn.className = 'check-btn' + (data.cardioDone ? ' checked' : '');
     cardioBtn.textContent = '✓';
     cardioBtn.onclick = () => {
-      const d = loadDayData(currentDay, currentProfile);
+      const d = loadDayData(currentSessionId, currentProfile);
       d.cardioDone = !d.cardioDone;
-      saveDayData(currentDay, currentProfile, d);
+      saveDayData(currentSessionId, currentProfile, d);
       cardioBtn.classList.toggle('checked', d.cardioDone);
     };
     cardioCard.appendChild(cardioBtn);
@@ -522,7 +496,7 @@ function closeConfirm(){
   document.getElementById('confirm-modal').classList.remove('open');
 }
 function doReset(){
-  saveDayData(currentDay, currentProfile, { sets:{}, cardioDone:false });
+  saveDayData(currentSessionId, currentProfile, { sets:{}, cardioDone:false });
   closeConfirm();
   render();
   showToast('Séance réinitialisée');
@@ -530,27 +504,16 @@ function doReset(){
 
 /* ---------- EXPORT ---------- */
 function buildExportText(){
-  const dayProgram = PROGRAM[currentDay];
+  const dayProgram = getSession(currentSessionId);
   const profileName = currentProfile === 'corentin' ? 'Corentin' : 'Lisa';
   const today = new Date();
   const dateStr = today.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
 
-  if(dayProgram.rest){
-    let txt = `🏋️ BILAN DE SÉANCE\n`;
-    txt += `Nom : ${profileName}\n`;
-    txt += `Date : ${dateStr} (${currentDay})\n`;
-    txt += `Statut : Jour de repos\n`;
-    if(currentDay === 'Mercredi' && currentProfile === 'lisa'){
-      txt += `Note : Optionnel — 45 min Pilates / Yoga / TSE\n`;
-    }
-    return txt;
-  }
-
-  const data = loadDayData(currentDay, currentProfile);
+  const data = loadDayData(currentSessionId, currentProfile);
   let txt = `🏋️ BILAN DE SÉANCE\n`;
   txt += `Nom : ${profileName}\n`;
-  txt += `Date : ${dateStr} (${currentDay})\n`;
-  txt += `Séance : ${dayProgram.title}\n`;
+  txt += `Date : ${dateStr}\n`;
+  txt += `Séance : ${dayProgram.label} — ${dayProgram.title}\n`;
   txt += `------------------------------\n`;
 
   dayProgram.exercises.forEach((ex, exIdx) => {
@@ -617,8 +580,26 @@ function showToast(msg){
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
+/* ---------- AJUSTEMENT DYNAMIQUE DE L'ESPACE SOUS LE CONTENU (fix iPhone) ---------- */
+function adjustBottomSpacing(){
+  try{
+    const bar = document.getElementById('bottom-bar');
+    if(bar){
+      const h = bar.offsetHeight;
+      const computed = h + 24;
+      // ne jamais descendre sous le minimum de sécurité défini en CSS (120px + safe-area)
+      document.body.style.paddingBottom = Math.max(computed, 120) + 'px';
+    }
+  }catch(e){ /* ignore, le CSS statique sert de filet de sécurité */ }
+}
+window.addEventListener('resize', adjustBottomSpacing);
+window.addEventListener('orientationchange', () => setTimeout(adjustBottomSpacing, 200));
+window.addEventListener('load', adjustBottomSpacing);
+
 /* ---------- INIT ---------- */
 render();
+adjustBottomSpacing();
+setTimeout(adjustBottomSpacing, 300); // sécurité si les polices/safe-area se stabilisent après le premier rendu
 </script>
 </body>
 </html>
