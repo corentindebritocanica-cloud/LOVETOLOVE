@@ -29,47 +29,66 @@
     padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* HEADER */
+  /* VUES (écrans) */
+  .view{
+    display:none; flex-direction:column; flex:1;
+  }
+  .view.active{ display:flex; }
+  .view-inner{
+    padding:20px 18px; display:flex; flex-direction:column; gap:12px; flex:1;
+  }
+  .center-view{ justify-content:center; }
+  .app-title{
+    font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--text-dim); margin:0 0 4px 2px; font-weight:600;
+  }
+  .big-question{
+    font-size:23px; font-weight:800; margin:4px 2px 14px 2px;
+  }
+  .back-btn{
+    align-self:flex-start; background:none; border:none; color:var(--text-dim);
+    font-size:14px; font-weight:600; padding:8px 2px; margin-bottom:2px;
+  }
+
+  .big-choice-btn{
+    padding:24px 18px; border-radius:18px; border:2px solid var(--border);
+    background:var(--card); color:var(--text); font-size:19px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+    transition: all .15s ease;
+  }
+  .big-choice-btn.corentin.selected, .big-choice-btn.corentin:active{
+    border-color:var(--corentin); color:var(--corentin); background:rgba(59,130,246,0.12);
+  }
+  .big-choice-btn.lisa.selected, .big-choice-btn.lisa:active{
+    border-color:var(--lisa); color:var(--lisa); background:rgba(236,72,153,0.12);
+  }
+
+  .session-list{
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .session-btn{
+    padding:18px; border-radius:16px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); text-align:left;
+    display:flex; flex-direction:column; gap:4px; font-family:inherit;
+  }
+  .session-btn .s-label{font-size:16.5px; font-weight:800;}
+  .session-btn .s-subtitle{font-size:13px; color:var(--text-dim); font-weight:500;}
+  .session-btn.selected{
+    border-color:var(--accent);
+  }
+
+  /* HEADER ÉCRAN EXERCICES */
   header{
     position:sticky; top:0; z-index:20;
     background:var(--bg);
     padding:14px 14px 8px 14px;
     border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
   }
-  .app-title{
-    font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-    color:var(--text-dim); margin:0 0 10px 2px; font-weight:600;
+  header .back-btn.small{
+    margin:0; padding:6px 0; flex:0 0 auto;
   }
-  .profile-selector{
-    display:flex; gap:10px; margin-bottom:12px;
-  }
-  .profile-btn{
-    flex:1; padding:12px 8px; border-radius:14px; border:2px solid var(--border);
-    background:var(--card); color:var(--text-dim); font-size:16px; font-weight:700;
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    transition: all .15s ease;
-  }
-  .profile-btn .dot{width:10px; height:10px; border-radius:50%; background:currentColor;}
-  .profile-btn.corentin.active{
-    border-color:var(--corentin); color:var(--corentin); background:rgba(59,130,246,0.12);
-  }
-  .profile-btn.lisa.active{
-    border-color:var(--lisa); color:var(--lisa); background:rgba(236,72,153,0.12);
-  }
-
-  .day-bar{
-    display:flex; gap:8px; overflow-x:auto; padding:2px 2px 6px 2px;
-    scrollbar-width:none;
-  }
-  .day-bar::-webkit-scrollbar{display:none;}
-  .day-btn{
-    flex:0 0 auto; padding:10px 14px; border-radius:12px; border:1px solid var(--border);
-    background:var(--card); color:var(--text-dim); font-size:14px; font-weight:600;
-    white-space:nowrap;
-  }
-  .day-btn.active{
-    background:var(--accent); color:#fff; border-color:var(--accent);
-  }
+  header .app-title{ margin:0; }
 
   /* MAIN */
   main{
@@ -122,11 +141,18 @@
 
   .cardio-card{
     background:var(--card); border:1px solid var(--border); border-radius:16px;
-    padding:16px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:16px; display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
-  .cardio-card .label{display:flex; align-items:center; gap:10px;}
-  .cardio-card .icon{font-size:22px;}
+  .cardio-card .label{display:flex; align-items:center; gap:10px; flex:1; min-width:0;}
+  .cardio-card .icon{font-size:22px; flex:0 0 auto;}
+  .cardio-text{display:flex; flex-direction:column; gap:2px; min-width:0;}
   .cardio-card .name{font-weight:700; font-size:15px;}
+  .cardio-suggestion{font-size:12px; color:var(--text-dim);}
+  .cardio-minutes-input{
+    width:64px; flex:0 0 auto; padding:10px 6px; border-radius:10px; border:1px solid var(--border);
+    background:#26262e; color:var(--text); font-size:16px; text-align:center;
+  }
+  .cardio-minutes-input:focus{ outline:none; border-color:var(--accent); }
 
   /* BOTTOM BAR */
   .bottom-bar{
@@ -200,24 +226,38 @@
 </head>
 <body>
 
-<header>
-  <p class="app-title">Duo Training</p>
-  <div class="profile-selector">
-    <button class="profile-btn corentin" id="btn-corentin" onclick="setProfile('corentin')">
-      <span class="dot"></span> Corentin
-    </button>
-    <button class="profile-btn lisa" id="btn-lisa" onclick="setProfile('lisa')">
-      <span class="dot"></span> Lisa
-    </button>
+<!-- ÉCRAN 1 : CHOIX DU PROFIL -->
+<div class="view active" id="view-profile">
+  <div class="view-inner center-view">
+    <p class="app-title">Duo Training</p>
+    <h1 class="big-question">Qui s'entraîne ?</h1>
+    <button class="big-choice-btn corentin" onclick="selectProfile('corentin')">Corentin</button>
+    <button class="big-choice-btn lisa" onclick="selectProfile('lisa')">Lisa</button>
   </div>
-  <div class="day-bar" id="day-bar"></div>
-</header>
+</div>
 
-<main id="main-content"></main>
+<!-- ÉCRAN 2 : CHOIX DE LA SÉANCE -->
+<div class="view" id="view-session">
+  <div class="view-inner">
+    <button class="back-btn" onclick="goToProfileView()">← Retour</button>
+    <h1 class="big-question" id="session-view-title">Choisis ta séance</h1>
+    <div class="session-list" id="session-list"></div>
+  </div>
+</div>
 
-<div class="bottom-bar" id="bottom-bar">
-  <button class="bottom-btn btn-reset" onclick="askReset()">🔄</button>
-  <button class="bottom-btn btn-export" onclick="openExportModal()">Terminer &amp; Exporter 📤</button>
+<!-- ÉCRAN 3 : EXERCICES -->
+<div class="view" id="view-exercises">
+  <header>
+    <button class="back-btn small" onclick="goToSessionView()">← Séances</button>
+    <p class="app-title" id="exercises-profile-label"></p>
+  </header>
+
+  <main id="main-content"></main>
+
+  <div class="bottom-bar" id="bottom-bar">
+    <button class="bottom-btn btn-reset" onclick="askReset()">🔄</button>
+    <button class="bottom-btn btn-export" onclick="openExportModal()">Terminer &amp; Exporter 📤</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="export-modal">
@@ -233,7 +273,7 @@
 
 <div class="confirm-overlay" id="confirm-modal">
   <div class="confirm-box">
-    <p>Réinitialiser les données de la séance pour ce jour et ce profil ?</p>
+    <p>Réinitialiser les données de cette séance pour ce profil ?</p>
     <div class="confirm-actions">
       <button class="btn-cancel" onclick="closeConfirm()">Annuler</button>
       <button class="btn-confirm" onclick="doReset()">Réinitialiser</button>
@@ -270,7 +310,7 @@ const SESSIONS = [
     id: "s1",
     label: "Séance 1",
     title: "Bas du Corps (Quads & Fessiers)",
-    cardio: { name: "30 min Tapis incliné Zone 2" },
+    cardio: { name: "Tapis incliné Zone 2", targetMinutes: 30 },
     exercises: [
       { name:"Squat (Barre au rack)", sets:4, target:{corentin:"8-10 reps (Lourd)", lisa:"10-12 reps (Contrôlé)"} },
       { name:"Fentes arrière à la barre (Au rack)", sets:3, target:{corentin:"10 reps/jambe", lisa:"12 reps/jambe"} },
@@ -282,7 +322,7 @@ const SESSIONS = [
     id: "s2",
     label: "Séance 2",
     title: "Haut du Corps & Abdos",
-    cardio: { name: "30 min Tapis incliné Zone 2" },
+    cardio: { name: "Tapis incliné Zone 2", targetMinutes: 30 },
     exercises: [
       { name:"Tirage poitrine vertical (Lat Pulldown)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
       { name:"Développé couché / incliné (Haltères)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
@@ -294,7 +334,7 @@ const SESSIONS = [
     id: "s3",
     label: "Séance 3",
     title: "Bas du Corps (Fessiers & Ischios)",
-    cardio: { name: "30 min Tapis incliné Zone 2" },
+    cardio: { name: "Tapis incliné Zone 2", targetMinutes: 30 },
     exercises: [
       { name:"Hip Thrust (Barre ou machine)", sets:4, target:{corentin:"8-10 reps (Lourd)", lisa:"10-12 reps (Pause 1-2s haut)"} },
       { name:"Soulevé de terre jambes tendues / RDL", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
@@ -330,8 +370,8 @@ function dataKey(sessionId, profile){
 }
 function loadDayData(sessionId, profile){
   const raw = storage.get(dataKey(sessionId, profile));
-  if(!raw) return { sets:{}, cardioDone:false };
-  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, cardioDone:false }; }
+  if(!raw) return { sets:{}, cardioDone:false, cardioMinutes:'' };
+  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, cardioDone:false, cardioMinutes:'' }; }
 }
 function saveDayData(day, profile, data){
   storage.set(dataKey(day, profile), JSON.stringify(data));
@@ -345,36 +385,66 @@ function applyThemeColor(){
 function setProfile(profile){
   currentProfile = profile;
   storage.set("duo_profile", profile);
-  render();
+}
+
+function selectProfile(profile){
+  setProfile(profile);
+  applyThemeColor();
+  renderSessionList();
+  showView('view-session');
 }
 
 function setSession(sessionId){
   currentSessionId = sessionId;
   storage.set("duo_session", sessionId);
-  render();
 }
 
-function renderDayBar(){
-  const bar = document.getElementById('day-bar');
-  bar.innerHTML = '';
+function selectSession(sessionId){
+  setSession(sessionId);
+  const profileLabel = document.getElementById('exercises-profile-label');
+  profileLabel.textContent = (currentProfile === 'corentin' ? 'Corentin' : 'Lisa');
+  showView('view-exercises');
+  render();
+  adjustBottomSpacing();
+  setTimeout(adjustBottomSpacing, 300);
+}
+
+function goToProfileView(){
+  showView('view-profile');
+}
+
+function goToSessionView(){
+  renderSessionList();
+  showView('view-session');
+}
+
+function showView(viewId){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(viewId);
+  if(target) target.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function renderSessionList(){
+  const title = document.getElementById('session-view-title');
+  title.textContent = `Choisis ta séance — ${currentProfile === 'corentin' ? 'Corentin' : 'Lisa'}`;
+
+  const list = document.getElementById('session-list');
+  list.innerHTML = '';
   SESSIONS.forEach(session => {
     const btn = document.createElement('button');
-    btn.className = 'day-btn' + (session.id === currentSessionId ? ' active' : '');
-    btn.textContent = session.label;
-    btn.onclick = () => setSession(session.id);
-    bar.appendChild(btn);
+    btn.className = 'session-btn' + (session.id === currentSessionId ? ' selected' : '');
+    btn.innerHTML = `
+      <span class="s-label">${session.label}</span>
+      <span class="s-subtitle">${session.title}</span>
+    `;
+    btn.onclick = () => selectSession(session.id);
+    list.appendChild(btn);
   });
-}
-
-function renderProfileButtons(){
-  document.getElementById('btn-corentin').classList.toggle('active', currentProfile === 'corentin');
-  document.getElementById('btn-lisa').classList.toggle('active', currentProfile === 'lisa');
 }
 
 function render(){
   applyThemeColor();
-  renderProfileButtons();
-  renderDayBar();
 
   const main = document.getElementById('main-content');
   main.innerHTML = '';
@@ -471,9 +541,26 @@ function render(){
     cardioCard.innerHTML = `
       <div class="label">
         <span class="icon">🏃</span>
-        <span class="name">${dayProgram.cardio.name}</span>
+        <div class="cardio-text">
+          <span class="name">${dayProgram.cardio.name}</span>
+          <span class="cardio-suggestion">Suggestion : ${dayProgram.cardio.targetMinutes} min</span>
+        </div>
       </div>
     `;
+
+    const minutesInput = document.createElement('input');
+    minutesInput.type = 'number';
+    minutesInput.inputMode = 'numeric';
+    minutesInput.className = 'cardio-minutes-input';
+    minutesInput.placeholder = 'min';
+    minutesInput.value = data.cardioMinutes || '';
+    minutesInput.oninput = () => {
+      const d = loadDayData(currentSessionId, currentProfile);
+      d.cardioMinutes = minutesInput.value;
+      saveDayData(currentSessionId, currentProfile, d);
+    };
+    cardioCard.appendChild(minutesInput);
+
     const cardioBtn = document.createElement('button');
     cardioBtn.className = 'check-btn' + (data.cardioDone ? ' checked' : '');
     cardioBtn.textContent = '✓';
@@ -496,7 +583,7 @@ function closeConfirm(){
   document.getElementById('confirm-modal').classList.remove('open');
 }
 function doReset(){
-  saveDayData(currentSessionId, currentProfile, { sets:{}, cardioDone:false });
+  saveDayData(currentSessionId, currentProfile, { sets:{}, cardioDone:false, cardioMinutes:'' });
   closeConfirm();
   render();
   showToast('Séance réinitialisée');
@@ -530,7 +617,8 @@ function buildExportText(){
   });
 
   if(dayProgram.cardio){
-    txt += `\nCardio : ${dayProgram.cardio.name} ${data.cardioDone ? '✅' : '❌'}\n`;
+    const minutesStr = data.cardioMinutes ? `${data.cardioMinutes} min` : 'non renseigné';
+    txt += `\nCardio : ${dayProgram.cardio.name} — ${minutesStr} ${data.cardioDone ? '✅' : '❌'}\n`;
   }
 
   return txt;
