@@ -111,6 +111,18 @@
     font-size:13px; font-weight:600; color:var(--accent);
   }
 
+  .variant-row{
+    display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .variant-btn{
+    flex:1 1 auto; min-width:0; padding:9px 8px; border-radius:10px;
+    border:1px solid var(--border); background:#26262e; color:var(--text-dim);
+    font-size:12.5px; font-weight:600; text-align:center; white-space:nowrap;
+  }
+  .variant-btn.selected{
+    background:var(--accent); border-color:var(--accent); color:#fff;
+  }
+
   .set-grid-header, .set-row{
     display:grid; grid-template-columns: 34px 1fr 1fr 44px;
     gap:8px; align-items:center;
@@ -304,6 +316,9 @@ const storage = {
 };
 
 /* ---------- DONNEES DU PROGRAMME ---------- */
+/* Options de variante proposées pour les exercices du haut du corps (haltères / poulie) */
+const UPPER_BODY_OPTIONS = ["Haltères", "Poulie unilatéral", "Poulie 2 mains"];
+
 /* Séances numérotées (indépendantes du jour de la semaine, pour s'adapter à un emploi du temps mobile) */
 const SESSIONS = [
   {
@@ -324,9 +339,9 @@ const SESSIONS = [
     title: "Haut du Corps & Abdos",
     cardio: { name: "Tapis incliné Zone 2", targetMinutes: 30 },
     exercises: [
-      { name:"Tirage poitrine vertical (Lat Pulldown)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
-      { name:"Développé couché / incliné (Haltères)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
-      { name:"Élévations latérales (Haltères)", sets:4, target:{corentin:"12-15 reps", lisa:"12-15 reps"} },
+      { name:"Tirage poitrine vertical (Lat Pulldown)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
+      { name:"Développé couché / incliné (Haltères)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
+      { name:"Élévations latérales (Haltères)", sets:4, target:{corentin:"12-15 reps", lisa:"12-15 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
       { name:"Circuit Abdos (Relevés de jambes 12-15r + Gainage 45s)", sets:3, target:{corentin:"3 tours", lisa:"3 tours"} }
     ]
   },
@@ -348,9 +363,9 @@ const SESSIONS = [
     title: "Haut du Corps & Abdos",
     cardio: null,
     exercises: [
-      { name:"Rowing poulie basse (Tirage horizontal)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
-      { name:"Développé militaire assis (Haltères)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"} },
-      { name:"Face Pulls (Poulie haute avec corde)", sets:3, target:{corentin:"12-15 reps", lisa:"12-15 reps"} },
+      { name:"Rowing poulie basse (Tirage horizontal)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
+      { name:"Développé militaire assis (Haltères)", sets:4, target:{corentin:"8-10 reps", lisa:"10-12 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
+      { name:"Face Pulls (Poulie haute avec corde)", sets:3, target:{corentin:"12-15 reps", lisa:"12-15 reps"}, equipmentOptions: UPPER_BODY_OPTIONS },
       { name:"Circuit Abdos (Crunchs 15-20r + Portefeuille 12-15r)", sets:3, target:{corentin:"3 tours", lisa:"3 tours"} }
     ]
   }
@@ -370,8 +385,8 @@ function dataKey(sessionId, profile){
 }
 function loadDayData(sessionId, profile){
   const raw = storage.get(dataKey(sessionId, profile));
-  if(!raw) return { sets:{}, cardioDone:false, cardioMinutes:'' };
-  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, cardioDone:false, cardioMinutes:'' }; }
+  if(!raw) return { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' };
+  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' }; }
 }
 function saveDayData(day, profile, data){
   storage.set(dataKey(day, profile), JSON.stringify(data));
@@ -462,6 +477,8 @@ function render(){
   subtitleEl.textContent = currentProfile === 'corentin' ? 'Profil : Corentin' : 'Profil : Lisa';
   main.appendChild(subtitleEl);
 
+  data.variants = data.variants || {};
+
   dayProgram.exercises.forEach((ex, exIdx) => {
     const card = document.createElement('div');
     card.className = 'exercise-card';
@@ -473,6 +490,27 @@ function render(){
       <div class="exercise-target">${ex.target[currentProfile]}</div>
     `;
     card.appendChild(head);
+
+    if(ex.equipmentOptions){
+      const variantRow = document.createElement('div');
+      variantRow.className = 'variant-row';
+      const selectedVariant = data.variants[exIdx] || '';
+
+      ex.equipmentOptions.forEach(option => {
+        const optBtn = document.createElement('button');
+        optBtn.className = 'variant-btn' + (selectedVariant === option ? ' selected' : '');
+        optBtn.textContent = option;
+        optBtn.onclick = () => {
+          const d = loadDayData(currentSessionId, currentProfile);
+          d.variants = d.variants || {};
+          d.variants[exIdx] = (d.variants[exIdx] === option) ? '' : option;
+          saveDayData(currentSessionId, currentProfile, d);
+          render();
+        };
+        variantRow.appendChild(optBtn);
+      });
+      card.appendChild(variantRow);
+    }
 
     const gridHeader = document.createElement('div');
     gridHeader.className = 'set-grid-header';
@@ -583,7 +621,7 @@ function closeConfirm(){
   document.getElementById('confirm-modal').classList.remove('open');
 }
 function doReset(){
-  saveDayData(currentSessionId, currentProfile, { sets:{}, cardioDone:false, cardioMinutes:'' });
+  saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' });
   closeConfirm();
   render();
   showToast('Séance réinitialisée');
@@ -597,6 +635,7 @@ function buildExportText(){
   const dateStr = today.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
 
   const data = loadDayData(currentSessionId, currentProfile);
+  data.variants = data.variants || {};
   let txt = `🏋️ BILAN DE SÉANCE\n`;
   txt += `Nom : ${profileName}\n`;
   txt += `Date : ${dateStr}\n`;
@@ -605,6 +644,9 @@ function buildExportText(){
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     txt += `\n${ex.name}\n`;
+    if(ex.equipmentOptions && data.variants[exIdx]){
+      txt += `Variante : ${data.variants[exIdx]}\n`;
+    }
     txt += `Cible : ${ex.target[currentProfile]}\n`;
     for(let s = 1; s <= ex.sets; s++){
       const setKey = `ex${exIdx}_set${s}`;
