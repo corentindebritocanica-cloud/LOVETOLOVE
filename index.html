@@ -1075,29 +1075,144 @@ function closeExportModal(){
 }
 function copyExport(){
   const textarea = document.getElementById('export-text');
-  textarea.select();
-  textarea.setSelectionRange(0, 999999);
+  copyTextToClipboard(textarea.value, textarea);
+}
+
+/* ---------- COPIE PRESSE-PAPIER (partagée) ---------- */
+function copyTextToClipboard(text, sourceTextarea){
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(textarea.value).then(() => {
+      navigator.clipboard.writeText(text).then(() => {
         showToast('Copié dans le presse-papier ✅');
       }).catch(() => {
-        fallbackCopy(textarea);
+        fallbackCopy(text, sourceTextarea);
       });
     } else {
-      fallbackCopy(textarea);
+      fallbackCopy(text, sourceTextarea);
     }
   }catch(e){
-    fallbackCopy(textarea);
+    fallbackCopy(text, sourceTextarea);
   }
 }
-function fallbackCopy(textarea){
+function fallbackCopy(text, sourceTextarea){
   try{
+    let ta = sourceTextarea;
+    let temp = false;
+    if(!ta){
+      ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      temp = true;
+    }
+    ta.select();
+    ta.setSelectionRange(0, 999999);
     document.execCommand('copy');
+    if(temp) document.body.removeChild(ta);
     showToast('Copié dans le presse-papier ✅');
   }catch(e){
     showToast('Copie impossible — sélectionne le texte manuellement');
   }
+}
+
+/* ---------- SÉANCE TERMINÉE (copier / archiver) ---------- */
+function openFinishModal(){
+  document.getElementById('finish-modal').classList.add('open');
+}
+function closeFinishModal(){
+  document.getElementById('finish-modal').classList.remove('open');
+}
+function finishCopy(){
+  const text = buildExportText();
+  copyTextToClipboard(text);
+  closeFinishModal();
+}
+function finishArchive(){
+  const dayProgram = getSession(currentSessionId);
+  const now = new Date();
+  const archive = {
+    id: 'arc_' + now.getTime(),
+    dateLabel: now.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' }),
+    timeLabel: now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }),
+    profile: currentProfile,
+    sessionId: currentSessionId,
+    sessionLabel: dayProgram.label,
+    sessionTitle: dayProgram.title,
+    exportText: buildExportText()
+  };
+
+  const key = `duo_archives_${currentProfile}`;
+  const raw = storage.get(key);
+  let list = [];
+  try{ list = raw ? JSON.parse(raw) : []; }catch(e){ list = []; }
+  list.unshift(archive);
+  storage.set(key, JSON.stringify(list));
+
+  saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' });
+
+  closeFinishModal();
+  showToast('Séance archivée 📦');
+  goToSessionView();
+}
+
+/* ---------- ARCHIVES ---------- */
+function getArchivesList(profile){
+  const raw = storage.get(`duo_archives_${profile}`);
+  if(!raw) return [];
+  try{ return JSON.parse(raw); }catch(e){ return []; }
+}
+function renderArchivesList(){
+  const profileName = currentProfile === 'corentin' ? 'Corentin' : 'Lisa';
+  document.getElementById('archives-view-title').textContent = `Archives — ${profileName}`;
+
+  const list = document.getElementById('archive-list');
+  list.innerHTML = '';
+  const archives = getArchivesList(currentProfile);
+
+  if(archives.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'archive-empty';
+    empty.textContent = 'Aucune séance archivée pour le moment.';
+    list.appendChild(empty);
+    return;
+  }
+
+  archives.forEach(arc => {
+    const item = document.createElement('div');
+    item.className = 'archive-item';
+    item.innerHTML = `
+      <div class="archive-info">
+        <span class="archive-date">${arc.dateLabel} · ${arc.timeLabel}</span>
+        <span class="archive-title">${arc.sessionLabel} — ${arc.sessionTitle}</span>
+      </div>
+      <div class="archive-actions">
+        <button class="archive-view-btn">Voir</button>
+        <button class="archive-delete-btn">🗑️</button>
+      </div>
+    `;
+    item.querySelector('.archive-view-btn').onclick = () => viewArchive(arc.id);
+    item.querySelector('.archive-delete-btn').onclick = () => askDeleteArchive(arc.id);
+    list.appendChild(item);
+  });
+}
+function viewArchive(id){
+  const archives = getArchivesList(currentProfile);
+  const arc = archives.find(a => a.id === id);
+  if(!arc) return;
+  document.getElementById('export-text').value = arc.exportText;
+  document.getElementById('motivation-line').textContent = `Archivée le ${arc.dateLabel} à ${arc.timeLabel}`;
+  document.getElementById('export-modal').classList.add('open');
+}
+function askDeleteArchive(id){
+  showConfirm('Supprimer définitivement cette séance archivée ?', () => deleteArchive(id));
+}
+function deleteArchive(id){
+  const key = `duo_archives_${currentProfile}`;
+  const list = getArchivesList(currentProfile).filter(a => a.id !== id);
+  storage.set(key, JSON.stringify(list));
+  renderArchivesList();
+  showToast('Archive supprimée');
 }
 
 /* ---------- TOAST ---------- */
