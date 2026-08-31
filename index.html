@@ -367,6 +367,45 @@
   .confirm-actions button{flex:1; padding:12px; border-radius:10px; border:none; font-weight:700; font-size:14px;}
   .btn-cancel{background:var(--card-2); color:var(--text); border:1px solid var(--border);}
   .btn-confirm{background:#ef4444; color:#fff;}
+
+  /* POPUP FIN DE SÉANCE */
+  .finish-box{ max-width:360px; padding:22px 20px; }
+  .finish-title{ font-size:18px; font-weight:800; margin:0 0 4px 0 !important; }
+  .finish-sub{ font-size:13px; color:var(--text-dim); margin:0 0 16px 0 !important; }
+  .finish-actions{ display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+  .finish-btn{
+    padding:15px 12px; border-radius:14px; border:1px solid var(--border);
+    font-size:15px; font-weight:700; text-align:center;
+  }
+  .finish-btn.copy{ background:var(--card-2); color:var(--text); }
+  .finish-btn.archive{ background:var(--accent); color:#fff; border-color:transparent; }
+  .btn-cancel-text{
+    background:none; border:none; color:var(--text-dim); font-size:13.5px;
+    font-weight:600; padding:6px; width:100%;
+  }
+
+  /* ARCHIVES */
+  .archive-list{ display:flex; flex-direction:column; gap:12px; }
+  .archive-empty{
+    text-align:center; color:var(--text-dim); font-size:14px; padding:30px 10px;
+  }
+  .archive-item{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:15px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .archive-info{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .archive-date{ font-size:12px; color:var(--text-dim); font-weight:600; }
+  .archive-title{ font-size:14.5px; font-weight:700; }
+  .archive-actions{ display:flex; gap:8px; flex:0 0 auto; }
+  .archive-view-btn{
+    padding:9px 14px; border-radius:10px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--text); font-size:13px; font-weight:700;
+  }
+  .archive-delete-btn{
+    width:36px; height:36px; border-radius:10px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--text-dim); font-size:14px;
+  }
 </style>
 </head>
 <body>
@@ -399,6 +438,15 @@
   </div>
 </div>
 
+<!-- ÉCRAN ARCHIVES -->
+<div class="view" id="view-archives">
+  <div class="view-inner">
+    <button class="back-btn" onclick="goToSessionView()">← Séances</button>
+    <h1 class="big-question" id="archives-view-title">Archives</h1>
+    <div class="archive-list" id="archive-list"></div>
+  </div>
+</div>
+
 <!-- ÉCRAN 3 : EXERCICES -->
 <div class="view" id="view-exercises">
   <header>
@@ -416,7 +464,7 @@
 
   <div class="bottom-bar" id="bottom-bar">
     <button class="bottom-btn btn-reset" onclick="askReset()">🔄</button>
-    <button class="bottom-btn btn-export" onclick="openExportModal()">Terminer &amp; Exporter 📤</button>
+    <button class="bottom-btn btn-export" onclick="openFinishModal()">Séance terminée ✅</button>
   </div>
 </div>
 
@@ -432,12 +480,25 @@
   </div>
 </div>
 
+<!-- POPUP FIN DE SÉANCE -->
+<div class="confirm-overlay" id="finish-modal">
+  <div class="confirm-box finish-box">
+    <p class="finish-title">Séance terminée 🏁</p>
+    <p class="finish-sub">Qu'est-ce que tu veux faire ?</p>
+    <div class="finish-actions">
+      <button class="finish-btn copy" onclick="finishCopy()">📋 Copier la séance</button>
+      <button class="finish-btn archive" onclick="finishArchive()">📦 Archiver la séance</button>
+    </div>
+    <button class="btn-cancel-text" onclick="closeFinishModal()">Annuler</button>
+  </div>
+</div>
+
 <div class="confirm-overlay" id="confirm-modal">
   <div class="confirm-box">
-    <p>Réinitialiser les données de cette séance pour ce profil ?</p>
+    <p id="confirm-message">Réinitialiser les données de cette séance pour ce profil ?</p>
     <div class="confirm-actions">
       <button class="btn-cancel" onclick="closeConfirm()">Annuler</button>
-      <button class="btn-confirm" onclick="doReset()">Réinitialiser</button>
+      <button class="btn-confirm" onclick="confirmAction()">Confirmer</button>
     </div>
   </div>
 </div>
@@ -632,6 +693,11 @@ function goToSessionView(){
   showView('view-session', 'back');
 }
 
+function goToArchivesView(){
+  renderArchivesList();
+  showView('view-archives', 'fwd');
+}
+
 function showView(viewId, direction){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'slide-fwd', 'slide-back'));
   const target = document.getElementById(viewId);
@@ -662,6 +728,19 @@ function renderSessionList(){
     btn.onclick = () => selectSession(session.id);
     list.appendChild(btn);
   });
+
+  const archiveCount = getArchivesList(currentProfile).length;
+  const archBtn = document.createElement('button');
+  archBtn.className = 'session-btn archive-entry';
+  archBtn.innerHTML = `
+    <span class="session-icon">📦</span>
+    <span class="session-text">
+      <span class="s-label">Archives</span>
+      <span class="s-subtitle">${archiveCount} séance${archiveCount > 1 ? 's' : ''} enregistrée${archiveCount > 1 ? 's' : ''}</span>
+    </span>
+  `;
+  archBtn.onclick = () => goToArchivesView();
+  list.appendChild(archBtn);
 }
 
 function updateSessionProgress(){
@@ -905,17 +984,30 @@ function render(){
   updateSessionProgress();
 }
 
-/* ---------- RESET ---------- */
-function askReset(){
+/* ---------- CONFIRMATION GÉNÉRIQUE ---------- */
+let pendingConfirmCallback = null;
+function showConfirm(message, onConfirm){
+  document.getElementById('confirm-message').textContent = message;
+  pendingConfirmCallback = onConfirm;
   document.getElementById('confirm-modal').classList.add('open');
 }
 function closeConfirm(){
   document.getElementById('confirm-modal').classList.remove('open');
+  pendingConfirmCallback = null;
+}
+function confirmAction(){
+  const cb = pendingConfirmCallback;
+  closeConfirm();
+  if(cb) cb();
+}
+
+/* ---------- RESET ---------- */
+function askReset(){
+  showConfirm('Réinitialiser les données de cette séance pour ce profil ?', doReset);
 }
 function doReset(){
   pushUndoSnapshot();
   saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' });
-  closeConfirm();
   render();
   showToast('Séance réinitialisée');
 }
