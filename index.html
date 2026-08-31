@@ -18,6 +18,22 @@
     --accent: var(--corentin);
     --shadow: 0 10px 28px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.3);
     --shadow-sm: 0 4px 14px rgba(0,0,0,0.3);
+    --glass-bar: rgba(28,28,34,0.85);
+    --glass-modal: rgba(28,28,34,0.92);
+    --reset-btn-bg: rgba(255,255,255,0.06);
+  }
+  html.light-mode{
+    --bg:#f1f1f4;
+    --card:#ffffff;
+    --card-2:#eceef1;
+    --border:rgba(0,0,0,0.08);
+    --text:#17171a;
+    --text-dim:#6b6b74;
+    --shadow: 0 10px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
+    --glass-bar: rgba(255,255,255,0.78);
+    --glass-modal: rgba(255,255,255,0.92);
+    --reset-btn-bg: rgba(0,0,0,0.05);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{
@@ -26,6 +42,7 @@
     font-family:-apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
     -webkit-font-smoothing:antialiased;
     -webkit-overflow-scrolling: touch;
+    transition: background .25s ease, color .25s ease;
   }
   /* grain subtil */
   body::before{
@@ -34,15 +51,26 @@
     opacity:0.035; mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
+  html.light-mode body::before{ opacity:0.015; }
 
   /* fond statique — texture plaque métallique (tôle larmée), tuile SVG sans jointure visible */
-  .diagonal-bg{
+  .metal-bg{
     position:fixed; inset:0; z-index:0; pointer-events:none;
     background-color:#1a1a1f;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232a2a30'/><stop offset='0.5' stop-color='%231b1b20'/><stop offset='1' stop-color='%232a2a30'/></linearGradient><linearGradient id='bar' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%235a5a66'/><stop offset='0.45' stop-color='%23323039'/><stop offset='1' stop-color='%231c1c22'/></linearGradient><g id='vgroup'><ellipse cx='-14' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='-7' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='0' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='7' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='14' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/></g></defs><rect width='80' height='80' fill='url(%23bg)'/><use href='%23vgroup' transform='translate(20,20)'/><use href='%23vgroup' transform='translate(60,20) rotate(90)'/><use href='%23vgroup' transform='translate(20,60) rotate(90)'/><use href='%23vgroup' transform='translate(60,60)'/></svg>");
     background-size: 80px 80px;
     background-repeat: repeat;
     opacity: 0.55;
+  }
+  html.light-mode .metal-bg{ opacity:0.06; filter:invert(1) brightness(1.6) contrast(0.9); }
+
+  /* bouton bascule de thème */
+  .theme-toggle{
+    position:fixed; top:14px; right:14px; z-index:25;
+    width:38px; height:38px; border-radius:50%;
+    background:var(--card); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; box-shadow: var(--shadow-sm);
   }
 
   body{
@@ -136,7 +164,11 @@
   header .back-btn.small{
     margin:0; padding:6px 0; flex:0 0 auto;
   }
-  header .app-title{ margin:0; }
+  header .app-title{ margin:0; flex:1; }
+  .undo-btn{
+    flex:0 0 auto; background:none; border:none; font-size:17px; padding:6px 4px;
+    opacity:0.85;
+  }
   .session-progress-track{
     height:5px; border-radius:4px; background:var(--card-2); overflow:hidden;
   }
@@ -146,6 +178,9 @@
   }
   .session-progress-label{
     font-size:11.5px; color:var(--text-dim); font-weight:600; margin:0;
+  }
+  .session-tonnage-label{
+    font-size:11px; color:var(--text-dim); font-weight:500; margin:0; opacity:0.8;
   }
 
   /* MAIN */
@@ -184,7 +219,7 @@
   }
 
   .set-grid-header, .set-row{
-    display:grid; grid-template-columns: 34px 1fr 1fr 44px;
+    display:grid; grid-template-columns: 30px 1fr 1fr 26px 44px;
     gap:8px; align-items:center;
   }
   .set-grid-header.circuit, .set-row.circuit{
@@ -202,12 +237,18 @@
   }
   .set-row input{
     width:100%; padding:10px 8px; border-radius:10px; border:1px solid var(--border);
-    background:#26262e; color:var(--text); font-size:16px; text-align:center;
+    background:var(--card-2); color:var(--text); font-size:16px; text-align:center;
     min-width:0;
   }
   .set-row input:focus{
     outline:none; border-color:var(--accent);
   }
+  .dup-btn{
+    width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
+    background:transparent; color:var(--text-dim); font-size:13px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .dup-btn:active{ color:var(--accent); border-color:var(--accent); }
   .check-btn{
     width:44px; height:44px; border-radius:12px; border:1px solid var(--border);
     background:var(--card-2); color:var(--text-dim); font-size:20px; font-weight:800;
@@ -238,14 +279,14 @@
   .cardio-suggestion{font-size:12px; color:var(--text-dim);}
   .cardio-minutes-input{
     width:64px; flex:0 0 auto; padding:10px 6px; border-radius:10px; border:1px solid var(--border);
-    background:#26262e; color:var(--text); font-size:16px; text-align:center;
+    background:var(--card-2); color:var(--text); font-size:16px; text-align:center;
   }
   .cardio-minutes-input:focus{ outline:none; border-color:var(--accent); }
 
   /* BOTTOM BAR */
   .bottom-bar{
     position:fixed; bottom:0; left:0; right:0; z-index:30;
-    background:rgba(28,28,34,0.75);
+    background:var(--glass-bar);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     backdrop-filter: blur(18px) saturate(160%);
     border-top:1px solid var(--border);
@@ -259,7 +300,7 @@
   }
   .bottom-btn:active{ transform:scale(0.97); }
   .btn-reset{
-    background:rgba(255,255,255,0.06); color:var(--text); border-color:var(--border); flex:0 0 56px;
+    background:var(--reset-btn-bg); color:var(--text); border-color:var(--border); flex:0 0 56px;
     font-size:20px;
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
@@ -277,7 +318,7 @@
   }
   .modal-overlay.open{display:flex;}
   .modal{
-    background:rgba(28,28,34,0.92);
+    background:var(--glass-modal);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     backdrop-filter: blur(20px) saturate(160%);
     width:100%; max-width:560px;
@@ -292,7 +333,7 @@
   }
   .modal textarea{
     width:100%; min-height:260px; resize:vertical;
-    background:#0f0f12; color:var(--text); border:1px solid var(--border);
+    background:var(--card-2); color:var(--text); border:1px solid var(--border);
     border-radius:12px; padding:12px; font-size:13px; line-height:1.5;
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   }
@@ -301,11 +342,11 @@
     flex:1; padding:13px 10px; border-radius:12px; border:none; font-size:14.5px; font-weight:700;
   }
   .btn-copy{background:var(--done); color:#fff;}
-  .btn-close-modal{background:#26262e; color:var(--text); border:1px solid var(--border);}
+  .btn-close-modal{background:var(--card-2); color:var(--text); border:1px solid var(--border);}
 
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:#26262e; color:var(--text); padding:10px 18px; border-radius:30px;
+    background:var(--card-2); color:var(--text); padding:10px 18px; border-radius:30px;
     font-size:13.5px; font-weight:600; border:1px solid var(--border);
     opacity:0; pointer-events:none; transition:all .25s ease; z-index:60;
     white-space:nowrap;
@@ -324,13 +365,14 @@
   .confirm-box p{margin:0 0 16px 0; font-size:14.5px; color:var(--text);}
   .confirm-actions{display:flex; gap:10px;}
   .confirm-actions button{flex:1; padding:12px; border-radius:10px; border:none; font-weight:700; font-size:14px;}
-  .btn-cancel{background:#26262e; color:var(--text); border:1px solid var(--border);}
+  .btn-cancel{background:var(--card-2); color:var(--text); border:1px solid var(--border);}
   .btn-confirm{background:#ef4444; color:#fff;}
 </style>
 </head>
 <body>
 
-<div class="diagonal-bg" aria-hidden="true"></div>
+<div class="metal-bg" aria-hidden="true"></div>
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 
 <!-- ÉCRAN 1 : CHOIX DU PROFIL -->
 <div class="view active" id="view-profile">
@@ -363,9 +405,11 @@
     <div class="header-row">
       <button class="back-btn small" onclick="goToSessionView()">← Séances</button>
       <p class="app-title" id="exercises-profile-label"></p>
+      <button class="undo-btn" onclick="undoLastAction()" aria-label="Annuler la dernière action">↩️</button>
     </div>
     <div class="session-progress-track"><div class="session-progress-fill" id="session-progress-fill"></div></div>
     <p class="session-progress-label" id="session-progress-label"></p>
+    <p class="session-tonnage-label" id="session-tonnage-label"></p>
   </header>
 
   <main id="main-content"></main>
@@ -419,6 +463,27 @@ const storage = {
     }catch(e){ /* fallback mémoire silencieux */ }
   }
 };
+
+/* ---------- THÈME CLAIR / SOMBRE ---------- */
+function applyTheme(theme){
+  document.documentElement.classList.toggle('light-mode', theme === 'light');
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const current = storage.get('duo_theme') || 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  storage.set('duo_theme', next);
+  applyTheme(next);
+}
+applyTheme(storage.get('duo_theme') || 'dark');
+
+/* ---------- VIBRATION (retour haptique à la validation) ---------- */
+function vibrate(){
+  try{
+    if(navigator.vibrate) navigator.vibrate(15);
+  }catch(e){ /* API non supportée, ignoré silencieusement */ }
+}
 
 /* ---------- DONNEES DU PROGRAMME ---------- */
 /* Icônes de groupe musculaire (SVG inline, dessinées pour l'app) */
@@ -501,6 +566,29 @@ function saveDayData(day, profile, data){
   storage.set(dataKey(day, profile), JSON.stringify(data));
 }
 
+/* ---------- ANNULER LA DERNIÈRE ACTION ---------- */
+const undoStacks = {}; // { "sessionId_profile": [snapshot1, snapshot2, ...] }
+function pushUndoSnapshot(){
+  const key = dataKey(currentSessionId, currentProfile);
+  if(!undoStacks[key]) undoStacks[key] = [];
+  undoStacks[key].push(JSON.stringify(loadDayData(currentSessionId, currentProfile)));
+  if(undoStacks[key].length > 25) undoStacks[key].shift();
+}
+function undoLastAction(){
+  const key = dataKey(currentSessionId, currentProfile);
+  const stack = undoStacks[key];
+  if(!stack || stack.length === 0){
+    showToast('Rien à annuler');
+    return;
+  }
+  const previous = stack.pop();
+  try{
+    storage.set(key, previous);
+  }catch(e){ /* ignore */ }
+  render();
+  showToast('Dernière action annulée ↩️');
+}
+
 /* ---------- RENDU ---------- */
 function applyThemeColor(){
   const isLisa = currentProfile === 'lisa';
@@ -579,13 +667,18 @@ function renderSessionList(){
 function updateSessionProgress(){
   const dayProgram = getSession(currentSessionId);
   const data = loadDayData(currentSessionId, currentProfile);
-  let total = 0, done = 0;
+  let total = 0, done = 0, tonnage = 0;
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     for(let s = 1; s <= ex.sets; s++){
       total++;
       const setData = data.sets[`ex${exIdx}_set${s}`];
       if(setData && setData.done) done++;
+      if(ex.logType !== 'circuit' && setData){
+        const w = parseFloat(setData.weight);
+        const r = parseFloat(setData.reps);
+        if(!isNaN(w) && !isNaN(r)) tonnage += w * r;
+      }
     }
   });
   if(dayProgram.cardio){
@@ -596,8 +689,13 @@ function updateSessionProgress(){
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const fill = document.getElementById('session-progress-fill');
   const label = document.getElementById('session-progress-label');
+  const tonnageLabel = document.getElementById('session-tonnage-label');
   if(fill) fill.style.width = pct + '%';
   if(label) label.textContent = `${done} / ${total} validés`;
+  if(tonnageLabel){
+    const formatted = Math.round(tonnage).toLocaleString('fr-FR');
+    tonnageLabel.textContent = tonnage > 0 ? `💪 ${formatted} kg soulevés cette séance` : '';
+  }
 }
 
 function render(){
@@ -643,6 +741,7 @@ function render(){
         optBtn.className = 'variant-btn' + (selectedVariant === option ? ' selected' : '');
         optBtn.textContent = option;
         optBtn.onclick = () => {
+          pushUndoSnapshot();
           const d = loadDayData(currentSessionId, currentProfile);
           d.variants = d.variants || {};
           d.variants[exIdx] = (d.variants[exIdx] === option) ? '' : option;
@@ -660,7 +759,7 @@ function render(){
     gridHeader.className = isCircuit ? 'set-grid-header circuit' : 'set-grid-header';
     gridHeader.innerHTML = isCircuit
       ? `<span>Tour</span><span>✓</span>`
-      : `<span>#</span><span>Poids (kg)</span><span>Reps</span><span>✓</span>`;
+      : `<span>#</span><span>Poids (kg)</span><span>Reps</span><span></span><span>✓</span>`;
     card.appendChild(gridHeader);
 
     for(let s = 1; s <= ex.sets; s++){
@@ -681,6 +780,7 @@ function render(){
         weightInput.inputMode = 'decimal';
         weightInput.placeholder = 'kg';
         weightInput.value = savedSet.weight;
+        weightInput.onfocus = () => pushUndoSnapshot();
         weightInput.oninput = () => {
           const d = loadDayData(currentSessionId, currentProfile);
           d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
@@ -694,6 +794,7 @@ function render(){
         repsInput.inputMode = 'numeric';
         repsInput.placeholder = 'reps';
         repsInput.value = savedSet.reps;
+        repsInput.onfocus = () => pushUndoSnapshot();
         repsInput.oninput = () => {
           const d = loadDayData(currentSessionId, currentProfile);
           d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
@@ -701,12 +802,41 @@ function render(){
           saveDayData(currentSessionId, currentProfile, d);
         };
         row.appendChild(repsInput);
+
+        if(s > 1){
+          const dupBtn = document.createElement('button');
+          dupBtn.className = 'dup-btn';
+          dupBtn.textContent = '⇊';
+          dupBtn.title = 'Recopier la série précédente';
+          dupBtn.onclick = () => {
+            pushUndoSnapshot();
+            const prevKey = `ex${exIdx}_set${s-1}`;
+            const d = loadDayData(currentSessionId, currentProfile);
+            const prev = d.sets[prevKey];
+            if(prev){
+              d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
+              d.sets[setKey].weight = prev.weight;
+              d.sets[setKey].reps = prev.reps;
+              saveDayData(currentSessionId, currentProfile, d);
+              weightInput.value = prev.weight;
+              repsInput.value = prev.reps;
+              showToast('Série recopiée');
+            } else {
+              showToast('Rien à recopier');
+            }
+          };
+          row.appendChild(dupBtn);
+        } else {
+          const spacer = document.createElement('div');
+          row.appendChild(spacer);
+        }
       }
 
       const checkBtn = document.createElement('button');
       checkBtn.className = 'check-btn' + (savedSet.done ? ' checked' : '');
       checkBtn.textContent = '✓';
       checkBtn.onclick = () => {
+        pushUndoSnapshot();
         const d = loadDayData(currentSessionId, currentProfile);
         d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
         d.sets[setKey].done = !d.sets[setKey].done;
@@ -714,6 +844,7 @@ function render(){
         checkBtn.classList.toggle('checked', d.sets[setKey].done);
         if(d.sets[setKey].done){
           checkBtn.classList.remove('pulse'); void checkBtn.offsetWidth; checkBtn.classList.add('pulse');
+          vibrate();
         }
         updateSessionProgress();
       };
@@ -744,6 +875,7 @@ function render(){
     minutesInput.className = 'cardio-minutes-input';
     minutesInput.placeholder = 'min';
     minutesInput.value = data.cardioMinutes || '';
+    minutesInput.onfocus = () => pushUndoSnapshot();
     minutesInput.oninput = () => {
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioMinutes = minutesInput.value;
@@ -755,12 +887,14 @@ function render(){
     cardioBtn.className = 'check-btn' + (data.cardioDone ? ' checked' : '');
     cardioBtn.textContent = '✓';
     cardioBtn.onclick = () => {
+      pushUndoSnapshot();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioDone = !d.cardioDone;
       saveDayData(currentSessionId, currentProfile, d);
       cardioBtn.classList.toggle('checked', d.cardioDone);
       if(d.cardioDone){
         cardioBtn.classList.remove('pulse'); void cardioBtn.offsetWidth; cardioBtn.classList.add('pulse');
+        vibrate();
       }
       updateSessionProgress();
     };
@@ -779,6 +913,7 @@ function closeConfirm(){
   document.getElementById('confirm-modal').classList.remove('open');
 }
 function doReset(){
+  pushUndoSnapshot();
   saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, cardioDone:false, cardioMinutes:'' });
   closeConfirm();
   render();
