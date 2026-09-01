@@ -293,7 +293,8 @@
   .cardio-text{display:flex; flex-direction:column; gap:2px; min-width:0;}
   .cardio-card .name{font-weight:700; font-size:15px;}
   .cardio-suggestion{font-size:12px; color:var(--text-dim);}
-  .cardio-fields-row{ display:flex; gap:10px; }
+  .cardio-fields-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cardio-field{ min-width:88px; }
   .cardio-field{ flex:1; display:flex; flex-direction:column; gap:5px; }
   .cardio-field-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
   .cardio-minutes-input{
@@ -861,8 +862,8 @@ function dataKey(sessionId, profile){
 }
 function loadDayData(sessionId, profile){
   const raw = storage.get(dataKey(sessionId, profile));
-  if(!raw) return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioCalories:'' };
-  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioCalories:'' }; }
+  if(!raw) return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' };
+  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' }; }
 }
 function saveDayData(day, profile, data){
   storage.set(dataKey(day, profile), JSON.stringify(data));
@@ -1314,29 +1315,73 @@ function render(){
     minutesField.appendChild(minutesInput);
     fieldsRow.appendChild(minutesField);
 
-    const caloriesField = document.createElement('div');
-    caloriesField.className = 'cardio-field';
-    const caloriesFieldLabel = document.createElement('span');
-    caloriesFieldLabel.className = 'cardio-field-label';
-    caloriesFieldLabel.textContent = 'Calories (montre)';
-    caloriesField.appendChild(caloriesFieldLabel);
+    const inclineField = document.createElement('div');
+    inclineField.className = 'cardio-field';
+    const inclineFieldLabel = document.createElement('span');
+    inclineFieldLabel.className = 'cardio-field-label';
+    inclineFieldLabel.textContent = '% Inclinaison';
+    inclineField.appendChild(inclineFieldLabel);
 
-    const caloriesInput = document.createElement('input');
-    caloriesInput.type = 'number';
-    caloriesInput.inputMode = 'numeric';
-    caloriesInput.className = 'cardio-minutes-input';
-    caloriesInput.placeholder = 'kcal';
-    caloriesInput.value = data.cardioCalories || '';
-    caloriesInput.onfocus = () => pushUndoSnapshot();
-    caloriesInput.oninput = () => {
+    const inclineInput = document.createElement('input');
+    inclineInput.type = 'number';
+    inclineInput.inputMode = 'numeric';
+    inclineInput.className = 'cardio-minutes-input';
+    inclineInput.placeholder = '%';
+    inclineInput.value = data.cardioIncline || '';
+    inclineInput.onfocus = () => pushUndoSnapshot();
+    inclineInput.oninput = () => {
       const d = loadDayData(currentSessionId, currentProfile);
-      d.cardioCalories = caloriesInput.value;
+      d.cardioIncline = inclineInput.value;
       saveDayData(currentSessionId, currentProfile, d);
     };
-    caloriesField.appendChild(caloriesInput);
-    fieldsRow.appendChild(caloriesField);
+    inclineField.appendChild(inclineInput);
+    fieldsRow.appendChild(inclineField);
+
+    const speedField = document.createElement('div');
+    speedField.className = 'cardio-field';
+    const speedFieldLabel = document.createElement('span');
+    speedFieldLabel.className = 'cardio-field-label';
+    speedFieldLabel.textContent = 'Vitesse';
+    speedField.appendChild(speedFieldLabel);
+
+    const speedInput = document.createElement('input');
+    speedInput.type = 'text';
+    speedInput.inputMode = 'decimal';
+    speedInput.className = 'cardio-minutes-input';
+    speedInput.placeholder = 'ex: 5';
+    speedInput.value = data.cardioSpeed || '';
+    speedInput.onfocus = () => pushUndoSnapshot();
+    speedInput.oninput = () => {
+      const d = loadDayData(currentSessionId, currentProfile);
+      d.cardioSpeed = speedInput.value;
+      saveDayData(currentSessionId, currentProfile, d);
+    };
+    speedField.appendChild(speedInput);
+    fieldsRow.appendChild(speedField);
 
     cardioCard.appendChild(fieldsRow);
+
+    const cardioNoteWrap = document.createElement('div');
+    cardioNoteWrap.className = 'note-wrap';
+    const cardioNoteLabel = document.createElement('span');
+    cardioNoteLabel.className = 'note-label';
+    cardioNoteLabel.textContent = '🗒️ Info';
+    cardioNoteWrap.appendChild(cardioNoteLabel);
+
+    const cardioNoteInput = document.createElement('textarea');
+    cardioNoteInput.className = 'note-input';
+    cardioNoteInput.rows = 1;
+    cardioNoteInput.placeholder = "Sensation, essoufflement, raison d'un cardio écourté... (optionnel)";
+    cardioNoteInput.value = data.cardioNote || '';
+    cardioNoteInput.onfocus = () => pushUndoSnapshot();
+    cardioNoteInput.oninput = () => {
+      const d = loadDayData(currentSessionId, currentProfile);
+      d.cardioNote = cardioNoteInput.value;
+      saveDayData(currentSessionId, currentProfile, d);
+    };
+    cardioNoteWrap.appendChild(cardioNoteInput);
+    cardioCard.appendChild(cardioNoteWrap);
+
     main.appendChild(cardioCard);
   }
 
@@ -1366,7 +1411,7 @@ function askReset(){
 }
 function doReset(){
   pushUndoSnapshot();
-  saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioCalories:'' });
+  saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' });
   render();
   showToast('Séance réinitialisée');
 }
@@ -1412,8 +1457,12 @@ function buildExportText(){
 
   if(dayProgram.cardio){
     const minutesStr = data.cardioMinutes !== '' && data.cardioMinutes != null ? `${data.cardioMinutes} min` : 'non renseigné';
-    const caloriesStr = data.cardioCalories !== '' && data.cardioCalories != null ? `${data.cardioCalories} kcal` : 'non renseigné';
-    txt += `\nCardio : ${dayProgram.cardio.name} — ${minutesStr}, ${caloriesStr} ${data.cardioDone ? '✅' : '❌'}\n`;
+    const inclineStr = data.cardioIncline !== '' && data.cardioIncline != null ? `${data.cardioIncline}% inclinaison` : 'inclinaison non renseignée';
+    const speedStr = data.cardioSpeed !== '' && data.cardioSpeed != null ? `vitesse ${data.cardioSpeed}` : 'vitesse non renseignée';
+    txt += `\nCardio : ${dayProgram.cardio.name} — ${minutesStr}, ${inclineStr}, ${speedStr} ${data.cardioDone ? '✅' : '❌'}\n`;
+    if(data.cardioNote && data.cardioNote.trim() !== ''){
+      txt += `  🗒️ Info : ${data.cardioNote.trim()}\n`;
+    }
   }
 
   return txt;
@@ -1518,7 +1567,7 @@ function finishArchive(){
   const { db, doc, setDoc } = window.__fb;
   setDoc(doc(db, 'archives', archive.id), archive)
     .then(() => {
-      saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioCalories:'' });
+      saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' });
       closeFinishModal();
       showToast('Séance archivée 📦');
       goToSessionView();
