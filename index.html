@@ -131,10 +131,6 @@
   .session-list{
     display:flex; flex-direction:column; gap:14px;
   }
-  .seed-link{
-    margin-top:16px; background:none; border:none; color:var(--text-dim);
-    font-size:12.5px; text-decoration:underline; padding:8px;
-  }
   .session-btn{
     padding:18px; border-radius:18px; border:1px solid var(--border);
     background:var(--card); color:var(--text); text-align:left;
@@ -439,7 +435,6 @@
     <button class="back-btn" onclick="goToProfileView()">← Retour</button>
     <h1 class="big-question" id="session-view-title">Choisis ta séance</h1>
     <div class="session-list" id="session-list"></div>
-    <button class="seed-link" id="seed-link" onclick="seedFirstSessions()">📥 Importer les séances du 31/08</button>
   </div>
 </div>
 
@@ -1280,98 +1275,6 @@ window.addEventListener('archives-updated', () => {
   if(activeView.id === 'view-session') renderSessionList();
   if(activeView.id === 'view-archives') renderArchivesList();
 });
-
-/* ---------- IMPORT PONCTUEL DES SÉANCES DU 31/08 (à retirer une fois fait) ---------- */
-function seedFirstSessions(){
-  if(!window.__fb){
-    showToast('Connexion au cloud en cours, réessaie dans un instant');
-    return;
-  }
-  const createdAt = new Date('2026-08-31T12:00:00').getTime();
-
-  const lisaText = `🏋️ BILAN DE SÉANCE
-Nom : Lisa
-Date : 31/08/2026
-Séance : Séance 1 — Bas du Corps (Quads & Fessiers)
-------------------------------
-
-Squat (Barre au rack)
-Cible : 10-12 reps (Contrôlé)
-Série 1 : 30 kg x 12 reps ✅
-Série 2 : 30 kg x 12 reps ✅
-Série 3 : 30 kg x 12 reps ✅
-Série 4 : 30 kg x 12 reps ✅
-
-Fentes arrière à la barre (Au rack)
-Cible : 12 reps/jambe
-Série 1 : 20 kg x 12 reps ✅
-Série 2 : 20 kg x 12 reps ✅
-Série 3 : 20 kg x 12 reps ✅
-
-Leg Extension (Machine)
-Cible : 12-15 reps
-Série 1 : 11 kg x 12 reps ✅
-Série 2 : 11 kg x 12 reps ✅
-Série 3 : 11 kg x 12 reps ✅
-
-Leg Curl (Machine)
-Cible : 12-15 reps
-Série 1 : 11 kg x 15 reps ✅
-Série 2 : 18 kg x 15 reps ✅
-Série 3 : 18 kg x 15 reps ✅
-
-Cardio : Tapis incliné Zone 2 — 15 min ✅ (inclinaison 12 et vitesse 4,5 et 5)`;
-
-  const corentinText = `🏋️ BILAN DE SÉANCE
-Nom : Corentin
-Date : 31/08/2026
-Séance : Séance 1 — Bas du Corps (Quads & Fessiers)
-------------------------------
-
-Squat (Barre au rack)
-Cible : 8-10 reps (Lourd)
-Série 1 : 50 kg x 10 reps ✅
-Série 2 : 70 kg x 8 reps ✅
-Série 3 : 80 kg x 6 reps ✅
-Série 4 : 70 kg x 10 reps ✅
-
-Fentes arrière à la barre (Au rack)
-Cible : 10 reps/jambe
-Série 1 : 40 kg x 20 reps ✅
-Série 2 : 30 kg x 10 reps ✅
-Série 3 : 0 kg x 0 reps ✅
-
-Leg Extension (Machine)
-Cible : 10-12 reps
-Série 1 : 32 kg x 10 reps ✅
-Série 2 : 32 kg x 12 reps ✅
-Série 3 : 32 kg x 10 reps ✅
-
-Leg Curl (Machine)
-Cible : 10-12 reps
-Série 1 : 33 kg x 12 reps ✅
-Série 2 : 39 kg x 10 reps ✅
-Série 3 : 39 kg x 10 reps ✅
-
-Cardio : Tapis incliné Zone 2 — 7 min ✅`;
-
-  const archives = [
-    { id:'seed_lisa_20260831_s1', profile:'lisa', sessionId:'s1', sessionLabel:'Séance 1', sessionTitle:'Bas du Corps (Quads & Fessiers)', dateLabel:'31/08/2026', timeLabel:'—', createdAt, exportText: lisaText },
-    { id:'seed_corentin_20260831_s1', profile:'corentin', sessionId:'s1', sessionLabel:'Séance 1', sessionTitle:'Bas du Corps (Quads & Fessiers)', dateLabel:'31/08/2026', timeLabel:'—', createdAt, exportText: corentinText }
-  ];
-
-  const { db, doc, setDoc } = window.__fb;
-  Promise.all(archives.map(arc => setDoc(doc(db, 'archives', arc.id), arc)))
-    .then(() => {
-      showToast('Séances du 31/08 importées ✅');
-      const link = document.getElementById('seed-link');
-      if(link) link.remove();
-    })
-    .catch((err) => {
-      console.error('Erreur import Firestore', err);
-      showToast("Échec de l'import — vérifie ta connexion");
-    });
-}
 
 /* ---------- TOAST ---------- */
 let toastTimer;
