@@ -6,34 +6,34 @@
 <title>Duo Training — Corentin & Lisa</title>
 <style>
   :root{
-    --bg:#0d0d10;
-    --card:#1c1c22;
-    --card-2:#222229;
-    --border:rgba(255,255,255,0.07);
-    --corentin:#3b82f6;
-    --lisa:#ec4899;
-    --done:#10b981;
-    --text:#f5f5f7;
-    --text-dim:#96969f;
+    --bg:#0b0b0e;
+    --card:#1a1a20;
+    --card-2:#242429;
+    --border:rgba(255,255,255,0.08);
+    --corentin:#4c8dfb;
+    --lisa:#f2599e;
+    --done:#12b981;
+    --text:#f6f6f8;
+    --text-dim:#94949e;
     --accent: var(--corentin);
-    --shadow: 0 10px 28px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.3);
-    --shadow-sm: 0 4px 14px rgba(0,0,0,0.3);
-    --glass-bar: rgba(28,28,34,0.85);
-    --glass-modal: rgba(28,28,34,0.92);
-    --reset-btn-bg: rgba(255,255,255,0.06);
+    --shadow: 0 14px 32px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.28);
+    --shadow-sm: 0 6px 16px rgba(0,0,0,0.28);
+    --glass-bar: rgba(24,24,29,0.86);
+    --glass-modal: rgba(24,24,29,0.94);
+    --reset-btn-bg: rgba(255,255,255,0.07);
   }
   html.light-mode{
-    --bg:#f1f1f4;
+    --bg:#f4f4f7;
     --card:#ffffff;
-    --card-2:#eceef1;
-    --border:rgba(0,0,0,0.08);
-    --text:#17171a;
-    --text-dim:#6b6b74;
-    --shadow: 0 10px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
-    --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
-    --glass-bar: rgba(255,255,255,0.78);
-    --glass-modal: rgba(255,255,255,0.92);
-    --reset-btn-bg: rgba(0,0,0,0.05);
+    --card-2:#f0f0f3;
+    --border:rgba(15,15,20,0.09);
+    --text:#15151a;
+    --text-dim:#6c6c76;
+    --shadow: 0 14px 28px rgba(20,20,30,0.09), 0 2px 8px rgba(20,20,30,0.05);
+    --shadow-sm: 0 6px 14px rgba(20,20,30,0.07);
+    --glass-bar: rgba(255,255,255,0.82);
+    --glass-modal: rgba(255,255,255,0.94);
+    --reset-btn-bg: rgba(15,15,20,0.05);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{
@@ -44,25 +44,6 @@
     -webkit-overflow-scrolling: touch;
     transition: background .25s ease, color .25s ease;
   }
-  /* grain subtil */
-  body::before{
-    content:"";
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    opacity:0.035; mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  }
-  html.light-mode body::before{ opacity:0.015; }
-
-  /* fond statique — texture plaque métallique (tôle larmée), tuile SVG sans jointure visible */
-  .metal-bg{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-color:#1a1a1f;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%232a2a30'/><stop offset='0.5' stop-color='%231b1b20'/><stop offset='1' stop-color='%232a2a30'/></linearGradient><linearGradient id='bar' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%235a5a66'/><stop offset='0.45' stop-color='%23323039'/><stop offset='1' stop-color='%231c1c22'/></linearGradient><g id='vgroup'><ellipse cx='-14' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='-7' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='0' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='7' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/><ellipse cx='14' cy='0' rx='1.7' ry='13' fill='url(%23bar)' stroke='%23000000' stroke-opacity='0.55' stroke-width='0.6'/></g></defs><rect width='80' height='80' fill='url(%23bg)'/><use href='%23vgroup' transform='translate(20,20)'/><use href='%23vgroup' transform='translate(60,20) rotate(90)'/><use href='%23vgroup' transform='translate(20,60) rotate(90)'/><use href='%23vgroup' transform='translate(60,60)'/></svg>");
-    background-size: 80px 80px;
-    background-repeat: repeat;
-    opacity: 0.55;
-  }
-  html.light-mode .metal-bg{ opacity:0.06; filter:invert(1) brightness(1.6) contrast(0.9); }
 
   /* bouton bascule de thème */
   .theme-toggle{
@@ -118,15 +99,15 @@
     background: rgba(255,255,255,0.05);
   }
   .big-choice-btn.corentin.selected{
-    border-color:var(--corentin); color:var(--corentin); background:rgba(59,130,246,0.1);
-    box-shadow: 0 10px 28px rgba(59,130,246,0.18), var(--shadow-sm);
+    border-color:var(--corentin); color:var(--corentin); background:rgba(76,141,251,0.1);
+    box-shadow: 0 10px 28px rgba(76,141,251,0.18), var(--shadow-sm);
   }
-  .big-choice-btn.corentin.selected .choice-icon{ background:rgba(59,130,246,0.18); }
+  .big-choice-btn.corentin.selected .choice-icon{ background:rgba(76,141,251,0.18); }
   .big-choice-btn.lisa.selected{
-    border-color:var(--lisa); color:var(--lisa); background:rgba(236,72,153,0.1);
-    box-shadow: 0 10px 28px rgba(236,72,153,0.18), var(--shadow-sm);
+    border-color:var(--lisa); color:var(--lisa); background:rgba(242,89,158,0.1);
+    box-shadow: 0 10px 28px rgba(242,89,158,0.18), var(--shadow-sm);
   }
-  .big-choice-btn.lisa.selected .choice-icon{ background:rgba(236,72,153,0.18); }
+  .big-choice-btn.lisa.selected .choice-icon{ background:rgba(242,89,158,0.18); }
 
   .session-list{
     display:flex; flex-direction:column; gap:14px;
@@ -326,7 +307,7 @@
     backdrop-filter: blur(8px);
   }
   .btn-export{
-    background:rgba(var(--accent-rgb, 59,130,246), 0.28); color:#fff; border-color:rgba(255,255,255,0.12);
+    background:rgba(var(--accent-rgb, 76,141,251), 0.28); color:#fff; border-color:rgba(255,255,255,0.12);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
   }
@@ -430,7 +411,6 @@
 </head>
 <body>
 
-<div class="metal-bg" aria-hidden="true"></div>
 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 
 <!-- ÉCRAN 1 : CHOIX DU PROFIL -->
@@ -716,7 +696,7 @@ function undoLastAction(){
 function applyThemeColor(){
   const isLisa = currentProfile === 'lisa';
   document.documentElement.style.setProperty('--accent', isLisa ? 'var(--lisa)' : 'var(--corentin)');
-  document.documentElement.style.setProperty('--accent-rgb', isLisa ? '236,72,153' : '59,130,246');
+  document.documentElement.style.setProperty('--accent-rgb', isLisa ? '242,89,158' : '76,141,251');
 }
 
 function setProfile(profile){
