@@ -108,6 +108,12 @@
     box-shadow: 0 10px 28px rgba(242,89,158,0.18), var(--shadow-sm);
   }
   .big-choice-btn.lisa.selected .choice-icon{ background:rgba(242,89,158,0.18); }
+  .big-choice-btn.build{
+    border-style:dashed; font-size:16px; opacity:0.9;
+  }
+  .big-choice-btn.build:active{
+    border-color:var(--text-dim); color:var(--text); background:var(--card-2);
+  }
 
   .session-list{
     display:flex; flex-direction:column; gap:14px;
@@ -132,6 +138,12 @@
     border-color:var(--accent);
   }
   .session-btn.selected .session-icon{ background:rgba(255,255,255,0.1); }
+  .custom-session-row{ cursor:pointer; }
+  .custom-session-delete{
+    flex:0 0 auto; width:34px; height:34px; border-radius:10px;
+    border:1px solid var(--border); background:var(--card-2); color:var(--text-dim);
+    font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
 
   /* HEADER ÉCRAN EXERCICES */
   header{
@@ -385,6 +397,52 @@
     font-weight:600; padding:6px; width:100%;
   }
 
+  /* BUILD TRAINING */
+  .builder-field{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .builder-label{ font-size:12.5px; color:var(--text-dim); font-weight:700; }
+  .builder-input{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--text); font-size:15px; font-family:inherit;
+  }
+  .builder-input:focus{ outline:none; border-color:var(--accent); }
+  .builder-toggle-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 16px; background:var(--card); border:1px solid var(--border);
+    border-radius:14px; margin-top:6px;
+  }
+  .builder-checkbox{ width:20px; height:20px; accent-color:var(--accent); flex:0 0 auto; }
+  .builder-exercises{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+  .builder-exercise-card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:14px; display:flex; flex-direction:column; gap:10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .builder-exercise-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .builder-exercise-num{ font-size:12px; color:var(--text-dim); font-weight:700; }
+  .builder-remove-btn{
+    width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
+    background:transparent; color:var(--text-dim); font-size:13px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .builder-exercise-row{ display:flex; flex-direction:column; gap:5px; }
+  .builder-exercise-row .mini-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
+  .builder-exercise-row input{
+    width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--text); font-size:14px; font-family:inherit;
+  }
+  .builder-exercise-row input:focus{ outline:none; border-color:var(--accent); }
+  .builder-reps-row{ display:flex; gap:10px; }
+  .builder-reps-row .builder-exercise-row{ flex:1; }
+  .builder-add-btn{
+    padding:13px; border-radius:12px; border:1px dashed var(--border);
+    background:transparent; color:var(--text-dim); font-size:14px; font-weight:700;
+    margin-top:14px;
+  }
+  .builder-save-btn{
+    padding:15px; border-radius:14px; border:none; margin-top:20px;
+    background:var(--accent); color:#fff; font-size:15.5px; font-weight:800;
+  }
+
   /* ARCHIVES */
   .archive-list{ display:flex; flex-direction:column; gap:12px; }
   .archive-empty{
@@ -426,6 +484,10 @@
       <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.6 3.1-6.4 7-6.4s7 2.8 7 6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
       Lisa
     </button>
+    <button class="big-choice-btn build" onclick="goToBuilderView()">
+      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14.5 3.5a3 3 0 0 0-4.2 3.6L4 13.4V17h3.6l6.3-6.3a3 3 0 0 0 3.6-4.2l-2.1 2.1-1.8-1.8 2.1-2.1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      Build Training
+    </button>
   </div>
 </div>
 
@@ -435,6 +497,30 @@
     <button class="back-btn" onclick="goToProfileView()">← Retour</button>
     <h1 class="big-question" id="session-view-title">Choisis ta séance</h1>
     <div class="session-list" id="session-list"></div>
+  </div>
+</div>
+
+<!-- ÉCRAN BUILD TRAINING -->
+<div class="view" id="view-builder">
+  <div class="view-inner">
+    <button class="back-btn" onclick="goToProfileView()">← Retour</button>
+    <h1 class="big-question">Créer une séance</h1>
+
+    <div class="builder-field">
+      <span class="builder-label">Nom de la séance</span>
+      <input type="text" id="builder-name" class="builder-input" placeholder="ex: Bras & Épaules">
+    </div>
+
+    <label class="builder-toggle-row">
+      <span class="builder-label">Inclure le cardio (Tapis incliné Zone 2)</span>
+      <input type="checkbox" id="builder-cardio" class="builder-checkbox">
+    </label>
+
+    <div class="builder-exercises" id="builder-exercises"></div>
+
+    <button class="builder-add-btn" onclick="addBuilderExercise()">+ Ajouter un exercice</button>
+
+    <button class="builder-save-btn" onclick="saveCustomSession()">Enregistrer la séance ✅</button>
   </div>
 </div>
 
@@ -524,6 +610,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const archivesCol = collection(db, 'archives');
+  const customSessionsCol = collection(db, 'customSessions');
 
   // Pont vers le script principal (non-module)
   window.__fb = { db, doc, setDoc, deleteDoc };
@@ -540,11 +627,22 @@
   }, (error) => {
     console.error('Erreur de synchronisation Firestore', error);
   });
+
+  onSnapshot(customSessionsCol, (snapshot) => {
+    const all = [];
+    snapshot.forEach(d => all.push(d.data()));
+    all.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    window.customSessionsCache = all;
+    window.dispatchEvent(new Event('custom-sessions-updated'));
+  }, (error) => {
+    console.error('Erreur de synchronisation Firestore (customSessions)', error);
+  });
 </script>
 
 <script>
 /* valeur par défaut le temps que Firebase se connecte, pour éviter toute erreur */
 if(!window.archivesCache) window.archivesCache = { corentin: [], lisa: [] };
+if(!window.customSessionsCache) window.customSessionsCache = [];
 </script>
 
 <script>
@@ -592,6 +690,7 @@ function vibrate(){
 /* Icônes de groupe musculaire (SVG inline, dessinées pour l'app) */
 const ICON_LEGS = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 3h3v9l-1.5 9h-3l1-9-1-9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 3h3v9l1 9h-3l-1.5-9V3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 const ICON_UPPER = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="4.5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6"/><circle cx="19.5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M6.7 12h10.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 12v0M15 12v0" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>`;
+const ICON_CUSTOM = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14.5 3.5a3 3 0 0 0-4.2 3.6L4 13.4V17h3.6l6.3-6.3a3 3 0 0 0 3.6-4.2l-2.1 2.1-1.8-1.8 2.1-2.1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 
 /* Options de variante proposées pour les exercices du haut du corps (haltères / poulie) */
 const UPPER_BODY_OPTIONS = ["Haltères", "Poulie unilatéral", "Poulie 2 mains"];
@@ -649,7 +748,14 @@ const SESSIONS = [
 ];
 
 function getSession(id){
-  return SESSIONS.find(s => s.id === id) || SESSIONS[0];
+  const fixed = SESSIONS.find(s => s.id === id);
+  if(fixed) return fixed;
+  const custom = (window.customSessionsCache || []).find(s => s.id === id);
+  if(custom) return custom;
+  return SESSIONS[0];
+}
+function getAllSelectableSessions(){
+  return SESSIONS.concat(window.customSessionsCache || []);
 }
 
 /* ---------- ETAT ---------- */
@@ -740,6 +846,12 @@ function goToArchivesView(){
   showView('view-archives', 'fwd');
 }
 
+function goToBuilderView(){
+  resetBuilderDraft();
+  renderBuilderForm();
+  showView('view-builder', 'fwd');
+}
+
 function showView(viewId, direction){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'slide-fwd', 'slide-back'));
   const target = document.getElementById(viewId);
@@ -769,6 +881,31 @@ function renderSessionList(){
     `;
     btn.onclick = () => selectSession(session.id);
     list.appendChild(btn);
+  });
+
+  const customSessions = window.customSessionsCache || [];
+  customSessions.forEach(session => {
+    const row = document.createElement('div');
+    row.className = 'session-btn custom-session-row' + (session.id === currentSessionId ? ' selected' : '');
+    row.innerHTML = `
+      <span class="session-icon">${ICON_CUSTOM}</span>
+      <span class="session-text">
+        <span class="s-label">${session.label}</span>
+        <span class="s-subtitle">${session.title || 'Séance personnalisée'}</span>
+      </span>
+    `;
+    row.onclick = () => selectSession(session.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'custom-session-delete';
+    delBtn.textContent = '🗑️';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      askDeleteCustomSession(session.id);
+    };
+    row.appendChild(delBtn);
+
+    list.appendChild(row);
   });
 
   const archiveCount = getArchivesList(currentProfile).length;
@@ -1341,6 +1478,183 @@ window.addEventListener('archives-updated', () => {
   if(activeView.id === 'view-session') renderSessionList();
   if(activeView.id === 'view-archives') renderArchivesList();
 });
+window.addEventListener('custom-sessions-updated', () => {
+  const activeView = document.querySelector('.view.active');
+  if(!activeView) return;
+  if(activeView.id === 'view-session') renderSessionList();
+});
+
+/* ---------- BUILD TRAINING (création de séance personnalisée) ---------- */
+let builderDraft = { name: '', cardio: false, exercises: [] };
+
+function resetBuilderDraft(){
+  builderDraft = {
+    name: '',
+    cardio: false,
+    exercises: [ { name:'', sets:3, repsCorentin:'', repsLisa:'' } ]
+  };
+}
+
+function renderBuilderForm(){
+  document.getElementById('builder-name').value = builderDraft.name;
+  document.getElementById('builder-cardio').checked = builderDraft.cardio;
+
+  const container = document.getElementById('builder-exercises');
+  container.innerHTML = '';
+
+  builderDraft.exercises.forEach((ex, idx) => {
+    const card = document.createElement('div');
+    card.className = 'builder-exercise-card';
+
+    const head = document.createElement('div');
+    head.className = 'builder-exercise-head';
+    head.innerHTML = `<span class="builder-exercise-num">Exercice ${idx + 1}</span>`;
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'builder-remove-btn';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removeBuilderExercise(idx);
+    head.appendChild(removeBtn);
+    card.appendChild(head);
+
+    const nameRow = document.createElement('div');
+    nameRow.className = 'builder-exercise-row';
+    nameRow.innerHTML = `<span class="mini-label">Nom de l'exercice</span>`;
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'ex: Curl biceps (Haltères)';
+    nameInput.value = ex.name;
+    nameInput.oninput = () => { builderDraft.exercises[idx].name = nameInput.value; };
+    nameRow.appendChild(nameInput);
+    card.appendChild(nameRow);
+
+    const setsRow = document.createElement('div');
+    setsRow.className = 'builder-exercise-row';
+    setsRow.innerHTML = `<span class="mini-label">Nombre de séries</span>`;
+    const setsInput = document.createElement('input');
+    setsInput.type = 'number';
+    setsInput.inputMode = 'numeric';
+    setsInput.placeholder = '3';
+    setsInput.value = ex.sets;
+    setsInput.oninput = () => { builderDraft.exercises[idx].sets = setsInput.value; };
+    setsRow.appendChild(setsInput);
+    card.appendChild(setsRow);
+
+    const repsRow = document.createElement('div');
+    repsRow.className = 'builder-reps-row';
+
+    const repsCorentinRow = document.createElement('div');
+    repsCorentinRow.className = 'builder-exercise-row';
+    repsCorentinRow.innerHTML = `<span class="mini-label">Reps Corentin</span>`;
+    const repsCorentinInput = document.createElement('input');
+    repsCorentinInput.type = 'text';
+    repsCorentinInput.placeholder = 'ex: 8-10 reps';
+    repsCorentinInput.value = ex.repsCorentin;
+    repsCorentinInput.oninput = () => { builderDraft.exercises[idx].repsCorentin = repsCorentinInput.value; };
+    repsCorentinRow.appendChild(repsCorentinInput);
+    repsRow.appendChild(repsCorentinRow);
+
+    const repsLisaRow = document.createElement('div');
+    repsLisaRow.className = 'builder-exercise-row';
+    repsLisaRow.innerHTML = `<span class="mini-label">Reps Lisa</span>`;
+    const repsLisaInput = document.createElement('input');
+    repsLisaInput.type = 'text';
+    repsLisaInput.placeholder = 'ex: 10-12 reps';
+    repsLisaInput.value = ex.repsLisa;
+    repsLisaInput.oninput = () => { builderDraft.exercises[idx].repsLisa = repsLisaInput.value; };
+    repsLisaRow.appendChild(repsLisaInput);
+    repsRow.appendChild(repsLisaRow);
+
+    card.appendChild(repsRow);
+    container.appendChild(card);
+  });
+}
+
+function addBuilderExercise(){
+  builderDraft.name = document.getElementById('builder-name').value;
+  builderDraft.cardio = document.getElementById('builder-cardio').checked;
+  builderDraft.exercises.push({ name:'', sets:3, repsCorentin:'', repsLisa:'' });
+  renderBuilderForm();
+}
+function removeBuilderExercise(idx){
+  builderDraft.name = document.getElementById('builder-name').value;
+  builderDraft.cardio = document.getElementById('builder-cardio').checked;
+  builderDraft.exercises.splice(idx, 1);
+  if(builderDraft.exercises.length === 0){
+    builderDraft.exercises.push({ name:'', sets:3, repsCorentin:'', repsLisa:'' });
+  }
+  renderBuilderForm();
+}
+
+function saveCustomSession(){
+  if(!window.__fb){
+    showToast('Connexion au cloud en cours, réessaie dans un instant');
+    return;
+  }
+
+  const name = document.getElementById('builder-name').value.trim();
+  const cardioEnabled = document.getElementById('builder-cardio').checked;
+
+  if(name === ''){
+    showToast('Donne un nom à ta séance');
+    return;
+  }
+
+  const validExercises = builderDraft.exercises
+    .filter(ex => ex.name && ex.name.trim() !== '')
+    .map(ex => ({
+      name: ex.name.trim(),
+      sets: parseInt(ex.sets, 10) > 0 ? parseInt(ex.sets, 10) : 3,
+      target: {
+        corentin: ex.repsCorentin && ex.repsCorentin.trim() !== '' ? ex.repsCorentin.trim() : '—',
+        lisa: ex.repsLisa && ex.repsLisa.trim() !== '' ? ex.repsLisa.trim() : '—'
+      }
+    }));
+
+  if(validExercises.length === 0){
+    showToast('Ajoute au moins un exercice avec un nom');
+    return;
+  }
+
+  const now = Date.now();
+  const session = {
+    id: 'custom_' + now,
+    label: name,
+    title: 'Séance personnalisée',
+    createdAt: now,
+    exercises: validExercises,
+    cardio: cardioEnabled ? { name: 'Tapis incliné Zone 2', targetMinutes: 30 } : null
+  };
+
+  const { db, doc, setDoc } = window.__fb;
+  setDoc(doc(db, 'customSessions', session.id), session)
+    .then(() => {
+      showToast('Séance créée ✅');
+      goToProfileView();
+    })
+    .catch((err) => {
+      console.error('Erreur création séance Firestore', err);
+      showToast('Échec de la création — vérifie ta connexion');
+    });
+}
+
+function askDeleteCustomSession(id){
+  showConfirm('Supprimer définitivement cette séance personnalisée (pour Corentin et Lisa) ?', () => deleteCustomSession(id));
+}
+function deleteCustomSession(id){
+  if(!window.__fb){
+    showToast('Connexion au cloud en cours, réessaie dans un instant');
+    return;
+  }
+  const { db, doc, deleteDoc } = window.__fb;
+  deleteDoc(doc(db, 'customSessions', id))
+    .then(() => {
+      showToast('Séance personnalisée supprimée');
+    })
+    .catch((err) => {
+      console.error('Erreur suppression séance Firestore', err);
+      showToast('Échec de la suppression — vérifie ta connexion');
+    });
+}
 
 /* ---------- TOAST ---------- */
 let toastTimer;
