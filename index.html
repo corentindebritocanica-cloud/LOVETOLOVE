@@ -53,6 +53,12 @@
     display:flex; align-items:center; justify-content:center;
     font-size:16px; box-shadow: var(--shadow-sm);
   }
+  .sync-badge{
+    position:fixed; top:16px; right:56px; z-index:25;
+    font-size:9px; width:16px; height:16px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card); box-shadow: var(--shadow-sm);
+  }
 
   body{
     display:flex; flex-direction:column; min-height:100vh;
@@ -419,11 +425,13 @@
   }
   .builder-exercise-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .builder-exercise-num{ font-size:12px; color:var(--text-dim); font-weight:700; }
-  .builder-remove-btn{
+  .builder-head-actions{ display:flex; gap:6px; }
+  .builder-move-btn, .builder-remove-btn{
     width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
-    background:transparent; color:var(--text-dim); font-size:13px;
+    background:transparent; color:var(--text-dim); font-size:12px;
     display:flex; align-items:center; justify-content:center; padding:0;
   }
+  .builder-move-btn:disabled{ opacity:0.3; }
   .builder-exercise-row{ display:flex; flex-direction:column; gap:5px; }
   .builder-exercise-row .mini-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
   .builder-exercise-row input{
@@ -433,6 +441,11 @@
   .builder-exercise-row input:focus{ outline:none; border-color:var(--accent); }
   .builder-reps-row{ display:flex; gap:10px; }
   .builder-reps-row .builder-exercise-row{ flex:1; }
+  .builder-options-row{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
+  .builder-checkbox-label{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); font-weight:600;
+  }
+  .builder-checkbox-label input{ width:17px; height:17px; accent-color:var(--accent); flex:0 0 auto; }
   .builder-add-btn{
     padding:13px; border-radius:12px; border:1px dashed var(--border);
     background:transparent; color:var(--text-dim); font-size:14px; font-weight:700;
@@ -444,7 +457,28 @@
   }
 
   /* ARCHIVES */
+  .archive-toolbar{ display:flex; gap:10px; margin:2px 0 4px 0; }
+  .archive-tool-btn{
+    flex:1; padding:11px 8px; border-radius:12px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--text); font-size:13px; font-weight:700;
+  }
   .archive-list{ display:flex; flex-direction:column; gap:12px; }
+
+  .progress-exercise-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .progress-exercise-btn{
+    padding:14px 16px; border-radius:14px; border:1px solid var(--border);
+    background:var(--card); color:var(--text); text-align:left;
+    font-size:14.5px; font-weight:700; box-shadow: var(--shadow-sm);
+  }
+  .progress-exercise-btn.selected{ border-color:var(--accent); color:var(--accent); }
+  .progress-chart-card{
+    margin-top:16px; background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:16px; box-shadow: var(--shadow-sm);
+  }
+  .progress-chart-title{ font-size:14px; font-weight:800; margin-bottom:10px; }
+  .progress-chart-empty{ color:var(--text-dim); font-size:13px; text-align:center; padding:20px 0; }
+  .progress-point-label{ font-size:9.5px; fill:var(--text-dim); }
+  .progress-value-label{ font-size:10.5px; fill:var(--text); font-weight:700; }
   .archive-empty{
     text-align:center; color:var(--text-dim); font-size:14px; padding:30px 10px;
   }
@@ -470,6 +504,7 @@
 <body>
 
 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
+<div class="sync-badge" id="sync-badge" aria-hidden="true">🟢</div>
 
 <!-- ÉCRAN 1 : CHOIX DU PROFIL -->
 <div class="view active" id="view-profile">
@@ -504,7 +539,7 @@
 <div class="view" id="view-builder">
   <div class="view-inner">
     <button class="back-btn" onclick="goToProfileView()">← Retour</button>
-    <h1 class="big-question">Créer une séance</h1>
+    <h1 class="big-question" id="builder-title">Créer une séance</h1>
 
     <div class="builder-field">
       <span class="builder-label">Nom de la séance</span>
@@ -520,7 +555,7 @@
 
     <button class="builder-add-btn" onclick="addBuilderExercise()">+ Ajouter un exercice</button>
 
-    <button class="builder-save-btn" onclick="saveCustomSession()">Enregistrer la séance ✅</button>
+    <button class="builder-save-btn" id="builder-save-btn" onclick="saveCustomSession()">Enregistrer la séance ✅</button>
   </div>
 </div>
 
@@ -529,7 +564,21 @@
   <div class="view-inner">
     <button class="back-btn" onclick="goToSessionView()">← Séances</button>
     <h1 class="big-question" id="archives-view-title">Archives</h1>
+    <div class="archive-toolbar" id="archive-toolbar">
+      <button class="archive-tool-btn" onclick="exportAllArchives()">📤 Exporter tout</button>
+      <button class="archive-tool-btn" onclick="goToProgressView()">📈 Progression</button>
+    </div>
     <div class="archive-list" id="archive-list"></div>
+  </div>
+</div>
+
+<!-- ÉCRAN PROGRESSION -->
+<div class="view" id="view-progress">
+  <div class="view-inner">
+    <button class="back-btn" onclick="goToArchivesView('back')">← Archives</button>
+    <h1 class="big-question">Progression</h1>
+    <div class="progress-exercise-list" id="progress-exercise-list"></div>
+    <div id="progress-chart-wrap"></div>
   </div>
 </div>
 
@@ -595,7 +644,8 @@
   // ---------- FIREBASE (archives partagées Corentin / Lisa, temps réel) ----------
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
   import {
-    getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
+    getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot,
+    enableIndexedDbPersistence
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -609,13 +659,26 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  // Persistance hors-ligne : les lectures/écritures faites sans réseau sont mises
+  // en cache local puis synchronisées automatiquement dès que la connexion revient.
+  enableIndexedDbPersistence(db).catch((err) => {
+    console.warn('Persistance hors-ligne indisponible :', err.code);
+  });
+
   const archivesCol = collection(db, 'archives');
   const customSessionsCol = collection(db, 'customSessions');
 
   // Pont vers le script principal (non-module)
   window.__fb = { db, doc, setDoc, deleteDoc };
 
-  onSnapshot(archivesCol, (snapshot) => {
+  function updateSyncStatus(hasPendingWrites, fromCache){
+    window.__syncPending = hasPendingWrites;
+    window.__syncFromCache = fromCache;
+    window.dispatchEvent(new Event('sync-status-updated'));
+  }
+
+  onSnapshot(archivesCol, { includeMetadataChanges: true }, (snapshot) => {
     const all = [];
     snapshot.forEach(d => all.push(d.data()));
     all.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -623,16 +686,18 @@
       corentin: all.filter(a => a.profile === 'corentin'),
       lisa: all.filter(a => a.profile === 'lisa')
     };
+    updateSyncStatus(snapshot.metadata.hasPendingWrites, snapshot.metadata.fromCache);
     window.dispatchEvent(new Event('archives-updated'));
   }, (error) => {
     console.error('Erreur de synchronisation Firestore', error);
   });
 
-  onSnapshot(customSessionsCol, (snapshot) => {
+  onSnapshot(customSessionsCol, { includeMetadataChanges: true }, (snapshot) => {
     const all = [];
     snapshot.forEach(d => all.push(d.data()));
     all.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     window.customSessionsCache = all;
+    updateSyncStatus(snapshot.metadata.hasPendingWrites, snapshot.metadata.fromCache);
     window.dispatchEvent(new Event('custom-sessions-updated'));
   }, (error) => {
     console.error('Erreur de synchronisation Firestore (customSessions)', error);
@@ -665,6 +730,26 @@ const storage = {
   }
 };
 
+/* ---------- BADGE DE SYNCHRONISATION ---------- */
+function updateSyncBadge(){
+  const badge = document.getElementById('sync-badge');
+  if(!badge) return;
+  if(!navigator.onLine){
+    badge.textContent = '🔴';
+    badge.title = 'Hors ligne — sera synchronisé au retour du réseau';
+  } else if(window.__syncPending){
+    badge.textContent = '🟡';
+    badge.title = 'Synchronisation en cours...';
+  } else {
+    badge.textContent = '🟢';
+    badge.title = 'Synchronisé';
+  }
+}
+window.addEventListener('sync-status-updated', updateSyncBadge);
+window.addEventListener('online', updateSyncBadge);
+window.addEventListener('offline', updateSyncBadge);
+updateSyncBadge();
+
 /* ---------- THÈME CLAIR / SOMBRE ---------- */
 function applyTheme(theme){
   document.documentElement.classList.toggle('light-mode', theme === 'light');
@@ -678,6 +763,14 @@ function toggleTheme(){
   applyTheme(next);
 }
 applyTheme(storage.get('duo_theme') || 'dark');
+
+/* ---------- MESSAGE D'ERREUR FIRESTORE LISIBLE ---------- */
+function firestoreErrorMessage(err, action){
+  if(err && err.code === 'permission-denied'){
+    return `Accès refusé par Firestore — vérifie les règles de sécurité (${action})`;
+  }
+  return `Échec ${action} — vérifie ta connexion`;
+}
 
 /* ---------- VIBRATION (retour haptique à la validation) ---------- */
 function vibrate(){
@@ -841,9 +934,15 @@ function goToSessionView(){
   showView('view-session', 'back');
 }
 
-function goToArchivesView(){
+function goToArchivesView(direction){
   renderArchivesList();
-  showView('view-archives', 'fwd');
+  showView('view-archives', direction || 'fwd');
+}
+
+function goToProgressView(){
+  renderProgressExerciseList();
+  document.getElementById('progress-chart-wrap').innerHTML = '';
+  showView('view-progress', 'fwd');
 }
 
 function goToBuilderView(){
@@ -896,6 +995,15 @@ function renderSessionList(){
     `;
     row.onclick = () => selectSession(session.id);
 
+    const editBtn = document.createElement('button');
+    editBtn.className = 'custom-session-delete';
+    editBtn.textContent = '✏️';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      editCustomSession(session.id);
+    };
+    row.appendChild(editBtn);
+
     const delBtn = document.createElement('button');
     delBtn.className = 'custom-session-delete';
     delBtn.textContent = '🗑️';
@@ -922,21 +1030,32 @@ function renderSessionList(){
   list.appendChild(archBtn);
 }
 
+function computeSessionTonnage(dayProgram, data){
+  let tonnage = 0;
+  dayProgram.exercises.forEach((ex, exIdx) => {
+    for(let s = 1; s <= ex.sets; s++){
+      const setData = data.sets[`ex${exIdx}_set${s}`];
+      if(ex.logType !== 'circuit' && setData){
+        const w = parseFloat(setData.weight);
+        const r = parseFloat(setData.reps);
+        if(!isNaN(w) && !isNaN(r)) tonnage += w * r;
+      }
+    }
+  });
+  return tonnage;
+}
+
 function updateSessionProgress(){
   const dayProgram = getSession(currentSessionId);
   const data = loadDayData(currentSessionId, currentProfile);
-  let total = 0, done = 0, tonnage = 0;
+  let total = 0, done = 0;
+  const tonnage = computeSessionTonnage(dayProgram, data);
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     for(let s = 1; s <= ex.sets; s++){
       total++;
       const setData = data.sets[`ex${exIdx}_set${s}`];
       if(setData && setData.done) done++;
-      if(ex.logType !== 'circuit' && setData){
-        const w = parseFloat(setData.weight);
-        const r = parseFloat(setData.reps);
-        if(!isNaN(w) && !isNaN(r)) tonnage += w * r;
-      }
     }
   });
   if(dayProgram.cardio){
@@ -1379,6 +1498,7 @@ function finishArchive(){
     return;
   }
   const dayProgram = getSession(currentSessionId);
+  const data = loadDayData(currentSessionId, currentProfile);
   const now = new Date();
   const archive = {
     id: 'arc_' + now.getTime() + '_' + Math.random().toString(36).slice(2,7),
@@ -1389,7 +1509,10 @@ function finishArchive(){
     sessionId: currentSessionId,
     sessionLabel: dayProgram.label,
     sessionTitle: dayProgram.title,
-    exportText: buildExportText()
+    exportText: buildExportText(),
+    tonnage: Math.round(computeSessionTonnage(dayProgram, data)),
+    exerciseNames: dayProgram.exercises.map(ex => ex.name),
+    rawSets: data.sets || {}
   };
 
   const { db, doc, setDoc } = window.__fb;
@@ -1402,7 +1525,7 @@ function finishArchive(){
     })
     .catch((err) => {
       console.error('Erreur archivage Firestore', err);
-      showToast("Échec de l'archivage — vérifie ta connexion");
+      showToast(firestoreErrorMessage(err, "de l'archivage"));
     });
 }
 
@@ -1418,6 +1541,9 @@ function renderArchivesList(){
   list.innerHTML = '';
   const archives = getArchivesList(currentProfile);
 
+  const toolbar = document.getElementById('archive-toolbar');
+  if(toolbar) toolbar.style.display = archives.length > 0 ? 'flex' : 'none';
+
   if(archives.length === 0){
     const empty = document.createElement('p');
     empty.className = 'archive-empty';
@@ -1429,9 +1555,10 @@ function renderArchivesList(){
   archives.forEach(arc => {
     const item = document.createElement('div');
     item.className = 'archive-item';
+    const tonnageStr = arc.tonnage ? `· 💪 ${arc.tonnage.toLocaleString('fr-FR')} kg` : '';
     item.innerHTML = `
       <div class="archive-info">
-        <span class="archive-date">${arc.dateLabel} · ${arc.timeLabel}</span>
+        <span class="archive-date">${arc.dateLabel} · ${arc.timeLabel} ${tonnageStr}</span>
         <span class="archive-title">${arc.sessionLabel} — ${arc.sessionTitle}</span>
       </div>
       <div class="archive-actions">
@@ -1452,6 +1579,129 @@ function viewArchive(id){
   document.getElementById('motivation-line').textContent = `Archivée le ${arc.dateLabel} à ${arc.timeLabel}`;
   document.getElementById('export-modal').classList.add('open');
 }
+/* ---------- EXPORT DE TOUTES LES ARCHIVES ---------- */
+function exportAllArchives(){
+  const archives = getArchivesList(currentProfile);
+  if(archives.length === 0){
+    showToast('Aucune archive à exporter');
+    return;
+  }
+  const profileName = currentProfile === 'corentin' ? 'Corentin' : 'Lisa';
+  let txt = `📚 HISTORIQUE COMPLET — ${profileName}\n${archives.length} séance(s) archivée(s)\n`;
+  archives.slice().reverse().forEach(arc => {
+    txt += `\n==============================\n`;
+    txt += arc.exportText;
+    txt += `\n`;
+  });
+  document.getElementById('export-text').value = txt;
+  document.getElementById('motivation-line').textContent = `Export complet — ${archives.length} séance(s)`;
+  document.getElementById('export-modal').classList.add('open');
+}
+
+/* ---------- GRAPHIQUE DE PROGRESSION ---------- */
+function getExerciseNamesFromArchives(profile){
+  const archives = getArchivesList(profile);
+  const names = new Set();
+  archives.forEach(arc => {
+    (arc.exerciseNames || []).forEach(n => names.add(n));
+  });
+  return Array.from(names).sort();
+}
+
+function renderProgressExerciseList(){
+  const container = document.getElementById('progress-exercise-list');
+  container.innerHTML = '';
+  const names = getExerciseNamesFromArchives(currentProfile);
+
+  if(names.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'archive-empty';
+    empty.textContent = 'Pas encore assez de séances archivées pour afficher une progression.';
+    container.appendChild(empty);
+    return;
+  }
+
+  names.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'progress-exercise-btn';
+    btn.textContent = name;
+    btn.onclick = () => {
+      container.querySelectorAll('.progress-exercise-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      renderProgressChart(name);
+    };
+    container.appendChild(btn);
+  });
+}
+
+function getBestSetPerArchiveForExercise(profile, exerciseName){
+  const archives = getArchivesList(profile).slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const points = [];
+
+  archives.forEach(arc => {
+    const names = arc.exerciseNames || [];
+    const exIdx = names.indexOf(exerciseName);
+    if(exIdx === -1) return;
+    const rawSets = arc.rawSets || {};
+    let best = 0;
+    Object.keys(rawSets).forEach(key => {
+      if(key.indexOf(`ex${exIdx}_set`) !== 0) return;
+      const w = parseFloat(rawSets[key].weight);
+      if(!isNaN(w) && w > best) best = w;
+    });
+    if(best > 0){
+      points.push({ dateLabel: arc.dateLabel, weight: best });
+    }
+  });
+
+  return points;
+}
+
+function renderProgressChart(exerciseName){
+  const wrap = document.getElementById('progress-chart-wrap');
+  const points = getBestSetPerArchiveForExercise(currentProfile, exerciseName);
+
+  if(points.length === 0){
+    wrap.innerHTML = `
+      <div class="progress-chart-card">
+        <div class="progress-chart-title">${exerciseName}</div>
+        <div class="progress-chart-empty">Pas de poids enregistré pour cet exercice dans les archives.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const width = 320, height = 160, padding = 28;
+  const maxW = Math.max(...points.map(p => p.weight));
+  const minW = Math.min(...points.map(p => p.weight));
+  const range = (maxW - minW) || 1;
+
+  const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => {
+    const x = padding + i * stepX;
+    const y = height - padding - ((p.weight - minW) / range) * (height - padding * 2);
+    return { x, y, ...p };
+  });
+
+  const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+
+  const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--accent)"/>`).join('');
+  const valueLabels = coords.map(c => `<text class="progress-value-label" x="${c.x.toFixed(1)}" y="${(c.y - 10).toFixed(1)}" text-anchor="middle">${c.weight}</text>`).join('');
+  const dateLabels = coords.map(c => `<text class="progress-point-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${c.dateLabel.slice(0,5)}</text>`).join('');
+
+  wrap.innerHTML = `
+    <div class="progress-chart-card">
+      <div class="progress-chart-title">${exerciseName} — meilleure série (kg)</div>
+      <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
+        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${dots}
+        ${valueLabels}
+        ${dateLabels}
+      </svg>
+    </div>
+  `;
+}
+
 function askDeleteArchive(id){
   showConfirm('Supprimer définitivement cette séance archivée ?', () => deleteArchive(id));
 }
@@ -1467,7 +1717,7 @@ function deleteArchive(id){
     })
     .catch((err) => {
       console.error('Erreur suppression Firestore', err);
-      showToast('Échec de la suppression — vérifie ta connexion');
+      showToast(firestoreErrorMessage(err, "de la suppression"));
     });
 }
 
@@ -1484,18 +1734,54 @@ window.addEventListener('custom-sessions-updated', () => {
   if(activeView.id === 'view-session') renderSessionList();
 });
 
-/* ---------- BUILD TRAINING (création de séance personnalisée) ---------- */
+/* ---------- BUILD TRAINING (création / édition de séance personnalisée) ---------- */
 let builderDraft = { name: '', cardio: false, exercises: [] };
+let editingSessionId = null;
+
+function blankBuilderExercise(){
+  return { name:'', sets:3, repsCorentin:'', repsLisa:'', isCircuit:false, hasEquipmentOptions:false };
+}
 
 function resetBuilderDraft(){
+  editingSessionId = null;
   builderDraft = {
     name: '',
     cardio: false,
-    exercises: [ { name:'', sets:3, repsCorentin:'', repsLisa:'' } ]
+    exercises: [ blankBuilderExercise() ]
   };
 }
 
+function loadBuilderDraftFromSession(session){
+  editingSessionId = session.id;
+  builderDraft = {
+    name: session.label || '',
+    cardio: !!session.cardio,
+    exercises: (session.exercises || []).map(ex => ({
+      name: ex.name || '',
+      sets: ex.sets || 3,
+      repsCorentin: (ex.target && ex.target.corentin) || '',
+      repsLisa: (ex.target && ex.target.lisa) || '',
+      isCircuit: ex.logType === 'circuit',
+      hasEquipmentOptions: !!ex.equipmentOptions
+    }))
+  };
+  if(builderDraft.exercises.length === 0) builderDraft.exercises.push(blankBuilderExercise());
+}
+
+function editCustomSession(id){
+  const session = (window.customSessionsCache || []).find(s => s.id === id);
+  if(!session) return;
+  loadBuilderDraftFromSession(session);
+  renderBuilderForm();
+  showView('view-builder', 'fwd');
+}
+
 function renderBuilderForm(){
+  const titleEl = document.getElementById('builder-title');
+  if(titleEl) titleEl.textContent = editingSessionId ? 'Modifier la séance' : 'Créer une séance';
+  const saveBtn = document.getElementById('builder-save-btn');
+  if(saveBtn) saveBtn.textContent = editingSessionId ? 'Enregistrer les modifications ✅' : 'Enregistrer la séance ✅';
+
   document.getElementById('builder-name').value = builderDraft.name;
   document.getElementById('builder-cardio').checked = builderDraft.cardio;
 
@@ -1509,11 +1795,31 @@ function renderBuilderForm(){
     const head = document.createElement('div');
     head.className = 'builder-exercise-head';
     head.innerHTML = `<span class="builder-exercise-num">Exercice ${idx + 1}</span>`;
+
+    const headActions = document.createElement('div');
+    headActions.className = 'builder-head-actions';
+
+    const upBtn = document.createElement('button');
+    upBtn.className = 'builder-move-btn';
+    upBtn.textContent = '▲';
+    upBtn.disabled = idx === 0;
+    upBtn.onclick = () => moveBuilderExercise(idx, -1);
+    headActions.appendChild(upBtn);
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'builder-move-btn';
+    downBtn.textContent = '▼';
+    downBtn.disabled = idx === builderDraft.exercises.length - 1;
+    downBtn.onclick = () => moveBuilderExercise(idx, 1);
+    headActions.appendChild(downBtn);
+
     const removeBtn = document.createElement('button');
     removeBtn.className = 'builder-remove-btn';
     removeBtn.textContent = '✕';
     removeBtn.onclick = () => removeBuilderExercise(idx);
-    head.appendChild(removeBtn);
+    headActions.appendChild(removeBtn);
+
+    head.appendChild(headActions);
     card.appendChild(head);
 
     const nameRow = document.createElement('div');
@@ -1529,7 +1835,7 @@ function renderBuilderForm(){
 
     const setsRow = document.createElement('div');
     setsRow.className = 'builder-exercise-row';
-    setsRow.innerHTML = `<span class="mini-label">Nombre de séries</span>`;
+    setsRow.innerHTML = `<span class="mini-label">Nombre de séries${ex.isCircuit ? ' (tours)' : ''}</span>`;
     const setsInput = document.createElement('input');
     setsInput.type = 'number';
     setsInput.inputMode = 'numeric';
@@ -1544,10 +1850,10 @@ function renderBuilderForm(){
 
     const repsCorentinRow = document.createElement('div');
     repsCorentinRow.className = 'builder-exercise-row';
-    repsCorentinRow.innerHTML = `<span class="mini-label">Reps Corentin</span>`;
+    repsCorentinRow.innerHTML = `<span class="mini-label">${ex.isCircuit ? 'Cible Corentin' : 'Reps Corentin'}</span>`;
     const repsCorentinInput = document.createElement('input');
     repsCorentinInput.type = 'text';
-    repsCorentinInput.placeholder = 'ex: 8-10 reps';
+    repsCorentinInput.placeholder = ex.isCircuit ? 'ex: 3 tours' : 'ex: 8-10 reps';
     repsCorentinInput.value = ex.repsCorentin;
     repsCorentinInput.oninput = () => { builderDraft.exercises[idx].repsCorentin = repsCorentinInput.value; };
     repsCorentinRow.appendChild(repsCorentinInput);
@@ -1555,24 +1861,61 @@ function renderBuilderForm(){
 
     const repsLisaRow = document.createElement('div');
     repsLisaRow.className = 'builder-exercise-row';
-    repsLisaRow.innerHTML = `<span class="mini-label">Reps Lisa</span>`;
+    repsLisaRow.innerHTML = `<span class="mini-label">${ex.isCircuit ? 'Cible Lisa' : 'Reps Lisa'}</span>`;
     const repsLisaInput = document.createElement('input');
     repsLisaInput.type = 'text';
-    repsLisaInput.placeholder = 'ex: 10-12 reps';
+    repsLisaInput.placeholder = ex.isCircuit ? 'ex: 3 tours' : 'ex: 10-12 reps';
     repsLisaInput.value = ex.repsLisa;
     repsLisaInput.oninput = () => { builderDraft.exercises[idx].repsLisa = repsLisaInput.value; };
     repsLisaRow.appendChild(repsLisaInput);
     repsRow.appendChild(repsLisaRow);
 
     card.appendChild(repsRow);
+
+    const optionsRow = document.createElement('div');
+    optionsRow.className = 'builder-options-row';
+
+    const circuitLabel = document.createElement('label');
+    circuitLabel.className = 'builder-checkbox-label';
+    const circuitCheckbox = document.createElement('input');
+    circuitCheckbox.type = 'checkbox';
+    circuitCheckbox.checked = ex.isCircuit;
+    circuitCheckbox.onchange = () => {
+      builderDraft.exercises[idx].isCircuit = circuitCheckbox.checked;
+      renderBuilderForm();
+    };
+    circuitLabel.appendChild(circuitCheckbox);
+    circuitLabel.appendChild(document.createTextNode(' Exercice type circuit (sans poids)'));
+    optionsRow.appendChild(circuitLabel);
+
+    const equipLabel = document.createElement('label');
+    equipLabel.className = 'builder-checkbox-label';
+    const equipCheckbox = document.createElement('input');
+    equipCheckbox.type = 'checkbox';
+    equipCheckbox.checked = ex.hasEquipmentOptions;
+    equipCheckbox.onchange = () => { builderDraft.exercises[idx].hasEquipmentOptions = equipCheckbox.checked; };
+    equipLabel.appendChild(equipCheckbox);
+    equipLabel.appendChild(document.createTextNode(' Proposer variante Haltères / Poulie'));
+    optionsRow.appendChild(equipLabel);
+
+    card.appendChild(optionsRow);
     container.appendChild(card);
   });
+}
+
+function moveBuilderExercise(idx, delta){
+  const newIdx = idx + delta;
+  if(newIdx < 0 || newIdx >= builderDraft.exercises.length) return;
+  const tmp = builderDraft.exercises[idx];
+  builderDraft.exercises[idx] = builderDraft.exercises[newIdx];
+  builderDraft.exercises[newIdx] = tmp;
+  renderBuilderForm();
 }
 
 function addBuilderExercise(){
   builderDraft.name = document.getElementById('builder-name').value;
   builderDraft.cardio = document.getElementById('builder-cardio').checked;
-  builderDraft.exercises.push({ name:'', sets:3, repsCorentin:'', repsLisa:'' });
+  builderDraft.exercises.push(blankBuilderExercise());
   renderBuilderForm();
 }
 function removeBuilderExercise(idx){
@@ -1580,7 +1923,7 @@ function removeBuilderExercise(idx){
   builderDraft.cardio = document.getElementById('builder-cardio').checked;
   builderDraft.exercises.splice(idx, 1);
   if(builderDraft.exercises.length === 0){
-    builderDraft.exercises.push({ name:'', sets:3, repsCorentin:'', repsLisa:'' });
+    builderDraft.exercises.push(blankBuilderExercise());
   }
   renderBuilderForm();
 }
@@ -1601,26 +1944,31 @@ function saveCustomSession(){
 
   const validExercises = builderDraft.exercises
     .filter(ex => ex.name && ex.name.trim() !== '')
-    .map(ex => ({
-      name: ex.name.trim(),
-      sets: parseInt(ex.sets, 10) > 0 ? parseInt(ex.sets, 10) : 3,
-      target: {
-        corentin: ex.repsCorentin && ex.repsCorentin.trim() !== '' ? ex.repsCorentin.trim() : '—',
-        lisa: ex.repsLisa && ex.repsLisa.trim() !== '' ? ex.repsLisa.trim() : '—'
-      }
-    }));
+    .map(ex => {
+      const built = {
+        name: ex.name.trim(),
+        sets: parseInt(ex.sets, 10) > 0 ? parseInt(ex.sets, 10) : 3,
+        target: {
+          corentin: ex.repsCorentin && ex.repsCorentin.trim() !== '' ? ex.repsCorentin.trim() : '—',
+          lisa: ex.repsLisa && ex.repsLisa.trim() !== '' ? ex.repsLisa.trim() : '—'
+        }
+      };
+      if(ex.isCircuit) built.logType = 'circuit';
+      if(ex.hasEquipmentOptions) built.equipmentOptions = UPPER_BODY_OPTIONS;
+      return built;
+    });
 
   if(validExercises.length === 0){
     showToast('Ajoute au moins un exercice avec un nom');
     return;
   }
 
-  const now = Date.now();
+  const existing = editingSessionId ? (window.customSessionsCache || []).find(s => s.id === editingSessionId) : null;
   const session = {
-    id: 'custom_' + now,
+    id: editingSessionId || ('custom_' + Date.now()),
     label: name,
     title: 'Séance personnalisée',
-    createdAt: now,
+    createdAt: existing ? existing.createdAt : Date.now(),
     exercises: validExercises,
     cardio: cardioEnabled ? { name: 'Tapis incliné Zone 2', targetMinutes: 30 } : null
   };
@@ -1628,12 +1976,12 @@ function saveCustomSession(){
   const { db, doc, setDoc } = window.__fb;
   setDoc(doc(db, 'customSessions', session.id), session)
     .then(() => {
-      showToast('Séance créée ✅');
+      showToast(editingSessionId ? 'Séance mise à jour ✅' : 'Séance créée ✅');
       goToProfileView();
     })
     .catch((err) => {
       console.error('Erreur création séance Firestore', err);
-      showToast('Échec de la création — vérifie ta connexion');
+      showToast(firestoreErrorMessage(err, "de la création"));
     });
 }
 
@@ -1652,7 +2000,7 @@ function deleteCustomSession(id){
     })
     .catch((err) => {
       console.error('Erreur suppression séance Firestore', err);
-      showToast('Échec de la suppression — vérifie ta connexion');
+      showToast(firestoreErrorMessage(err, "de la suppression"));
     });
 }
 
