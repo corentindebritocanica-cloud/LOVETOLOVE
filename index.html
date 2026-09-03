@@ -5,35 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Duo Training — Corentin & Lisa</title>
 <style>
+  /* ==========================================================================
+     JETONS DE DESIGN
+     Palette, rayons et ombres sont définis ici et nulle part ailleurs. Toute
+     valeur codée en dur dans une règle plus bas est une anomalie à corriger.
+
+     Parti pris de la palette : un charcoal légèrement bleuté plutôt qu'un gris
+     neutre — la teinte de l'acier laqué d'un rack sous néon. Le gris parfaitement
+     neutre donnait une interface générique, sans rapport avec une salle.
+     ========================================================================== */
   :root{
-    --bg:#0b0b0e;
-    --card:#1a1a20;
-    --card-2:#242429;
-    --border:rgba(255,255,255,0.08);
+    /* Fonds, du plus profond au plus proche */
+    --bg:#0d1014;
+    --card:#161b22;
+    --card-2:#1e2530;
+    --border:rgba(146,170,199,0.14);
+    --border-strong:rgba(146,170,199,0.24);
+
+    /* Voile clair posé sur les fonds (icônes, états sélectionnés).
+       Défini ici parce qu'il doit s'inverser en thème clair : un blanc en dur
+       devenait invisible sur fond blanc. */
+    --tint:rgba(190,214,240,0.06);
+    --tint-strong:rgba(190,214,240,0.11);
+
+    /* Texte */
+    --text:#e9eff6;
+    --text-dim:#8a97a8;
+
+    /* Identité */
     --corentin:#4c8dfb;
     --lisa:#f2599e;
     --done:#12b981;
-    --text:#f6f6f8;
-    --text-dim:#94949e;
+    --danger:#ef4444;
     --accent: var(--corentin);
-    --shadow: 0 14px 32px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.28);
-    --shadow-sm: 0 6px 16px rgba(0,0,0,0.28);
-    --glass-bar: rgba(24,24,29,0.86);
-    --glass-modal: rgba(24,24,29,0.94);
-    --reset-btn-bg: rgba(255,255,255,0.07);
+
+    /* Rayons : cinq crans, la taille encode la hiérarchie.
+       Plus l'élément est grand et contenant, plus le rayon est ample. */
+    --r-xs:4px;    /* jauges, filets */
+    --r-sm:10px;   /* champs, petits boutons */
+    --r-md:14px;   /* boutons pleins, bascules */
+    --r-lg:18px;   /* cartes */
+    --r-xl:22px;   /* modales, gros choix */
+    --r-pill:999px;
+
+    /* Ombres : deux niveaux seulement, plus une pour les surfaces flottantes */
+    --shadow-sm: 0 6px 16px rgba(0,0,0,0.30);
+    --shadow: 0 14px 32px rgba(0,0,0,0.44), 0 2px 8px rgba(0,0,0,0.28);
+    --shadow-lg: 0 -8px 40px rgba(0,0,0,0.5);
+
+    /* Durées d'animation */
+    --t-fast:.14s;
+    --t-mid:.22s;
+
+    --glass-bar: rgba(19,24,31,0.86);
+    --glass-modal: rgba(22,27,34,0.95);
+    --reset-btn-bg: var(--tint-strong);
+    /* Reflet des animations de balayage : il passe toujours sur une surface
+       colorée (jauge verte), le blanc convient donc dans les deux thèmes. */
+    --sheen: rgba(255,255,255,0.55);
   }
   html.light-mode{
-    --bg:#f4f4f7;
+    --bg:#eef1f5;
     --card:#ffffff;
-    --card-2:#f0f0f3;
-    --border:rgba(15,15,20,0.09);
-    --text:#15151a;
-    --text-dim:#6c6c76;
-    --shadow: 0 14px 28px rgba(20,20,30,0.09), 0 2px 8px rgba(20,20,30,0.05);
-    --shadow-sm: 0 6px 14px rgba(20,20,30,0.07);
-    --glass-bar: rgba(255,255,255,0.82);
-    --glass-modal: rgba(255,255,255,0.94);
-    --reset-btn-bg: rgba(15,15,20,0.05);
+    --card-2:#e7ecf2;
+    --border:rgba(23,38,56,0.11);
+    --border-strong:rgba(23,38,56,0.20);
+    --tint:rgba(23,38,56,0.045);
+    --tint-strong:rgba(23,38,56,0.085);
+    --text:#131a23;
+    --text-dim:#5f6c7c;
+    --shadow-sm: 0 6px 14px rgba(20,30,45,0.08);
+    --shadow: 0 14px 28px rgba(20,30,45,0.10), 0 2px 8px rgba(20,30,45,0.05);
+    --shadow-lg: 0 -8px 40px rgba(20,30,45,0.14);
+    --glass-bar: rgba(255,255,255,0.84);
+    --glass-modal: rgba(255,255,255,0.95);
+    --reset-btn-bg: var(--tint-strong);
+    --sheen: rgba(255,255,255,0.70);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{
@@ -70,10 +117,15 @@
     display:none; flex-direction:column; flex:1; position:relative; z-index:1;
   }
   .view.active{ display:flex; }
-  .view.slide-fwd{ animation: slideInFwd .32s cubic-bezier(.4,0,.2,1); }
-  .view.slide-back{ animation: slideInBack .32s cubic-bezier(.4,0,.2,1); }
-  @keyframes slideInFwd{ from{ transform:translateX(28px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
-  @keyframes slideInBack{ from{ transform:translateX(-28px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+  /* 126 : le glissement d'origine (.32s, 28px) traînait sur un écran de téléphone.
+     Plus court et plus serré, il accompagne le geste au lieu de le retarder. */
+  .view.slide-fwd{ animation: slideInFwd var(--t-mid) cubic-bezier(.32,.72,.3,1); }
+  .view.slide-back{ animation: slideInBack var(--t-mid) cubic-bezier(.32,.72,.3,1); }
+  @keyframes slideInFwd{ from{ transform:translateX(16px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+  @keyframes slideInBack{ from{ transform:translateX(-16px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .view.slide-fwd, .view.slide-back{ animation:none; }
+  }
 
   .view-inner{
     padding:22px 18px; display:flex; flex-direction:column; gap:14px; flex:1;
@@ -92,7 +144,7 @@
   }
 
   .big-choice-btn{
-    padding:26px 20px; border-radius:20px; border:1px solid var(--border);
+    padding:26px 20px; border-radius:var(--r-lg); border:1px solid var(--border);
     background:var(--card); color:var(--text); font-size:19px; font-weight:800;
     display:flex; align-items:center; justify-content:flex-start; gap:16px; margin-bottom:14px;
     box-shadow: var(--shadow-sm);
@@ -100,9 +152,9 @@
   }
   .big-choice-btn:active{ transform: scale(0.98); }
   .big-choice-btn .choice-icon{
-    width:46px; height:46px; flex:0 0 auto; border-radius:14px;
+    width:46px; height:46px; flex:0 0 auto; border-radius:var(--r-md);
     display:flex; align-items:center; justify-content:center;
-    background: rgba(255,255,255,0.05);
+    background: var(--tint);
   }
   .big-choice-btn.corentin.selected{
     border-color:var(--corentin); color:var(--corentin); background:rgba(76,141,251,0.1);
@@ -125,7 +177,7 @@
     display:flex; flex-direction:column; gap:14px;
   }
   .session-btn{
-    padding:18px; border-radius:18px; border:1px solid var(--border);
+    padding:18px; border-radius:var(--r-lg); border:1px solid var(--border);
     background:var(--card); color:var(--text); text-align:left;
     display:flex; align-items:center; gap:14px; font-family:inherit;
     box-shadow: var(--shadow-sm);
@@ -133,9 +185,9 @@
   }
   .session-btn:active{ transform: scale(0.98); }
   .session-btn .session-icon{
-    width:44px; height:44px; flex:0 0 auto; border-radius:13px;
+    width:44px; height:44px; flex:0 0 auto; border-radius:var(--r-md);
     display:flex; align-items:center; justify-content:center;
-    background: rgba(255,255,255,0.05); color: var(--accent);
+    background: var(--tint); color: var(--accent);
   }
   .session-btn .session-text{ display:flex; flex-direction:column; gap:3px; min-width:0; }
   .session-btn .s-label{font-size:16.5px; font-weight:800;}
@@ -143,10 +195,10 @@
   .session-btn.selected{
     border-color:var(--accent);
   }
-  .session-btn.selected .session-icon{ background:rgba(255,255,255,0.1); }
+  .session-btn.selected .session-icon{ background:var(--tint-strong); }
   .custom-session-row{ cursor:pointer; }
   .custom-session-delete{
-    flex:0 0 auto; width:34px; height:34px; border-radius:10px;
+    flex:0 0 auto; width:34px; height:34px; border-radius:var(--r-sm);
     border:1px solid var(--border); background:var(--card-2); color:var(--text-dim);
     font-size:13px; display:flex; align-items:center; justify-content:center;
   }
@@ -172,11 +224,23 @@
     opacity:0.85;
   }
   .session-progress-track{
-    height:5px; border-radius:4px; background:var(--card-2); overflow:hidden;
+    height:5px; border-radius:var(--r-xs); background:var(--card-2); overflow:hidden;
   }
   .session-progress-fill{
-    height:100%; width:0%; background:var(--accent); border-radius:4px;
-    transition: width .3s cubic-bezier(.4,0,.2,1);
+    height:100%; width:0%; background:var(--accent); border-radius:var(--r-xs);
+    transition: width .3s cubic-bezier(.4,0,.2,1), background .3s ease;
+  }
+  /* 129 : séance complète — la jauge passe au vert et un reflet la parcourt une fois. */
+  .session-progress-track.complete .session-progress-fill{ background:var(--done); }
+  .session-progress-track.complete{ position:relative; overflow:hidden; }
+  .session-progress-track.celebrate::after{
+    content:''; position:absolute; top:0; bottom:0; width:45%;
+    background:linear-gradient(90deg, transparent, var(--sheen), transparent);
+    animation: trackSweep .85s ease-out 1;
+  }
+  @keyframes trackSweep{ from{ left:-45%; } to{ left:105%; } }
+  @media (prefers-reduced-motion: reduce){
+    .session-progress-track.celebrate::after{ display:none; }
   }
   .session-progress-label{
     font-size:11.5px; color:var(--text-dim); font-weight:600; margin:0;
@@ -196,28 +260,86 @@
     font-size:13px; color:var(--text-dim); margin:0 2px 4px 2px;
   }
 
+  /* ---------- CARTE D'EXERCICE (109) ----------
+     Deux zones : l'en-tête dit ce qu'est l'exercice, le corps sert à saisir.
+     Le fond légèrement teinté de l'en-tête et le filet de séparation évitent
+     que le nom, la cible, l'historique et les champs se lisent comme une
+     seule bouillie d'informations de même poids. */
   .exercise-card{
-    background:var(--card); border:1px solid var(--border); border-radius:18px;
-    padding:17px; display:flex; flex-direction:column; gap:11px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
+    display:flex; flex-direction:column; overflow:hidden;
     box-shadow: var(--shadow-sm);
+    transition: border-color var(--t-mid) ease;
   }
-  .exercise-head{display:flex; flex-direction:column; gap:3px;}
-  .exercise-name{font-size:16.5px; font-weight:750;}
-  .exercise-target{
-    font-size:13px; font-weight:600; color:var(--accent);
+  .exercise-card.complete{ border-color:rgba(18,185,129,0.42); }
+  .exercise-headwrap{
+    padding:14px 16px 12px 16px; background:var(--tint);
+    border-bottom:1px solid var(--border);
+    display:flex; flex-direction:column; gap:6px;
+    position:relative;
+  }
+  /* Liseré vert sur la tranche gauche quand toutes les séries sont validées */
+  .exercise-card.complete .exercise-headwrap::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--done);
+  }
+  .exercise-body{
+    padding:13px 16px 15px 16px; display:flex; flex-direction:column; gap:10px;
+  }
+  .exercise-head{ display:flex; flex-direction:column; gap:3px; }
+  .exercise-name{ font-size:16.5px; font-weight:750; line-height:1.25; }
+  .exercise-target{ font-size:13px; font-weight:600; color:var(--accent); }
+
+  /* 005 / 006 : contexte historique de l'exercice */
+  .exercise-history{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    font-size:12px; color:var(--text-dim);
+    padding-top:8px; border-top:1px solid var(--border);
+  }
+  .hist-last{ font-weight:500; }
+  .hist-record{
+    font-weight:700; color:var(--accent);
+    background:rgba(var(--accent-rgb, 76,141,251), 0.12);
+    border-radius:var(--r-sm); padding:2px 8px; margin-left:auto;
+  }
+  .pr-badge{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:9px 12px; border-radius:var(--r-md); font-size:13px; font-weight:800;
+    background:rgba(18,185,129,0.14); color:var(--done);
+    border:1px solid rgba(18,185,129,0.35);
+  }
+  .pr-badge::before{ content:'🏆'; font-size:14px; }
+  .pr-badge.pop{ animation: prPop .45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes prPop{
+    0%{ transform:scale(.9); opacity:0; }
+    60%{ transform:scale(1.04); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
   }
 
   .variant-row{
     display:flex; gap:6px; flex-wrap:wrap;
   }
+  /* 133 : les boutons de variante et de duplication ne donnaient aucun retour
+     au doigt. Enfoncement à la pression, et transition sur le changement d'état. */
   .variant-btn{
-    flex:1 1 auto; min-width:0; padding:9px 8px; border-radius:10px;
+    flex:1 1 auto; min-width:0; padding:9px 8px; border-radius:var(--r-sm);
     border:1px solid var(--border); background:transparent; color:var(--text-dim);
     font-size:12.5px; font-weight:600; text-align:center; white-space:nowrap;
-    transition: border-color .15s ease, color .15s ease;
+    transition: border-color var(--t-fast) ease, color var(--t-fast) ease,
+                background var(--t-fast) ease, transform var(--t-fast) ease;
   }
+  .variant-btn:active{ transform:scale(.96); }
   .variant-btn.selected{
-    border-color:var(--accent); color:var(--accent); background:rgba(255,255,255,0.03);
+    border-color:var(--accent); color:var(--accent); background:var(--tint);
+    animation: variantPick .3s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes variantPick{
+    0%{ transform:scale(.97); }
+    55%{ transform:scale(1.03); }
+    100%{ transform:scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .variant-btn.selected{ animation:none; }
   }
 
   .set-grid-header, .set-row{
@@ -238,7 +360,7 @@
     font-size:14px; font-weight:700; color:var(--text-dim); text-align:center;
   }
   .set-row input{
-    width:100%; padding:10px 8px; border-radius:10px; border:1px solid var(--border);
+    width:100%; padding:10px 8px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:16px; text-align:center;
     min-width:0;
   }
@@ -246,11 +368,17 @@
     outline:none; border-color:var(--accent);
   }
   .dup-btn{
-    width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
+    width:26px; height:26px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:transparent; color:var(--text-dim); font-size:13px;
     display:flex; align-items:center; justify-content:center; padding:0;
   }
-  .dup-btn:active{ color:var(--accent); border-color:var(--accent); }
+  .dup-btn{ transition: color var(--t-fast) ease, border-color var(--t-fast) ease, transform var(--t-fast) ease; }
+  .dup-btn:active{ color:var(--accent); border-color:var(--accent); transform:scale(.9); }
+  .dup-btn.done{ animation: dupFlash .4s ease-out; }
+  @keyframes dupFlash{
+    0%{ color:var(--accent); border-color:var(--accent); transform:translateY(-2px); }
+    100%{ color:var(--text-dim); border-color:var(--border); transform:translateY(0); }
+  }
 
   .note-wrap{
     display:flex; flex-direction:column; gap:5px; margin-top:2px;
@@ -260,7 +388,7 @@
     font-size:11px; color:var(--text-dim); font-weight:700; letter-spacing:0.2px;
   }
   .note-input{
-    width:100%; min-height:36px; padding:9px 10px; border-radius:10px;
+    width:100%; min-height:36px; padding:9px 10px; border-radius:var(--r-sm);
     border:1px solid var(--border); background:var(--card-2); color:var(--text);
     font-size:16px; font-family:inherit; resize:vertical; line-height:1.35;
   }
@@ -268,7 +396,7 @@
   .note-input::placeholder{ color:var(--text-dim); opacity:0.75; }
 
   .check-btn{
-    width:44px; height:44px; border-radius:12px; border:1px solid var(--border);
+    width:44px; height:44px; border-radius:var(--r-md); border:1px solid var(--border);
     background:var(--card-2); color:var(--text-dim); font-size:20px; font-weight:800;
     display:flex; align-items:center; justify-content:center;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
@@ -276,18 +404,33 @@
   .check-btn.checked{
     background:var(--done); border-color:var(--done); color:#fff;
   }
-  .check-btn.pulse{
-    animation: checkPulse .4s cubic-bezier(.34,1.56,.64,1);
+  /* 125 : la validation d'une série est le geste le plus répété de l'app.
+     Le simple agrandissement passait inaperçu bras tendus : on y ajoute une
+     onde qui se propage depuis le bouton. */
+  .check-btn{ position:relative; }
+  .check-btn.pulse{ animation: checkPulse .42s cubic-bezier(.34,1.56,.64,1); }
+  .check-btn.pulse::after{
+    content:''; position:absolute; inset:-4px; border-radius:var(--r-md);
+    border:2px solid var(--done); animation: checkRipple .5s ease-out forwards;
+    pointer-events:none;
   }
   @keyframes checkPulse{
     0%{ transform:scale(1); }
-    40%{ transform:scale(1.18); }
+    35%{ transform:scale(1.22); }
     100%{ transform:scale(1); }
+  }
+  @keyframes checkRipple{
+    0%{ transform:scale(.85); opacity:.9; }
+    100%{ transform:scale(1.5); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .check-btn.pulse{ animation:none; }
+    .check-btn.pulse::after{ display:none; }
   }
 
   .cardio-card{
-    background:var(--card); border:1px solid var(--border); border-radius:18px;
-    padding:17px; display:flex; flex-direction:column; gap:14px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:16px; display:flex; flex-direction:column; gap:14px;
     box-shadow: var(--shadow-sm);
   }
   .cardio-top-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -301,7 +444,7 @@
   .cardio-field{ flex:1; display:flex; flex-direction:column; gap:5px; }
   .cardio-field-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
   .cardio-minutes-input{
-    width:100%; padding:10px 6px; border-radius:10px; border:1px solid var(--border);
+    width:100%; padding:10px 6px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:16px; text-align:center;
   }
   .cardio-minutes-input:focus{ outline:none; border-color:var(--accent); }
@@ -317,7 +460,7 @@
     display:flex; gap:10px;
   }
   .bottom-btn{
-    flex:1; padding:14px 10px; border-radius:16px; border:1px solid transparent;
+    flex:1; padding:14px 10px; border-radius:var(--r-lg); border:1px solid transparent;
     font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;
     transition: transform .15s ease;
   }
@@ -329,7 +472,7 @@
     backdrop-filter: blur(8px);
   }
   .btn-export{
-    background:rgba(var(--accent-rgb, 76,141,251), 0.28); color:#fff; border-color:rgba(255,255,255,0.12);
+    background:rgba(var(--accent-rgb, 76,141,251), 0.28); color:#fff; border-color:var(--border-strong);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
   }
@@ -345,7 +488,7 @@
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     backdrop-filter: blur(20px) saturate(160%);
     width:100%; max-width:560px;
-    border-radius:22px 22px 0 0; padding:18px; max-height:88vh;
+    border-radius:var(--r-xl) var(--r-xl) 0 0; padding:18px; max-height:88vh;
     display:flex; flex-direction:column; gap:12px;
     border-top:1px solid var(--border);
     box-shadow: var(--shadow);
@@ -357,24 +500,43 @@
   .modal textarea{
     width:100%; min-height:260px; resize:vertical;
     background:var(--card-2); color:var(--text); border:1px solid var(--border);
-    border-radius:12px; padding:12px; font-size:16px; line-height:1.5;
+    border-radius:var(--r-md); padding:12px; font-size:16px; line-height:1.5;
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   }
   .modal-actions{display:flex; gap:10px;}
   .modal-actions button{
-    flex:1; padding:13px 10px; border-radius:12px; border:none; font-size:14.5px; font-weight:700;
+    flex:1; padding:13px 10px; border-radius:var(--r-md); border:none; font-size:14.5px; font-weight:700;
   }
   .btn-copy{background:var(--done); color:#fff;}
   .btn-close-modal{background:var(--card-2); color:var(--text); border:1px solid var(--border);}
 
-  .toast{
-    position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:var(--card-2); color:var(--text); padding:10px 18px; border-radius:30px;
-    font-size:13.5px; font-weight:600; border:1px solid var(--border);
-    opacity:0; pointer-events:none; transition:all .25s ease; z-index:60;
-    white-space:nowrap;
+  /* 131 : les messages s'empilent au lieu de s'écraser l'un l'autre */
+  .toast-stack{
+    position:fixed; bottom:100px; left:0; right:0; z-index:60;
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    pointer-events:none; padding:0 16px;
   }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast{
+    max-width:100%; background:var(--card-2); color:var(--text);
+    padding:10px 18px; border-radius:var(--r-pill);
+    font-size:13.5px; font-weight:600; border:1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    opacity:0; transform:translateY(12px) scale(.96);
+    transition: opacity .25s ease, transform .25s cubic-bezier(.32,.72,.3,1);
+    text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateY(0) scale(1); }
+  .toast.bump{ animation: toastBump .3s cubic-bezier(.34,1.5,.64,1); }
+  @keyframes toastBump{
+    0%{ transform:translateY(0) scale(1); }
+    45%{ transform:translateY(-3px) scale(1.04); }
+    100%{ transform:translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .toast{ transition: opacity .2s ease; transform:none; }
+    .toast.show{ transform:none; }
+    .toast.bump{ animation:none; }
+  }
 
   .confirm-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:55;
@@ -382,14 +544,14 @@
   }
   .confirm-overlay.open{display:flex;}
   .confirm-box{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
     padding:20px; width:100%; max-width:340px; text-align:center;
   }
   .confirm-box p{margin:0 0 16px 0; font-size:14.5px; color:var(--text);}
   .confirm-actions{display:flex; gap:10px;}
-  .confirm-actions button{flex:1; padding:12px; border-radius:10px; border:none; font-weight:700; font-size:14px;}
+  .confirm-actions button{flex:1; padding:12px; border-radius:var(--r-sm); border:none; font-weight:700; font-size:14px;}
   .btn-cancel{background:var(--card-2); color:var(--text); border:1px solid var(--border);}
-  .btn-confirm{background:#ef4444; color:#fff;}
+  .btn-confirm{background:var(--danger); color:#fff;}
 
   /* POPUP FIN DE SÉANCE */
   .finish-box{ max-width:360px; padding:22px 20px; }
@@ -397,7 +559,7 @@
   .finish-sub{ font-size:13px; color:var(--text-dim); margin:0 0 16px 0 !important; }
   .finish-actions{ display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
   .finish-btn{
-    padding:15px 12px; border-radius:14px; border:1px solid var(--border);
+    padding:15px 12px; border-radius:var(--r-md); border:1px solid var(--border);
     font-size:15px; font-weight:700; text-align:center;
   }
   .finish-btn.copy{ background:var(--card-2); color:var(--text); }
@@ -411,19 +573,19 @@
   .builder-field{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
   .builder-label{ font-size:12.5px; color:var(--text-dim); font-weight:700; }
   .builder-input{
-    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border);
+    width:100%; padding:12px 14px; border-radius:var(--r-md); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:16px; font-family:inherit;
   }
   .builder-input:focus{ outline:none; border-color:var(--accent); }
   .builder-toggle-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:14px 16px; background:var(--card); border:1px solid var(--border);
-    border-radius:14px; margin-top:6px;
+    border-radius:var(--r-md); margin-top:6px;
   }
   .builder-checkbox{ width:20px; height:20px; accent-color:var(--accent); flex:0 0 auto; }
   .builder-exercises{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
   .builder-exercise-card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
     padding:14px; display:flex; flex-direction:column; gap:10px;
     box-shadow: var(--shadow-sm);
   }
@@ -431,7 +593,7 @@
   .builder-exercise-num{ font-size:12px; color:var(--text-dim); font-weight:700; }
   .builder-head-actions{ display:flex; gap:6px; }
   .builder-move-btn, .builder-remove-btn{
-    width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
+    width:26px; height:26px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:transparent; color:var(--text-dim); font-size:12px;
     display:flex; align-items:center; justify-content:center; padding:0;
   }
@@ -439,7 +601,7 @@
   .builder-exercise-row{ display:flex; flex-direction:column; gap:5px; }
   .builder-exercise-row .mini-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
   .builder-exercise-row input{
-    width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border);
+    width:100%; padding:9px 10px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:16px; font-family:inherit;
   }
   .builder-exercise-row input:focus{ outline:none; border-color:var(--accent); }
@@ -448,7 +610,7 @@
   .exercise-name-field{ position:relative; }
   .suggest-panel{
     position:absolute; top:100%; left:0; right:0; z-index:40; margin-top:4px;
-    background:var(--card-2); border:1px solid var(--border); border-radius:12px;
+    background:var(--card-2); border:1px solid var(--border); border-radius:var(--r-md);
     max-height:212px; overflow-y:auto; -webkit-overflow-scrolling:touch;
     box-shadow: var(--shadow);
   }
@@ -467,7 +629,7 @@
     margin-top:7px; font-size:12px; color:var(--text-dim); line-height:1.35;
   }
   .suggest-hint-btn{
-    padding:6px 10px; border-radius:9px; border:1px solid var(--accent);
+    padding:6px 10px; border-radius:var(--r-sm); border:1px solid var(--accent);
     background:transparent; color:var(--accent); font-size:12px; font-weight:700;
     font-family:inherit;
   }
@@ -479,19 +641,19 @@
   }
   .builder-checkbox-label input{ width:17px; height:17px; accent-color:var(--accent); flex:0 0 auto; }
   .builder-add-btn{
-    padding:13px; border-radius:12px; border:1px dashed var(--border);
+    padding:13px; border-radius:var(--r-md); border:1px dashed var(--border);
     background:transparent; color:var(--text-dim); font-size:14px; font-weight:700;
     margin-top:14px;
   }
   .builder-save-btn{
-    padding:15px; border-radius:14px; border:none; margin-top:20px;
+    padding:15px; border-radius:var(--r-md); border:none; margin-top:20px;
     background:var(--accent); color:#fff; font-size:15.5px; font-weight:800;
   }
 
   /* ARCHIVES */
   .archive-toolbar{ display:flex; gap:10px; margin:2px 0 4px 0; }
   .archive-tool-btn{
-    flex:1; padding:11px 8px; border-radius:12px; border:1px solid var(--border);
+    flex:1; padding:11px 8px; border-radius:var(--r-md); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:13px; font-weight:700;
   }
   .archive-list{ display:flex; flex-direction:column; gap:12px; }
@@ -499,10 +661,10 @@
   /* Sélecteur de profil de l'écran Suivi Progression */
   .profile-switch{
     display:flex; gap:8px; padding:5px; margin-top:2px;
-    background:var(--card-2); border:1px solid var(--border); border-radius:14px;
+    background:var(--card-2); border:1px solid var(--border); border-radius:var(--r-md);
   }
   .profile-switch-btn{
-    flex:1; padding:11px 8px; border-radius:10px; border:1px solid transparent;
+    flex:1; padding:11px 8px; border-radius:var(--r-sm); border:1px solid transparent;
     background:transparent; color:var(--text-dim); font-size:14.5px; font-weight:700;
     font-family:inherit;
   }
@@ -513,16 +675,62 @@
     background:rgba(242,89,158,0.14); border-color:var(--lisa); color:var(--lisa);
   }
 
+  /* 063 : cumul de tout ce qui a été soulevé */
+  .lifetime-card{
+    display:flex; align-items:stretch; gap:14px; margin-top:12px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:15px 16px; box-shadow: var(--shadow-sm);
+  }
+  .lifetime-block{ flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .lifetime-value{
+    font-size:23px; font-weight:850; letter-spacing:-0.02em; color:var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .lifetime-label{ font-size:11.5px; color:var(--text-dim); font-weight:600; line-height:1.3; }
+  .lifetime-sep{ width:1px; background:var(--border); flex:0 0 auto; }
+
   .progress-exercise-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
   .progress-exercise-btn{
-    padding:14px 16px; border-radius:14px; border:1px solid var(--border);
+    padding:14px 16px; border-radius:var(--r-md); border:1px solid var(--border);
     background:var(--card); color:var(--text); text-align:left;
     font-size:14.5px; font-weight:700; box-shadow: var(--shadow-sm);
   }
   .progress-exercise-btn.selected{ border-color:var(--accent); color:var(--accent); }
+  /* Réglages de l'écran progression : métrique et période */
+  .progress-controls{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .segmented{
+    display:flex; gap:4px; padding:4px;
+    background:var(--card-2); border:1px solid var(--border); border-radius:var(--r-md);
+  }
+  .segmented-btn{
+    flex:1; padding:9px 4px; border-radius:var(--r-sm); border:1px solid transparent;
+    background:transparent; color:var(--text-dim); font-size:12.5px; font-weight:700;
+    font-family:inherit; white-space:nowrap;
+    transition: background .15s ease, color .15s ease;
+  }
+  .segmented-btn.selected{
+    background:var(--card); color:var(--accent); border-color:var(--border);
+  }
+  .progress-exercise-btn.is-tonnage{ border-style:dashed; }
+
+  .progress-chart-foot{
+    font-size:11px; color:var(--text-dim); text-align:center; margin-top:2px;
+  }
+  /* 034 : écart sur la période affichée */
+  .progress-delta{
+    display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+  }
+  .delta-main{ font-size:19px; font-weight:850; letter-spacing:-0.02em; }
+  .delta-pct{ font-size:13px; font-weight:700; }
+  .delta-ctx{ font-size:11.5px; color:var(--text-dim); width:100%; }
+  .progress-delta.up .delta-main, .progress-delta.up .delta-pct{ color:var(--done); }
+  .progress-delta.down .delta-main, .progress-delta.down .delta-pct{ color:var(--danger); }
+  .progress-delta.flat .delta-main, .progress-delta.flat .delta-pct{ color:var(--text-dim); }
+
   .progress-chart-card{
     margin-top:16px; background:var(--card); border:1px solid var(--border);
-    border-radius:16px; padding:16px; box-shadow: var(--shadow-sm);
+    border-radius:var(--r-lg); padding:16px; box-shadow: var(--shadow-sm);
   }
   .progress-chart-title{ font-size:14px; font-weight:800; margin-bottom:10px; }
   .progress-chart-empty{ color:var(--text-dim); font-size:13px; text-align:center; padding:20px 0; }
@@ -532,7 +740,7 @@
     text-align:center; color:var(--text-dim); font-size:14px; padding:30px 10px;
   }
   .archive-item{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
     padding:15px; display:flex; align-items:center; justify-content:space-between; gap:10px;
     box-shadow: var(--shadow-sm);
   }
@@ -541,13 +749,37 @@
   .archive-title{ font-size:14.5px; font-weight:700; }
   .archive-actions{ display:flex; gap:8px; flex:0 0 auto; }
   .archive-view-btn{
-    padding:9px 14px; border-radius:10px; border:1px solid var(--border);
+    padding:9px 14px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:var(--card-2); color:var(--text); font-size:13px; font-weight:700;
   }
   .archive-delete-btn{
-    width:36px; height:36px; border-radius:10px; border:1px solid var(--border);
+    width:36px; height:36px; border-radius:var(--r-sm); border:1px solid var(--border);
     background:var(--card-2); color:var(--text-dim); font-size:14px;
   }
+  /* ---------- SQUELETTES DE CHARGEMENT (130) ----------
+     Les classes étaient utilisées par le JS mais n'avaient aucun style : les
+     placeholders s'affichaient donc vides, ce qui était pire que rien. */
+  .skeleton-item{
+    pointer-events:none; opacity:.75;
+  }
+  .sk-line{
+    display:block; border-radius:var(--r-xs); background:var(--card-2);
+    position:relative; overflow:hidden;
+  }
+  .sk-line::after{
+    content:''; position:absolute; top:0; bottom:0; width:60%;
+    background:linear-gradient(90deg, transparent, var(--tint-strong), transparent);
+    animation: skShimmer 1.25s ease-in-out infinite;
+  }
+  @keyframes skShimmer{ from{ left:-60%; } to{ left:110%; } }
+  .sk-sm{ width:38%; height:9px; }
+  .sk-lg{ width:74%; height:13px; margin-top:6px; }
+  .sk-btn{ width:56px; height:30px; border-radius:var(--r-sm); }
+  .sk-icon{ width:100%; height:100%; border-radius:var(--r-md); margin:0; }
+  @media (prefers-reduced-motion: reduce){
+    .sk-line::after{ animation:none; }
+  }
+
   /* ---------- ÉCRAN DE CHARGEMENT ---------- */
   .splash{
     position:fixed; inset:0; z-index:200;
@@ -584,11 +816,11 @@
     letter-spacing:2.4px; text-transform:uppercase; color:var(--text-dim);
   }
   .splash-track{
-    width:172px; height:3px; border-radius:3px; margin-top:26px;
+    width:172px; height:3px; border-radius:var(--r-xs); margin-top:26px;
     background:var(--card-2); overflow:hidden;
   }
   .splash-fill{
-    height:100%; width:100%; border-radius:3px;
+    height:100%; width:100%; border-radius:var(--r-xs);
     background:linear-gradient(90deg, var(--corentin), var(--lisa));
   }
   .splash-status{
@@ -763,6 +995,8 @@
       <button class="profile-switch-btn corentin" onclick="setProgressProfile('corentin')">Corentin</button>
       <button class="profile-switch-btn lisa" onclick="setProgressProfile('lisa')">Lisa</button>
     </div>
+    <div class="lifetime-card" id="lifetime-card"></div>
+    <div class="progress-controls" id="progress-controls"></div>
     <div class="progress-exercise-list" id="progress-exercise-list"></div>
     <div id="progress-chart-wrap"></div>
   </div>
@@ -772,7 +1006,7 @@
 <div class="view" id="view-exercises">
   <header>
     <div class="header-row">
-      <button class="back-btn small" onclick="goToSessionView()">← Séances</button>
+      <button class="back-btn small" onclick="leaveExercisesView()">← Séances</button>
       <p class="app-title" id="exercises-profile-label"></p>
       <button class="undo-btn" onclick="undoLastAction()" aria-label="Annuler la dernière action">↩️</button>
     </div>
@@ -814,6 +1048,19 @@
   </div>
 </div>
 
+<!-- RAPPEL D'ARCHIVAGE (094) -->
+<div class="confirm-overlay" id="leave-modal">
+  <div class="confirm-box finish-box">
+    <p class="finish-title">Séance non archivée</p>
+    <p class="finish-sub">Tes données sont conservées, tu les retrouveras en revenant. Mais tant que la séance n'est pas archivée, elle ne compte pas dans ta progression.</p>
+    <div class="finish-actions">
+      <button class="finish-btn archive" onclick="leaveAndArchive()">📦 Archiver maintenant</button>
+      <button class="finish-btn copy" onclick="leaveAnyway()">Plus tard</button>
+    </div>
+    <button class="btn-cancel-text" onclick="closeLeaveModal()">Rester sur la séance</button>
+  </div>
+</div>
+
 <div class="confirm-overlay" id="confirm-modal">
   <div class="confirm-box">
     <p id="confirm-message">Réinitialiser les données de cette séance pour ce profil ?</p>
@@ -824,7 +1071,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
 
 <script type="module">
   // ---------- FIREBASE (archives partagées Corentin / Lisa, temps réel) ----------
@@ -875,10 +1122,19 @@
     const all = [];
     snapshot.forEach(d => all.push(d.data()));
     all.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    /* Une archive supprimée n'est pas effacée : elle porte un `deletedAt` et
+       part en corbeille. Tout le reste de l'app ne lit que les actives. */
+    const active = all.filter(a => !a.deletedAt);
+    const trashed = all.filter(a => a.deletedAt);
     window.archivesCache = {
-      corentin: all.filter(a => a.profile === 'corentin'),
-      lisa: all.filter(a => a.profile === 'lisa')
+      corentin: active.filter(a => a.profile === 'corentin'),
+      lisa: active.filter(a => a.profile === 'lisa')
     };
+    window.archivesTrashCache = {
+      corentin: trashed.filter(a => a.profile === 'corentin'),
+      lisa: trashed.filter(a => a.profile === 'lisa')
+    };
+    window.__archivesLoaded = true;
     updateSyncStatus(snapshot.metadata.hasPendingWrites, snapshot.metadata.fromCache);
     window.dispatchEvent(new Event('archives-updated'));
   }, (error) => {
@@ -890,6 +1146,7 @@
     snapshot.forEach(d => all.push(d.data()));
     all.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     window.customSessionsCache = all;
+    window.__customSessionsLoaded = true;
     updateSyncStatus(snapshot.metadata.hasPendingWrites, snapshot.metadata.fromCache);
     window.dispatchEvent(new Event('custom-sessions-updated'));
   }, (error) => {
@@ -900,6 +1157,7 @@
 <script>
 /* valeur par défaut le temps que Firebase se connecte, pour éviter toute erreur */
 if(!window.archivesCache) window.archivesCache = { corentin: [], lisa: [] };
+if(!window.archivesTrashCache) window.archivesTrashCache = { corentin: [], lisa: [] };
 if(!window.customSessionsCache) window.customSessionsCache = [];
 </script>
 
@@ -950,6 +1208,19 @@ function sanitizeField(input, mode){
     ? input.value.replace(/[^0-9]/g, '')
     : input.value.replace(/[^0-9.,]/g, '');
   if(cleaned !== input.value) input.value = cleaned;
+}
+
+/* Nombre à la française : espace milliers, virgule décimale, pas de zéro inutile. */
+function formatNumberFr(value){
+  if(value === null || value === undefined || isNaN(value)) return '—';
+  return (Math.round(value * 100) / 100).toLocaleString('fr-FR');
+}
+
+/* Affichage d'un poids : virgule française, pas de décimale inutile. */
+function formatKg(value){
+  if(value === null || value === undefined || isNaN(value)) return '—';
+  const rounded = Math.round(value * 100) / 100;
+  return rounded.toLocaleString('fr-FR') + ' kg';
 }
 
 /* Le clavier français produit "22,5" : parseFloat s'arrêterait à 22. */
@@ -1215,6 +1486,7 @@ function goToSessionView(){
 }
 
 function goToArchivesView(direction){
+  archivesMode = 'active';
   renderArchivesList();
   showView('view-archives', direction || 'fwd');
 }
@@ -1226,6 +1498,7 @@ let progressProfile = currentProfile;
 
 function setProgressProfile(profile){
   progressProfile = profile;
+  progressSelection = null; /* les exercices diffèrent d'un profil à l'autre */
   renderProgressView();
 }
 
@@ -1236,12 +1509,35 @@ function renderProgressView(){
   /* Le graphique reprend la couleur du profil consulté (override local de --accent) */
   const view = document.getElementById('view-progress');
   if(view) view.style.setProperty('--accent', progressProfile === 'lisa' ? 'var(--lisa)' : 'var(--corentin)');
+  renderLifetimeCard();
   renderProgressExerciseList();
+  renderProgressControls();
   document.getElementById('progress-chart-wrap').innerHTML = '';
+}
+
+/* 063 : tout ce qui a été soulevé depuis le début, corbeille exclue. */
+function renderLifetimeCard(){
+  const card = document.getElementById('lifetime-card');
+  if(!card) return;
+  const stats = getLifetimeStats(progressProfile);
+  if(stats.sessions === 0){ card.style.display = 'none'; card.innerHTML = ''; return; }
+  card.style.display = 'flex';
+  card.innerHTML = `
+    <div class="lifetime-block">
+      <span class="lifetime-value">${escapeHtml(stats.tonnage.toLocaleString('fr-FR'))}</span>
+      <span class="lifetime-label">kg soulevés au total</span>
+    </div>
+    <div class="lifetime-sep"></div>
+    <div class="lifetime-block">
+      <span class="lifetime-value">${stats.sessions}</span>
+      <span class="lifetime-label">séance${stats.sessions > 1 ? 's' : ''} archivée${stats.sessions > 1 ? 's' : ''}</span>
+    </div>
+  `;
 }
 
 function goToProgressView(){
   progressProfile = currentProfile;
+  progressSelection = null;
   renderProgressView();
   showView('view-progress', 'fwd');
 }
@@ -1294,6 +1590,21 @@ function renderSessionList(){
     list.appendChild(btn);
   });
 
+  /* 130 : les séances personnalisées arrivent de Firestore. Tant que le premier
+     snapshot n'est pas là, on réserve leur place plutôt que de faire sauter la
+     liste quand elles apparaissent. */
+  if(!window.__customSessionsLoaded && (window.customSessionsCache || []).length === 0){
+    for(let i = 0; i < 2; i++){
+      const sk = document.createElement('div');
+      sk.className = 'session-btn skeleton-item';
+      sk.innerHTML = `
+        <span class="session-icon"><span class="sk-line sk-icon"></span></span>
+        <span class="session-text"><span class="sk-line sk-sm"></span><span class="sk-line sk-lg"></span></span>
+      `;
+      list.appendChild(sk);
+    }
+  }
+
   const customSessions = window.customSessionsCache || [];
   customSessions.forEach(session => {
     const row = document.createElement('div');
@@ -1329,13 +1640,14 @@ function renderSessionList(){
   });
 
   const archiveCount = getArchivesList(currentProfile).length;
+  const trashCount = getTrashList(currentProfile).length;
   const archBtn = document.createElement('button');
   archBtn.className = 'session-btn archive-entry';
   archBtn.innerHTML = `
     <span class="session-icon">📦</span>
     <span class="session-text">
       <span class="s-label">Archives</span>
-      <span class="s-subtitle">${archiveCount} séance${archiveCount > 1 ? 's' : ''} enregistrée${archiveCount > 1 ? 's' : ''}</span>
+      <span class="s-subtitle">${archiveCount} séance${archiveCount > 1 ? 's' : ''} enregistrée${archiveCount > 1 ? 's' : ''}${trashCount > 0 ? ` · ${trashCount} en corbeille` : ''}</span>
     </span>
   `;
   archBtn.onclick = () => goToArchivesView();
@@ -1376,11 +1688,23 @@ function updateSessionProgress(){
   }
 
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const complete = total > 0 && done === total;
+  const track = document.querySelector('.session-progress-track');
+  /* 129 : franchir les 100 % se remarque, mais une seule fois — on ne rejoue pas
+     l'animation à chaque re-render une fois la séance complète. */
+  if(track){
+    const was = track.classList.contains('complete');
+    track.classList.toggle('complete', complete);
+    if(complete && !was){
+      track.classList.remove('celebrate'); void track.offsetWidth; track.classList.add('celebrate');
+    }
+    if(!complete) track.classList.remove('celebrate');
+  }
   const fill = document.getElementById('session-progress-fill');
   const label = document.getElementById('session-progress-label');
   const tonnageLabel = document.getElementById('session-tonnage-label');
   if(fill) fill.style.width = pct + '%';
-  if(label) label.textContent = `${done} / ${total} validés`;
+  if(label) label.textContent = complete ? `Séance complète — ${total} / ${total} validés` : `${done} / ${total} validés`;
   if(tonnageLabel){
     const formatted = Math.round(tonnage).toLocaleString('fr-FR');
     tonnageLabel.textContent = tonnage > 0 ? `💪 ${formatted} kg soulevés cette séance` : '';
@@ -1413,13 +1737,92 @@ function render(){
     const card = document.createElement('div');
     card.className = 'exercise-card';
 
+    /* 109 : la carte se lit en deux temps — l'identité de l'exercice (ce que
+       c'est, ce qu'on vise, ce qu'on avait fait), puis la zone de saisie. Les
+       deux blocs ont des fonds distincts séparés par un filet. */
+    const headWrap = document.createElement('div');
+    headWrap.className = 'exercise-headwrap';
+    card.appendChild(headWrap);
+
+    const body = document.createElement('div');
+    body.className = 'exercise-body';
+    card.appendChild(body);
+
     const head = document.createElement('div');
     head.className = 'exercise-head';
     head.innerHTML = `
       <div class="exercise-name">${escapeHtml(ex.name)}</div>
       <div class="exercise-target">${escapeHtml((ex.target && ex.target[currentProfile]) || '')}</div>
     `;
-    card.appendChild(head);
+    headWrap.appendChild(head);
+
+    /* 005 / 006 : contexte historique de l'exercice, lu une seule fois par carte. */
+    const isCircuitEx = ex.logType === 'circuit';
+    const lastPerf = isCircuitEx ? null : getLastPerformance(currentProfile, ex.name);
+    const record = isCircuitEx ? 0 : getPersonalRecord(currentProfile, ex.name);
+
+    if(lastPerf || record > 0){
+      const histRow = document.createElement('div');
+      histRow.className = 'exercise-history';
+      if(lastPerf){
+        const best = lastPerf.sets.reduce(function(a, b){ return b.weight > a.weight ? b : a; });
+        const span = document.createElement('span');
+        span.className = 'hist-last';
+        span.textContent = 'Dernière fois : ' + formatKg(best.weight)
+          + (isNaN(best.reps) ? '' : ' × ' + best.reps) + '  ·  ' + lastPerf.dateLabel;
+        histRow.appendChild(span);
+      }
+      if(record > 0){
+        const rec = document.createElement('span');
+        rec.className = 'hist-record';
+        rec.textContent = 'Record ' + formatKg(record);
+        histRow.appendChild(rec);
+      }
+      headWrap.appendChild(histRow);
+    }
+
+    /* Badge affiché dès qu'une série saisie dépasse le record archivé. */
+    const prBadge = document.createElement('div');
+    prBadge.className = 'pr-badge';
+    prBadge.style.display = 'none';
+    prBadge.textContent = '';
+    body.appendChild(prBadge);
+
+    /* Un exercice dont toutes les séries sont validées se signale discrètement :
+       en salle, ça évite de recompter les coches pour savoir où on en est. */
+    function refreshCardState(){
+      const d = loadDayData(currentSessionId, currentProfile);
+      let done = 0;
+      for(let n = 1; n <= ex.sets; n++){
+        const cur = d.sets['ex' + exIdx + '_set' + n];
+        if(cur && cur.done) done++;
+      }
+      card.classList.toggle('complete', done === ex.sets && ex.sets > 0);
+    }
+
+    function refreshRecordBadge(){
+      if(isCircuitEx || record <= 0){ prBadge.style.display = 'none'; return; }
+      const d = loadDayData(currentSessionId, currentProfile);
+      let best = 0;
+      for(let n = 1; n <= ex.sets; n++){
+        const cur = d.sets['ex' + exIdx + '_set' + n];
+        const val = cur ? parseNum(cur.weight) : NaN;
+        if(!isNaN(val) && val > best) best = val;
+      }
+      if(best > record){
+        const wasHidden = prBadge.style.display === 'none';
+        prBadge.textContent = 'Nouveau record : ' + formatKg(best)
+          + '  (+' + formatKg(best - record) + ')';
+        prBadge.style.display = 'flex';
+        if(wasHidden){
+          prBadge.classList.remove('pop'); void prBadge.offsetWidth; prBadge.classList.add('pop');
+        }
+      } else {
+        prBadge.style.display = 'none';
+      }
+    }
+    refreshRecordBadge();
+    refreshCardState();
 
     if(ex.equipmentOptions){
       const variantRow = document.createElement('div');
@@ -1443,7 +1846,7 @@ function render(){
         };
         variantRow.appendChild(optBtn);
       });
-      card.appendChild(variantRow);
+      body.appendChild(variantRow);
     }
 
     const isCircuit = ex.logType === 'circuit';
@@ -1453,7 +1856,7 @@ function render(){
     gridHeader.innerHTML = isCircuit
       ? `<span>Tour</span><span>✓</span>`
       : `<span>#</span><span>Poids (kg)</span><span>Reps</span><span></span><span>✓</span>`;
-    card.appendChild(gridHeader);
+    body.appendChild(gridHeader);
 
     for(let s = 1; s <= ex.sets; s++){
       const setKey = `ex${exIdx}_set${s}`;
@@ -1475,7 +1878,11 @@ function render(){
         weightInput.type = 'text';
         weightInput.inputMode = 'decimal';
         weightInput.autocomplete = 'off';
-        weightInput.placeholder = 'kg';
+        /* 005 : la valeur de la dernière fois sert d'indication grisée. Ce n'est
+           jamais une valeur saisie : si l'utilisateur ne tape rien, la série
+           reste vide dans l'export et dans le tonnage. */
+        const lastSet = lastPerf ? lastPerf.sets.find(function(x){ return x.set === s; }) : null;
+        weightInput.placeholder = (lastSet && !isNaN(lastSet.weight)) ? formatKg(lastSet.weight) : 'kg';
         weightInput.value = savedSet.weight;
         weightInput.onfocus = armUndoSnapshot;
         weightInput.oninput = () => {
@@ -1486,6 +1893,7 @@ function render(){
           d.sets[setKey].weight = weightInput.value;
           saveDayData(currentSessionId, currentProfile, d);
           updateSessionProgress(); /* tonnage recalculé en direct */
+          refreshRecordBadge();
         };
         row.appendChild(weightInput);
 
@@ -1493,7 +1901,7 @@ function render(){
         repsInput.type = 'text';
         repsInput.inputMode = 'numeric';
         repsInput.autocomplete = 'off';
-        repsInput.placeholder = 'reps';
+        repsInput.placeholder = (lastSet && !isNaN(lastSet.reps)) ? String(lastSet.reps) : 'reps';
         repsInput.value = savedSet.reps;
         repsInput.onfocus = armUndoSnapshot;
         repsInput.oninput = () => {
@@ -1524,6 +1932,8 @@ function render(){
               saveDayData(currentSessionId, currentProfile, d);
               weightInput.value = prev.weight;
               repsInput.value = prev.reps;
+              refreshRecordBadge();
+              dupBtn.classList.remove('done'); void dupBtn.offsetWidth; dupBtn.classList.add('done');
               showToast('Série recopiée');
             } else {
               showToast('Rien à recopier');
@@ -1550,11 +1960,12 @@ function render(){
           checkBtn.classList.remove('pulse'); void checkBtn.offsetWidth; checkBtn.classList.add('pulse');
           vibrate();
         }
+        refreshCardState();
         updateSessionProgress();
       };
       row.appendChild(checkBtn);
 
-      card.appendChild(row);
+      body.appendChild(row);
     }
 
     const noteWrap = document.createElement('div');
@@ -1579,7 +1990,7 @@ function render(){
       saveDayData(currentSessionId, currentProfile, d);
     };
     noteWrap.appendChild(noteInput);
-    card.appendChild(noteWrap);
+    body.appendChild(noteWrap);
 
     main.appendChild(card);
   });
@@ -1744,6 +2155,7 @@ function askReset(){
 }
 function doReset(){
   pushUndoSnapshot();
+  delete leaveReminderDismissed[dataKey(currentSessionId, currentProfile)];
   saveDayData(currentSessionId, currentProfile, blankDayData());
   render();
   showToast('Séance réinitialisée');
@@ -1864,6 +2276,61 @@ function fallbackCopy(text, sourceTextarea){
   }
 }
 
+/* ---------- RAPPEL D'ARCHIVAGE (094) ----------
+   Rien n'est jamais perdu : les données de séance sont écrites en LocalStorage à
+   chaque frappe. Le vrai risque est d'oublier d'archiver, et de ne pas voir la
+   séance apparaître dans la progression. Le message dit donc cela, et pas
+   "vous allez perdre vos données", qui serait faux. */
+
+/* Un "Plus tard" met le rappel en sourdine, mais seulement tant que la séance ne
+   bouge plus : on mémorise l'état des données au moment du refus. Si de nouvelles
+   séries sont saisies ensuite, le rappel se réarme — sinon dire "plus tard" en
+   début de séance suffirait à ne plus jamais être averti. */
+const leaveReminderDismissed = {};
+
+function sessionHasData(sessionId, profile){
+  const program = getSession(sessionId);
+  const d = loadDayData(sessionId, profile);
+  const sets = d.sets || {};
+  const filled = Object.keys(sets).some(k => {
+    const v = sets[k] || {};
+    return v.done || (v.weight !== '' && v.weight != null) || (v.reps !== '' && v.reps != null);
+  });
+  if(filled) return true;
+  const notes = d.notes || {};
+  if(Object.keys(notes).some(k => (notes[k] || '').trim() !== '')) return true;
+  if(program && program.cardio){
+    if(d.cardioDone) return true;
+    if([d.cardioMinutes, d.cardioIncline, d.cardioSpeed, d.cardioNote]
+       .some(v => v != null && String(v).trim() !== '')) return true;
+  }
+  return false;
+}
+
+function leaveExercisesView(){
+  const key = dataKey(currentSessionId, currentProfile);
+  const snapshot = JSON.stringify(loadDayData(currentSessionId, currentProfile));
+  const muted = leaveReminderDismissed[key] === snapshot;
+  if(muted || !sessionHasData(currentSessionId, currentProfile)){
+    goToSessionView();
+    return;
+  }
+  document.getElementById('leave-modal').classList.add('open');
+}
+function closeLeaveModal(){
+  document.getElementById('leave-modal').classList.remove('open');
+}
+function leaveAnyway(){
+  leaveReminderDismissed[dataKey(currentSessionId, currentProfile)] =
+    JSON.stringify(loadDayData(currentSessionId, currentProfile));
+  closeLeaveModal();
+  goToSessionView();
+}
+function leaveAndArchive(){
+  closeLeaveModal();
+  finishArchive();
+}
+
 /* ---------- SÉANCE TERMINÉE (copier / archiver) ---------- */
 function openFinishModal(){
   document.getElementById('finish-modal').classList.add('open');
@@ -1917,8 +2384,10 @@ function finishArchive(){
       if(currentSessionId === archivedSessionId && currentProfile === archivedProfile) render();
     });
 
+  delete leaveReminderDismissed[dataKey(archivedSessionId, archivedProfile)];
   saveDayData(currentSessionId, currentProfile, blankDayData());
   closeFinishModal();
+  closeLeaveModal();
   showToast(navigator.onLine ? 'Séance archivée 📦' : 'Archivée hors ligne — synchro au retour du réseau 📦');
   goToSessionView();
 }
@@ -1927,21 +2396,146 @@ function finishArchive(){
 function getArchivesList(profile){
   return (window.archivesCache && window.archivesCache[profile]) || [];
 }
+function getTrashList(profile){
+  return (window.archivesTrashCache && window.archivesTrashCache[profile]) || [];
+}
+/* Archives du plus ancien au plus récent (le cache est trié à l'envers). */
+function getArchivesChrono(profile){
+  return getArchivesList(profile).slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+/* ---------- SOCLE : lecture des séries d'un exercice dans une archive ----------
+   Les séries sont stockées sous la clé `ex<index>_set<n>`, l'index venant de la
+   position du nom dans `exerciseNames`. Cette fonction est le seul endroit qui
+   connaît ce détail : tout le reste (records, dernier poids, métriques du
+   graphique) passe par elle. */
+function getSetsForExercise(archive, exerciseName){
+  if(!archive) return [];
+  const names = archive.exerciseNames || [];
+  const exIdx = names.indexOf(exerciseName);
+  if(exIdx === -1) return [];
+  const rawSets = archive.rawSets || {};
+  const out = [];
+  Object.keys(rawSets).forEach(key => {
+    const match = key.match(/^ex(\d+)_set(\d+)$/);
+    if(!match || parseInt(match[1], 10) !== exIdx) return;
+    const raw = rawSets[key] || {};
+    out.push({
+      set: parseInt(match[2], 10),
+      weight: parseNum(raw.weight),
+      reps: parseNum(raw.reps),
+      done: !!raw.done
+    });
+  });
+  return out.sort((a, b) => a.set - b.set);
+}
+
+/* Dernière séance où l'exercice a été fait, avec au moins un poids saisi. */
+function getLastPerformance(profile, exerciseName){
+  const archives = getArchivesChrono(profile);
+  for(let i = archives.length - 1; i >= 0; i--){
+    const sets = getSetsForExercise(archives[i], exerciseName).filter(x => !isNaN(x.weight));
+    if(sets.length > 0) return { dateLabel: archives[i].dateLabel, sets: sets };
+  }
+  return null;
+}
+
+/* Meilleur poids jamais soulevé sur cet exercice (archives uniquement : la
+   séance en cours ne doit pas faire bouger le record pendant qu'on la saisit). */
+function getPersonalRecord(profile, exerciseName){
+  let best = 0;
+  getArchivesList(profile).forEach(arc => {
+    getSetsForExercise(arc, exerciseName).forEach(x => {
+      if(!isNaN(x.weight) && x.weight > best) best = x.weight;
+    });
+  });
+  return best;
+}
+
+/* Cumul de tout ce qui a été soulevé, corbeille exclue. */
+function getLifetimeStats(profile){
+  const archives = getArchivesList(profile);
+  let tonnage = 0;
+  archives.forEach(a => { tonnage += (a.tonnage || 0); });
+  return { sessions: archives.length, tonnage: Math.round(tonnage) };
+}
+let archivesMode = 'active'; /* 'active' | 'trash' */
+
+function setArchivesMode(mode){
+  archivesMode = mode;
+  renderArchivesList();
+}
+
+/* Placeholders affichés tant que le premier snapshot Firestore n'est pas arrivé,
+   plutôt qu'un "Connexion en cours..." qui laisse croire à une erreur. */
+function renderArchiveSkeletons(list, count){
+  for(let i = 0; i < count; i++){
+    const sk = document.createElement('div');
+    sk.className = 'archive-item skeleton-item';
+    sk.innerHTML = `
+      <div class="archive-info">
+        <span class="sk-line sk-sm"></span>
+        <span class="sk-line sk-lg"></span>
+      </div>
+      <div class="archive-actions"><span class="sk-line sk-btn"></span></div>
+    `;
+    list.appendChild(sk);
+  }
+}
+
 function renderArchivesList(){
   const profileName = currentProfile === 'corentin' ? 'Corentin' : 'Lisa';
-  document.getElementById('archives-view-title').textContent = `Archives — ${profileName}`;
+  const trash = getTrashList(currentProfile);
+  const inTrash = archivesMode === 'trash';
+  document.getElementById('archives-view-title').textContent =
+    inTrash ? `Corbeille — ${profileName}` : `Archives — ${profileName}`;
 
   const list = document.getElementById('archive-list');
   list.innerHTML = '';
-  const archives = getArchivesList(currentProfile);
+  const archives = inTrash ? trash : getArchivesList(currentProfile);
 
   const toolbar = document.getElementById('archive-toolbar');
-  if(toolbar) toolbar.style.display = archives.length > 0 ? 'flex' : 'none';
+  if(toolbar){
+    toolbar.innerHTML = '';
+    toolbar.style.display = 'flex';
+    if(inTrash){
+      const back = document.createElement('button');
+      back.className = 'archive-tool-btn';
+      back.textContent = '← Archives';
+      back.onclick = () => setArchivesMode('active');
+      toolbar.appendChild(back);
+      if(trash.length > 0){
+        const purge = document.createElement('button');
+        purge.className = 'archive-tool-btn danger';
+        purge.textContent = '🧹 Vider la corbeille';
+        purge.onclick = askEmptyTrash;
+        toolbar.appendChild(purge);
+      }
+    } else {
+      const exp = document.createElement('button');
+      exp.className = 'archive-tool-btn';
+      exp.textContent = '📤 Exporter tout';
+      exp.onclick = exportAllArchives;
+      toolbar.appendChild(exp);
+      const bin = document.createElement('button');
+      bin.className = 'archive-tool-btn';
+      bin.textContent = `🗑️ Corbeille (${trash.length})`;
+      bin.onclick = () => setArchivesMode('trash');
+      toolbar.appendChild(bin);
+      if(archives.length === 0 && trash.length === 0) toolbar.style.display = 'none';
+    }
+  }
 
   if(archives.length === 0){
+    if(!inTrash && !window.__archivesLoaded){
+      renderArchiveSkeletons(list, 3);
+      return;
+    }
     const empty = document.createElement('p');
     empty.className = 'archive-empty';
-    empty.textContent = window.__fb ? 'Aucune séance archivée pour le moment.' : 'Connexion au cloud en cours...';
+    empty.textContent = inTrash
+      ? 'La corbeille est vide.'
+      : 'Aucune séance archivée pour le moment.';
     list.appendChild(empty);
     return;
   }
@@ -1957,16 +2551,17 @@ function renderArchivesList(){
       </div>
       <div class="archive-actions">
         <button class="archive-view-btn">Voir</button>
-        <button class="archive-delete-btn">🗑️</button>
+        <button class="archive-delete-btn">${inTrash ? '♻️' : '🗑️'}</button>
       </div>
     `;
     item.querySelector('.archive-view-btn').onclick = () => viewArchive(arc.id);
-    item.querySelector('.archive-delete-btn').onclick = () => askDeleteArchive(arc.id);
+    item.querySelector('.archive-delete-btn').onclick = () =>
+      inTrash ? restoreArchive(arc.id) : askDeleteArchive(arc.id);
     list.appendChild(item);
   });
 }
 function viewArchive(id){
-  const archives = getArchivesList(currentProfile);
+  const archives = getArchivesList(currentProfile).concat(getTrashList(currentProfile));
   const arc = archives.find(a => a.id === id);
   if(!arc) return;
   document.getElementById('export-text').value = arc.exportText;
@@ -2002,10 +2597,102 @@ function getExerciseNamesFromArchives(profile){
   return Array.from(names).sort();
 }
 
+/* ---------- ÉCRAN PROGRESSION ----------
+   Trois réglages indépendants : la série suivie (un exercice, ou le tonnage de la
+   séance entière), la métrique, et la période. Toute la chaîne passe par
+   getSetsForExercise() : c'est le seul endroit qui connaît le format des archives. */
+
+const PROGRESS_TONNAGE_KEY = '__tonnage__';
+
+const PROGRESS_METRICS = [
+  { id:'weight',  label:'Poids max',  unit:'kg', title:'meilleure série' },
+  { id:'volume',  label:'Volume',     unit:'kg', title:'volume (poids × reps)' },
+  { id:'reps',    label:'Reps max',   unit:'reps', title:'meilleure série en reps' }
+];
+const PROGRESS_PERIODS = [
+  { id:'1m',  label:'1 mois', days:31 },
+  { id:'3m',  label:'3 mois', days:92 },
+  { id:'6m',  label:'6 mois', days:183 },
+  { id:'all', label:'Tout',   days:null }
+];
+
+let progressMetric = 'weight';
+let progressPeriod = 'all';
+let progressSelection = null; /* nom d'exercice, ou PROGRESS_TONNAGE_KEY */
+
+function setProgressMetric(id){
+  progressMetric = id;
+  renderProgressControls();
+  if(progressSelection) renderProgressChart(progressSelection);
+}
+function setProgressPeriod(id){
+  progressPeriod = id;
+  renderProgressControls();
+  if(progressSelection) renderProgressChart(progressSelection);
+}
+
+/* La métrique n'a pas de sens sur le tonnage de séance : la valeur est déjà
+   agrégée dans l'archive. On masque le sélecteur plutôt que de proposer des
+   options sans effet. */
+function renderProgressControls(){
+  const wrap = document.getElementById('progress-controls');
+  if(!wrap) return;
+  const showMetric = progressSelection !== null && progressSelection !== PROGRESS_TONNAGE_KEY;
+  wrap.innerHTML = '';
+  if(progressSelection === null){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'flex';
+
+  if(showMetric){
+    const row = document.createElement('div');
+    row.className = 'segmented';
+    PROGRESS_METRICS.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'segmented-btn' + (progressMetric === m.id ? ' selected' : '');
+      b.textContent = m.label;
+      b.onclick = () => setProgressMetric(m.id);
+      row.appendChild(b);
+    });
+    wrap.appendChild(row);
+  }
+
+  const periodRow = document.createElement('div');
+  periodRow.className = 'segmented';
+  PROGRESS_PERIODS.forEach(pd => {
+    const b = document.createElement('button');
+    b.className = 'segmented-btn' + (progressPeriod === pd.id ? ' selected' : '');
+    b.textContent = pd.label;
+    b.onclick = () => setProgressPeriod(pd.id);
+    periodRow.appendChild(b);
+  });
+  wrap.appendChild(periodRow);
+}
+
+function getExerciseNamesFromArchives(profile){
+  const archives = getArchivesList(profile);
+  const names = new Set();
+  archives.forEach(arc => {
+    (arc.exerciseNames || []).forEach(n => names.add(n));
+  });
+  return Array.from(names).sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
 function renderProgressExerciseList(){
   const container = document.getElementById('progress-exercise-list');
   container.innerHTML = '';
+
   const names = getExerciseNamesFromArchives(progressProfile);
+
+  /* Squelettes seulement s'il n'y a vraiment rien à montrer : si le cache contient
+     déjà des données, on les affiche sans attendre la confirmation du snapshot. */
+  if(names.length === 0 && !window.__archivesLoaded){
+    for(let i = 0; i < 4; i++){
+      const sk = document.createElement('div');
+      sk.className = 'progress-exercise-btn skeleton-item';
+      sk.innerHTML = '<span class="sk-line sk-lg"></span>';
+      container.appendChild(sk);
+    }
+    return;
+  }
 
   if(names.length === 0){
     const empty = document.createElement('p');
@@ -2015,106 +2702,231 @@ function renderProgressExerciseList(){
     return;
   }
 
-  names.forEach(name => {
+  function addButton(key, label, extraClass){
     const btn = document.createElement('button');
-    btn.className = 'progress-exercise-btn';
-    btn.textContent = name;
+    btn.className = 'progress-exercise-btn' + (extraClass ? ' ' + extraClass : '')
+      + (progressSelection === key ? ' selected' : '');
+    btn.textContent = label;
+    btn.dataset.key = key;
     btn.onclick = () => {
+      progressSelection = key;
       container.querySelectorAll('.progress-exercise-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      renderProgressChart(name);
+      renderProgressControls();
+      renderProgressChart(key);
     };
     container.appendChild(btn);
-  });
+  }
+
+  /* 032 : le tonnage est une donnée de séance, pas d'exercice — il prend donc la
+     tête de la liste plutôt qu'un écran à part. */
+  addButton(PROGRESS_TONNAGE_KEY, 'Tonnage total de la séance', 'is-tonnage');
+  names.forEach(n => addButton(n, n));
 }
 
-function getBestSetPerArchiveForExercise(profile, exerciseName){
-  const archives = getArchivesList(profile).slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+/* Archives d'un profil filtrées par la période choisie, du plus ancien au plus récent. */
+function getArchivesInPeriod(profile){
+  const archives = getArchivesChrono(profile);
+  const period = PROGRESS_PERIODS.find(p => p.id === progressPeriod);
+  if(!period || !period.days) return archives;
+  const floor = Date.now() - period.days * 24 * 60 * 60 * 1000;
+  return archives.filter(a => (a.createdAt || 0) >= floor);
+}
+
+/* Un point par archive. `value` vaut null quand l'exercice n'a rien d'exploitable
+   ce jour-là : le point est simplement absent de la courbe. */
+function getProgressPoints(profile, selection){
+  const archives = getArchivesInPeriod(profile);
   const points = [];
 
   archives.forEach(arc => {
-    const names = arc.exerciseNames || [];
-    const exIdx = names.indexOf(exerciseName);
-    if(exIdx === -1) return;
-    const rawSets = arc.rawSets || {};
-    let best = 0;
-    Object.keys(rawSets).forEach(key => {
-      if(key.indexOf(`ex${exIdx}_set`) !== 0) return;
-      const w = parseNum(rawSets[key] && rawSets[key].weight);
-      if(!isNaN(w) && w > best) best = w;
-    });
-    if(best > 0){
-      points.push({ dateLabel: arc.dateLabel, weight: best });
+    let value = null;
+    if(selection === PROGRESS_TONNAGE_KEY){
+      if(arc.tonnage > 0) value = arc.tonnage;
+    } else {
+      const sets = getSetsForExercise(arc, selection);
+      if(progressMetric === 'reps'){
+        const best = sets.reduce((m, x) => (!isNaN(x.reps) && x.reps > m) ? x.reps : m, 0);
+        if(best > 0) value = best;
+      } else if(progressMetric === 'volume'){
+        let total = 0;
+        sets.forEach(x => { if(!isNaN(x.weight) && !isNaN(x.reps)) total += x.weight * x.reps; });
+        if(total > 0) value = Math.round(total);
+      } else {
+        const best = sets.reduce((m, x) => (!isNaN(x.weight) && x.weight > m) ? x.weight : m, 0);
+        if(best > 0) value = best;
+      }
     }
+    if(value !== null) points.push({ dateLabel: arc.dateLabel, value: value, createdAt: arc.createdAt });
   });
 
   return points;
 }
 
-function renderProgressChart(exerciseName){
+/* 034 : écart entre le premier et le dernier point de la période affichée. */
+function getProgressDelta(points){
+  if(points.length < 2) return null;
+  const first = points[0].value, last = points[points.length - 1].value;
+  if(!first) return null;
+  const diff = last - first;
+  const pct = (diff / first) * 100;
+  return { first, last, diff, pct };
+}
+
+function progressMetricInfo(selection){
+  if(selection === PROGRESS_TONNAGE_KEY){
+    return { unit:'kg', title:'tonnage par séance', label:'Tonnage total de la séance' };
+  }
+  const m = PROGRESS_METRICS.find(x => x.id === progressMetric) || PROGRESS_METRICS[0];
+  return { unit:m.unit, title:m.title, label:selection };
+}
+
+function renderProgressChart(selection){
   const wrap = document.getElementById('progress-chart-wrap');
-  const points = getBestSetPerArchiveForExercise(progressProfile, exerciseName);
+  const info = progressMetricInfo(selection);
+  const points = getProgressPoints(progressProfile, selection);
+  const periodLabel = (PROGRESS_PERIODS.find(p => p.id === progressPeriod) || {}).label;
 
   if(points.length === 0){
     wrap.innerHTML = `
       <div class="progress-chart-card">
-        <div class="progress-chart-title">${escapeHtml(exerciseName)}</div>
-        <div class="progress-chart-empty">Pas de poids enregistré pour cet exercice dans les archives.</div>
+        <div class="progress-chart-title">${escapeHtml(info.label)}</div>
+        <div class="progress-chart-empty">Rien d'enregistré sur cette période${progressPeriod === 'all' ? '' : ' (' + escapeHtml(periodLabel) + ')'}.</div>
       </div>
     `;
     return;
   }
 
-  const width = 320, height = 160, padding = 28;
-  const maxW = Math.max(...points.map(p => p.weight));
-  const minW = Math.min(...points.map(p => p.weight));
-  const range = (maxW - minW) || 1;
+  const width = 320, height = 168, padding = 28;
+  const values = points.map(p => p.value);
+  const maxV = Math.max(...values), minV = Math.min(...values);
+  const range = (maxV - minV) || 1;
+  const flat = maxV === minV;
 
-  const flat = maxW === minW; /* poids identiques partout : ligne centrée, pas collée en bas */
   const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
   const coords = points.map((p, i) => {
     const x = points.length > 1 ? padding + i * stepX : width / 2;
-    const ratio = flat ? 0.5 : (p.weight - minW) / range;
-    const y = height - padding - ratio * (height - padding * 2);
-    return { x, y, ...p };
+    const ratio = flat ? 0.5 : (p.value - minV) / range;
+    return { x: x, y: height - padding - ratio * (height - padding * 2), point: p };
   });
 
   const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
-
   const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--accent)"/>`).join('');
-  const valueLabels = coords.map(c => `<text class="progress-value-label" x="${c.x.toFixed(1)}" y="${(c.y - 10).toFixed(1)}" text-anchor="middle">${c.weight}</text>`).join('');
-  const dateLabels = coords.map(c => `<text class="progress-point-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${escapeHtml(String(c.dateLabel || '').slice(0,5))}</text>`).join('');
+
+  /* Au-delà de 8 points, les étiquettes se chevauchent : on n'en garde qu'une sur
+     N, en conservant toujours la première et la dernière. */
+  const stride = Math.ceil(points.length / 6);
+  const keep = i => points.length <= 8 || i === 0 || i === points.length - 1 || i % stride === 0;
+
+  const valueLabels = coords.map((c, i) => keep(i)
+    ? `<text class="progress-value-label" x="${c.x.toFixed(1)}" y="${(c.y - 10).toFixed(1)}" text-anchor="middle">${escapeHtml(formatNumberFr(c.point.value))}</text>`
+    : '').join('');
+  const dateLabels = coords.map((c, i) => keep(i)
+    ? `<text class="progress-point-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${escapeHtml(String(c.point.dateLabel || '').slice(0,5))}</text>`
+    : '').join('');
+
+  const delta = getProgressDelta(points);
+  let deltaHtml = '';
+  if(delta){
+    const sign = delta.diff > 0 ? '+' : (delta.diff < 0 ? '−' : '');
+    const cls = delta.diff > 0 ? 'up' : (delta.diff < 0 ? 'down' : 'flat');
+    const abs = Math.abs(delta.diff);
+    deltaHtml = `
+      <div class="progress-delta ${cls}">
+        <span class="delta-main">${sign}${escapeHtml(formatNumberFr(Math.round(abs * 10) / 10))} ${escapeHtml(info.unit)}</span>
+        <span class="delta-pct">${sign}${escapeHtml(formatNumberFr(Math.abs(Math.round(delta.pct * 10) / 10)))} %</span>
+        <span class="delta-ctx">de ${escapeHtml(formatNumberFr(delta.first))} à ${escapeHtml(formatNumberFr(delta.last))} ${escapeHtml(info.unit)}${progressPeriod === 'all' ? '' : ' · ' + escapeHtml(periodLabel)}</span>
+      </div>
+    `;
+  }
 
   wrap.innerHTML = `
     <div class="progress-chart-card">
-      <div class="progress-chart-title">${escapeHtml(exerciseName)} — meilleure série (kg)</div>
+      <div class="progress-chart-title">${escapeHtml(info.label)} — ${escapeHtml(info.title)}</div>
       <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
         ${valueLabels}
         ${dateLabels}
       </svg>
+      <div class="progress-chart-foot">${points.length} séance${points.length > 1 ? 's' : ''} sur la période</div>
+      ${deltaHtml}
     </div>
   `;
 }
 
-function askDeleteArchive(id){
-  showConfirm('Supprimer définitivement cette séance archivée ?', () => deleteArchive(id));
+/* ---------- CORBEILLE ----------
+   Supprimer ne détruit plus rien : on pose un `deletedAt` et le document part en
+   corbeille. Reste dans la collection `archives`, donc aucune règle Firestore à
+   modifier. La destruction réelle n'a lieu qu'en vidant la corbeille. */
+function findArchiveAnywhere(id){
+  return getArchivesList(currentProfile).concat(getTrashList(currentProfile))
+    .find(a => a.id === id) || null;
 }
+
+function askDeleteArchive(id){
+  showConfirm('Mettre cette séance à la corbeille ?', () => deleteArchive(id));
+}
+
 function deleteArchive(id){
   if(!window.__fb){
     showToast('Connexion au cloud en cours, réessaie dans un instant');
     return;
   }
-  const { db, doc, deleteDoc } = window.__fb;
-  /* Pas de .then() : hors ligne la promesse ne se résout qu'au retour du réseau,
-     alors que la suppression est déjà appliquée au cache local (et donc à l'écran). */
-  deleteDoc(doc(db, 'archives', id))
+  const arc = findArchiveAnywhere(id);
+  if(!arc) return;
+  const { db, doc, setDoc } = window.__fb;
+  setDoc(doc(db, 'archives', id), Object.assign({}, arc, { deletedAt: Date.now() }))
     .catch((err) => {
-      console.error('Erreur suppression Firestore', err);
+      console.error('Erreur mise à la corbeille Firestore', err);
       showToast(firestoreErrorMessage(err, "de la suppression"));
     });
-  showToast('Archive supprimée');
+  showToast('Déplacée vers la corbeille 🗑️');
+}
+
+function restoreArchive(id){
+  if(!window.__fb){
+    showToast('Connexion au cloud en cours, réessaie dans un instant');
+    return;
+  }
+  const arc = findArchiveAnywhere(id);
+  if(!arc) return;
+  const restored = Object.assign({}, arc);
+  delete restored.deletedAt;
+  const { db, doc, setDoc } = window.__fb;
+  setDoc(doc(db, 'archives', id), restored)
+    .catch((err) => {
+      console.error('Erreur restauration Firestore', err);
+      showToast(firestoreErrorMessage(err, "de la restauration"));
+    });
+  showToast('Séance restaurée ♻️');
+}
+
+function askEmptyTrash(){
+  const count = getTrashList(currentProfile).length;
+  if(count === 0) return;
+  showConfirm(
+    `Supprimer définitivement ${count} séance${count > 1 ? 's' : ''} ? Cette fois c'est irréversible.`,
+    emptyTrash
+  );
+}
+
+function emptyTrash(){
+  if(!window.__fb){
+    showToast('Connexion au cloud en cours, réessaie dans un instant');
+    return;
+  }
+  const { db, doc, deleteDoc } = window.__fb;
+  const items = getTrashList(currentProfile);
+  items.forEach(arc => {
+    deleteDoc(doc(db, 'archives', arc.id))
+      .catch((err) => {
+        console.error('Erreur suppression définitive Firestore', err);
+        showToast(firestoreErrorMessage(err, "de la suppression"));
+      });
+  });
+  showToast(`${items.length} séance(s) supprimée(s) définitivement`);
+  setArchivesMode('active');
 }
 
 /* réagit en temps réel aux changements Firestore (y compris depuis l'autre téléphone) */
@@ -2579,14 +3391,45 @@ function deleteCustomSession(id){
   showToast('Séance personnalisée supprimée');
 }
 
-/* ---------- TOAST ---------- */
-let toastTimer;
+/* ---------- TOASTS EMPILABLES (131) ----------
+   Avant, un message unique était réécrit par le suivant : archiver puis échouer
+   la synchro n'affichait que le second. Les messages s'empilent désormais, les
+   plus anciens sortant en premier. */
+const TOAST_MAX = 3;
 function showToast(msg){
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  const stack = document.getElementById('toast-stack');
+  if(!stack) return;
+
+  /* Un même message répété est relancé plutôt que dupliqué. */
+  const existing = Array.prototype.find.call(stack.children, el => el.dataset.msg === msg);
+  if(existing){
+    clearTimeout(Number(existing.dataset.timer));
+    existing.classList.remove('bump'); void existing.offsetWidth; existing.classList.add('bump');
+    existing.dataset.timer = String(setTimeout(() => dismissToast(existing), 2600));
+    return;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  el.dataset.msg = msg;
+  stack.appendChild(el);
+  void el.offsetWidth;
+  el.classList.add('show');
+  el.dataset.timer = String(setTimeout(() => dismissToast(el), 2600));
+
+  /* Le retrait du DOM est différé (le temps du fondu), donc une boucle `while`
+     sur stack.children ne se terminerait jamais : on calcule d'abord la liste
+     des messages encore vivants, puis on évince l'excédent. */
+  const alive = Array.prototype.filter.call(stack.children, el => !el.dataset.leaving);
+  for(let i = 0; i < alive.length - TOAST_MAX; i++) dismissToast(alive[i]);
+}
+function dismissToast(el){
+  if(!el || el.dataset.leaving) return;
+  el.dataset.leaving = '1';
+  clearTimeout(Number(el.dataset.timer));
+  el.classList.remove('show');
+  setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 260);
 }
 
 /* ---------- AJUSTEMENT DYNAMIQUE DE L'ESPACE SOUS LE CONTENU (fix iPhone) ---------- */
