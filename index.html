@@ -159,7 +159,10 @@
     border-bottom:1px solid var(--border);
     display:flex; flex-direction:column; gap:8px;
   }
-  .header-row{ display:flex; align-items:center; gap:10px; }
+  /* padding-right : réserve la zone occupée par le badge de sync et le bouton
+     de thème (tous deux en position:fixed en haut à droite), sinon ils
+     recouvrent le bouton undo et interceptent le tap. */
+  .header-row{ display:flex; align-items:center; gap:10px; padding-right:86px; }
   header .back-btn.small{
     margin:0; padding:6px 0; flex:0 0 auto;
   }
@@ -259,7 +262,7 @@
   .note-input{
     width:100%; min-height:36px; padding:9px 10px; border-radius:10px;
     border:1px solid var(--border); background:var(--card-2); color:var(--text);
-    font-size:13px; font-family:inherit; resize:vertical; line-height:1.35;
+    font-size:16px; font-family:inherit; resize:vertical; line-height:1.35;
   }
   .note-input:focus{ outline:none; border-color:var(--accent); }
   .note-input::placeholder{ color:var(--text-dim); opacity:0.75; }
@@ -354,7 +357,7 @@
   .modal textarea{
     width:100%; min-height:260px; resize:vertical;
     background:var(--card-2); color:var(--text); border:1px solid var(--border);
-    border-radius:12px; padding:12px; font-size:13px; line-height:1.5;
+    border-radius:12px; padding:12px; font-size:16px; line-height:1.5;
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   }
   .modal-actions{display:flex; gap:10px;}
@@ -409,7 +412,7 @@
   .builder-label{ font-size:12.5px; color:var(--text-dim); font-weight:700; }
   .builder-input{
     width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border);
-    background:var(--card-2); color:var(--text); font-size:15px; font-family:inherit;
+    background:var(--card-2); color:var(--text); font-size:16px; font-family:inherit;
   }
   .builder-input:focus{ outline:none; border-color:var(--accent); }
   .builder-toggle-row{
@@ -437,9 +440,37 @@
   .builder-exercise-row .mini-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
   .builder-exercise-row input{
     width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border);
-    background:var(--card-2); color:var(--text); font-size:14px; font-family:inherit;
+    background:var(--card-2); color:var(--text); font-size:16px; font-family:inherit;
   }
   .builder-exercise-row input:focus{ outline:none; border-color:var(--accent); }
+  /* Suggestions de noms d'exercices (autocomplétion maison : <datalist> est trop
+     limité et peu fiable sur Safari iOS) */
+  .exercise-name-field{ position:relative; }
+  .suggest-panel{
+    position:absolute; top:100%; left:0; right:0; z-index:40; margin-top:4px;
+    background:var(--card-2); border:1px solid var(--border); border-radius:12px;
+    max-height:212px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    box-shadow: var(--shadow);
+  }
+  .suggest-head{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.6px;
+    color:var(--text-dim); font-weight:700; padding:9px 12px 5px 12px;
+  }
+  .suggest-item{
+    display:block; width:100%; text-align:left; padding:11px 12px;
+    background:none; border:none; border-top:1px solid var(--border);
+    color:var(--text); font-size:15px; font-family:inherit; line-height:1.3;
+  }
+  .suggest-item:active{ background:rgba(127,127,140,0.16); }
+  .suggest-hint{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-top:7px; font-size:12px; color:var(--text-dim); line-height:1.35;
+  }
+  .suggest-hint-btn{
+    padding:6px 10px; border-radius:9px; border:1px solid var(--accent);
+    background:transparent; color:var(--accent); font-size:12px; font-weight:700;
+    font-family:inherit;
+  }
   .builder-reps-row{ display:flex; gap:10px; }
   .builder-reps-row .builder-exercise-row{ flex:1; }
   .builder-options-row{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
@@ -464,6 +495,23 @@
     background:var(--card-2); color:var(--text); font-size:13px; font-weight:700;
   }
   .archive-list{ display:flex; flex-direction:column; gap:12px; }
+
+  /* Sélecteur de profil de l'écran Suivi Progression */
+  .profile-switch{
+    display:flex; gap:8px; padding:5px; margin-top:2px;
+    background:var(--card-2); border:1px solid var(--border); border-radius:14px;
+  }
+  .profile-switch-btn{
+    flex:1; padding:11px 8px; border-radius:10px; border:1px solid transparent;
+    background:transparent; color:var(--text-dim); font-size:14.5px; font-weight:700;
+    font-family:inherit;
+  }
+  .profile-switch-btn.corentin.selected{
+    background:rgba(76,141,251,0.14); border-color:var(--corentin); color:var(--corentin);
+  }
+  .profile-switch-btn.lisa.selected{
+    background:rgba(242,89,158,0.14); border-color:var(--lisa); color:var(--lisa);
+  }
 
   .progress-exercise-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
   .progress-exercise-btn{
@@ -500,16 +548,154 @@
     width:36px; height:36px; border-radius:10px; border:1px solid var(--border);
     background:var(--card-2); color:var(--text-dim); font-size:14px;
   }
+  /* ---------- ÉCRAN DE CHARGEMENT ---------- */
+  .splash{
+    position:fixed; inset:0; z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(76,141,251,0.16), transparent 58%),
+      radial-gradient(circle at 50% 40%, rgba(242,89,158,0.12), transparent 52%),
+      var(--bg);
+    transition: opacity .45s ease;
+    /* Filet de sécurité : si le JS échouait, l'écran s'effacerait quand même
+       au bout de 5s au lieu de bloquer l'app définitivement. Doit rester
+       nettement au-delà de la fin normale (2,5s + 0,46s de fondu). */
+    animation: splashFailsafe .3s linear 5s forwards;
+  }
+  @keyframes splashFailsafe{ to{ opacity:0; visibility:hidden; pointer-events:none; } }
+  .splash.done{ opacity:0; }
+  .splash-inner{
+    display:flex; flex-direction:column; align-items:center; padding:0 24px;
+  }
+  .splash-barbell{ width:210px; height:auto; color:var(--text-dim); }
+  .splash-title{
+    font-size:30px; font-weight:900; letter-spacing:-0.01em;
+    margin:14px 0 0 0; color:var(--text);
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)){
+    .splash-title{
+      background:linear-gradient(96deg, var(--corentin), var(--lisa));
+      -webkit-background-clip:text; background-clip:text;
+      color:transparent; -webkit-text-fill-color:transparent;
+    }
+  }
+  .splash-sub{
+    margin:5px 0 0 0; font-size:12px; font-weight:700;
+    letter-spacing:2.4px; text-transform:uppercase; color:var(--text-dim);
+  }
+  .splash-track{
+    width:172px; height:3px; border-radius:3px; margin-top:26px;
+    background:var(--card-2); overflow:hidden;
+  }
+  .splash-fill{
+    height:100%; width:100%; border-radius:3px;
+    background:linear-gradient(90deg, var(--corentin), var(--lisa));
+  }
+  .splash-status{
+    margin:12px 0 0 0; font-size:12px; font-weight:600; color:var(--text-dim);
+    min-height:16px; /* évite un saut de mise en page au changement de texte */
+  }
+
+  /* Les animations restent optionnelles : l'état par défaut ci-dessus est déjà
+     l'état final, donc l'écran s'affiche correctement sans mouvement. */
+  @media (prefers-reduced-motion: no-preference){
+    .bb-bar{ stroke-dasharray:140; stroke-dashoffset:140; animation: bbDraw .5s ease-out forwards; }
+    .bb-left, .bb-right{ opacity:0; }
+    .bb-left{ animation: bbPlateLeft .55s cubic-bezier(.2,.85,.25,1) .34s forwards; }
+    .bb-right{ animation: bbPlateRight .55s cubic-bezier(.2,.85,.25,1) .34s forwards; }
+    .bb-lift{ transform-box: view-box; transform-origin: 110px 60px; animation: bbLift 1.5s ease-in-out .95s; }
+    .splash-title, .splash-sub{ opacity:0; animation: splashRise .55s ease-out .7s forwards; }
+    .splash-sub{ animation-delay:.82s; }
+    .splash-fill{ width:0; animation: splashLoad 2.35s cubic-bezier(.35,0,.2,1) .1s forwards; }
+    .splash-status{ opacity:0; animation: splashRise .5s ease-out 1s forwards; }
+  }
+  @keyframes bbDraw{ to{ stroke-dashoffset:0; } }
+  @keyframes bbPlateLeft{ from{ opacity:0; transform:translateX(-42px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes bbPlateRight{ from{ opacity:0; transform:translateX(42px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes bbLift{
+    0%,100%{ transform:translateY(0) rotate(0deg); }
+    30%{ transform:translateY(-7px) rotate(-2.2deg); }
+    65%{ transform:translateY(-2px) rotate(1.6deg); }
+  }
+  @keyframes splashRise{ from{ opacity:0; transform:translateY(9px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes splashLoad{ from{ width:0; } to{ width:100%; } }
 </style>
 </head>
 <body>
 
+<!-- ÉCRAN DE CHARGEMENT (2 s puis fondu vers le menu principal) -->
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="splash-inner">
+    <svg class="splash-barbell" viewBox="0 0 220 120" fill="none" aria-hidden="true">
+      <g class="bb-lift">
+        <line class="bb-bar" x1="45" y1="60" x2="175" y2="60" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <g class="bb-left">
+          <rect x="52" y="37" width="12" height="46" rx="5" fill="var(--corentin)"/>
+          <rect x="36" y="46" width="10" height="28" rx="4" fill="var(--corentin)" opacity="0.55"/>
+        </g>
+        <g class="bb-right">
+          <rect x="156" y="37" width="12" height="46" rx="5" fill="var(--lisa)"/>
+          <rect x="174" y="46" width="10" height="28" rx="4" fill="var(--lisa)" opacity="0.55"/>
+        </g>
+      </g>
+    </svg>
+    <h1 class="splash-title">Duo Training</h1>
+    <p class="splash-sub">Corentin &amp; Lisa</p>
+    <div class="splash-track"><div class="splash-fill"></div></div>
+    <p class="splash-status" id="splash-status">Chargement des charges…</p>
+  </div>
+</div>
+
+<script>
+/* Script volontairement isolé et placé avant le reste : même si le script
+   principal plantait, l'écran de chargement s'effacerait quand même. */
+(function(){
+  var splash = document.getElementById('splash');
+  if(!splash) return;
+  var status = document.getElementById('splash-status');
+  var steps = ['Chargement des charges…', 'Connexion au cloud…', 'Barre chargée 💪'];
+  var i = 0;
+  var ticker = setInterval(function(){
+    i++;
+    if(i >= steps.length){ clearInterval(ticker); return; }
+    if(status) status.textContent = steps[i];
+  }, 800);
+  setTimeout(function(){
+    clearInterval(ticker);
+    splash.classList.add('done');
+    /* on attend la fin du fondu avant de retirer l'écran du flux */
+    setTimeout(function(){ splash.style.display = 'none'; }, 460);
+  }, 2500);
+})();
+</script>
+
 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 <div class="sync-badge" id="sync-badge" aria-hidden="true">🟢</div>
 
-<!-- ÉCRAN 1 : CHOIX DU PROFIL -->
-<div class="view active" id="view-profile">
+<!-- ÉCRAN 0 : MENU PRINCIPAL -->
+<div class="view active" id="view-menu">
   <div class="view-inner center-view">
+    <p class="app-title">Duo Training</p>
+    <h1 class="big-question">Menu principal</h1>
+    <button class="big-choice-btn" onclick="goToProfileView('fwd')">
+      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="4.5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.8"/><circle cx="19.5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.8"/><path d="M6.7 12h10.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 12v0M15 12v0" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg></span>
+      Entraînement
+    </button>
+    <button class="big-choice-btn" onclick="goToBuilderView()">
+      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14.5 3.5a3 3 0 0 0-4.2 3.6L4 13.4V17h3.6l6.3-6.3a3 3 0 0 0 3.6-4.2l-2.1 2.1-1.8-1.8 2.1-2.1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      Build Training
+    </button>
+    <button class="big-choice-btn" onclick="goToProgressView()">
+      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      Suivi Progression
+    </button>
+  </div>
+</div>
+
+<!-- ÉCRAN 1 : CHOIX DU PROFIL -->
+<div class="view" id="view-profile">
+  <div class="view-inner center-view">
+    <button class="back-btn" onclick="goToMenuView()">← Menu</button>
     <p class="app-title">Duo Training</p>
     <h1 class="big-question">Qui s'entraîne ?</h1>
     <button class="big-choice-btn corentin" onclick="selectProfile('corentin')">
@@ -519,10 +705,6 @@
     <button class="big-choice-btn lisa" onclick="selectProfile('lisa')">
       <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c0-3.6 3.1-6.4 7-6.4s7 2.8 7 6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
       Lisa
-    </button>
-    <button class="big-choice-btn build" onclick="goToBuilderView()">
-      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14.5 3.5a3 3 0 0 0-4.2 3.6L4 13.4V17h3.6l6.3-6.3a3 3 0 0 0 3.6-4.2l-2.1 2.1-1.8-1.8 2.1-2.1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-      Build Training
     </button>
   </div>
 </div>
@@ -539,7 +721,7 @@
 <!-- ÉCRAN BUILD TRAINING -->
 <div class="view" id="view-builder">
   <div class="view-inner">
-    <button class="back-btn" onclick="goToProfileView()">← Retour</button>
+    <button class="back-btn" id="builder-back-btn" onclick="exitBuilder()">← Menu</button>
     <h1 class="big-question" id="builder-title">Créer une séance</h1>
 
     <div class="builder-field">
@@ -567,7 +749,6 @@
     <h1 class="big-question" id="archives-view-title">Archives</h1>
     <div class="archive-toolbar" id="archive-toolbar">
       <button class="archive-tool-btn" onclick="exportAllArchives()">📤 Exporter tout</button>
-      <button class="archive-tool-btn" onclick="goToProgressView()">📈 Progression</button>
     </div>
     <div class="archive-list" id="archive-list"></div>
   </div>
@@ -576,8 +757,12 @@
 <!-- ÉCRAN PROGRESSION -->
 <div class="view" id="view-progress">
   <div class="view-inner">
-    <button class="back-btn" onclick="goToArchivesView('back')">← Archives</button>
-    <h1 class="big-question">Progression</h1>
+    <button class="back-btn" onclick="goToMenuView()">← Menu</button>
+    <h1 class="big-question">Suivi Progression</h1>
+    <div class="profile-switch" id="progress-profile-switch">
+      <button class="profile-switch-btn corentin" onclick="setProgressProfile('corentin')">Corentin</button>
+      <button class="profile-switch-btn lisa" onclick="setProgressProfile('lisa')">Lisa</button>
+    </div>
     <div class="progress-exercise-list" id="progress-exercise-list"></div>
     <div id="progress-chart-wrap"></div>
   </div>
@@ -645,8 +830,8 @@
   // ---------- FIREBASE (archives partagées Corentin / Lisa, temps réel) ----------
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
   import {
-    getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot,
-    enableIndexedDbPersistence
+    getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot,
+    persistentLocalCache, persistentMultipleTabManager
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -659,13 +844,20 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
 
   // Persistance hors-ligne : les lectures/écritures faites sans réseau sont mises
   // en cache local puis synchronisées automatiquement dès que la connexion revient.
-  enableIndexedDbPersistence(db).catch((err) => {
-    console.warn('Persistance hors-ligne indisponible :', err.code);
-  });
+  // `persistentLocalCache` remplace `enableIndexedDbPersistence`, déprécié depuis
+  // le SDK v10. Repli en mémoire si IndexedDB est indisponible (navigation privée).
+  let db;
+  try{
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  }catch(err){
+    console.warn('Persistance hors-ligne indisponible :', err && err.code);
+    db = getFirestore(app);
+  }
 
   const archivesCol = collection(db, 'archives');
   const customSessionsCol = collection(db, 'customSessions');
@@ -714,8 +906,13 @@ if(!window.customSessionsCache) window.customSessionsCache = [];
 <script>
 /* ---------- STOCKAGE ROBUSTE (LocalStorage + fallback mémoire) ---------- */
 const memoryStore = {};
+/* Clés dont l'écriture LocalStorage a échoué (quota plein, navigation privée...).
+   Pour celles-ci, la mémoire fait autorité : sans ce marqueur, `get` renverrait
+   l'ancienne valeur LocalStorage et écraserait la saisie en cours. */
+const memoryOnlyKeys = {};
 const storage = {
   get(key){
+    if(memoryOnlyKeys[key]) return key in memoryStore ? memoryStore[key] : null;
     try{
       const v = localStorage.getItem(key);
       return v !== null ? v : (key in memoryStore ? memoryStore[key] : null);
@@ -727,9 +924,41 @@ const storage = {
     memoryStore[key] = value;
     try{
       localStorage.setItem(key, value);
-    }catch(e){ /* fallback mémoire silencieux */ }
+      delete memoryOnlyKeys[key];
+    }catch(e){
+      memoryOnlyKeys[key] = true; /* fallback mémoire silencieux */
+    }
   }
 };
+
+/* ---------- HELPERS ---------- */
+/* Échappe le texte saisi avant toute injection via innerHTML (noms d'exercices,
+   de séances... saisis librement et partagés entre les deux profils). */
+function escapeHtml(value){
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* Les champs numériques sont en type="text" (voir plus bas) : on filtre donc les
+   caractères parasites au fil de la frappe, virgule et point restant autorisés. */
+function sanitizeField(input, mode){
+  const cleaned = mode === 'integer'
+    ? input.value.replace(/[^0-9]/g, '')
+    : input.value.replace(/[^0-9.,]/g, '');
+  if(cleaned !== input.value) input.value = cleaned;
+}
+
+/* Le clavier français produit "22,5" : parseFloat s'arrêterait à 22. */
+function parseNum(value){
+  if(value === null || value === undefined) return NaN;
+  const normalized = String(value).trim().replace(',', '.');
+  if(normalized === '') return NaN;
+  return parseFloat(normalized);
+}
 
 /* ---------- BADGE DE SYNCHRONISATION ---------- */
 function updateSyncBadge(){
@@ -855,18 +1084,50 @@ function getAllSelectableSessions(){
 /* ---------- ETAT ---------- */
 let currentProfile = storage.get("duo_profile") || "corentin";
 let currentSessionId = storage.get("duo_session") || SESSIONS[0].id;
-if(!SESSIONS.some(s => s.id === currentSessionId)) currentSessionId = SESSIONS[0].id;
+/* Les séances personnalisées arrivent de Firestore APRÈS ce code : on ne peut pas
+   encore les valider. On accepte donc tout id `custom_*`, sinon la dernière séance
+   perso ouverte serait systématiquement remplacée par la Séance 1 au rechargement. */
+if(!SESSIONS.some(s => s.id === currentSessionId) && String(currentSessionId).indexOf('custom_') !== 0){
+  currentSessionId = SESSIONS[0].id;
+}
 
 function dataKey(sessionId, profile){
   return `duo_data_${sessionId}_${profile}`;
 }
+function blankDayData(){
+  return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' };
+}
 function loadDayData(sessionId, profile){
   const raw = storage.get(dataKey(sessionId, profile));
-  if(!raw) return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' };
-  try{ return JSON.parse(raw); }catch(e){ return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' }; }
+  if(!raw) return blankDayData();
+  let parsed;
+  try{ parsed = JSON.parse(raw); }catch(e){ return blankDayData(); }
+  if(!parsed || typeof parsed !== 'object') return blankDayData();
+  /* Normalisation : une donnée écrite par une ancienne version peut ne pas avoir
+     toutes les clés, et `data.sets[...]` planterait. */
+  return Object.assign(blankDayData(), parsed, {
+    sets: parsed.sets || {},
+    variants: parsed.variants || {},
+    notes: parsed.notes || {}
+  });
 }
 function saveDayData(day, profile, data){
   storage.set(dataKey(day, profile), JSON.stringify(data));
+}
+
+/* ---------- CLÉS NOTES / VARIANTES ----------
+   Historiquement indexées par la position de l'exercice : réordonner une séance
+   personnalisée décalait notes et variantes d'un cran. On les rattache désormais
+   au nom de l'exercice, avec repli sur l'ancienne clé pour les données existantes. */
+function exerciseKey(ex, exIdx){
+  return (ex && ex.name) ? 'name:' + ex.name : 'idx:' + exIdx;
+}
+function readByExercise(store, ex, exIdx){
+  if(!store) return '';
+  const key = exerciseKey(ex, exIdx);
+  if(key in store) return store[key] || '';
+  if(exIdx in store) return store[exIdx] || '';   /* ancien format */
+  return '';
 }
 
 /* ---------- ANNULER LA DERNIÈRE ACTION ---------- */
@@ -874,8 +1135,22 @@ const undoStacks = {}; // { "sessionId_profile": [snapshot1, snapshot2, ...] }
 function pushUndoSnapshot(){
   const key = dataKey(currentSessionId, currentProfile);
   if(!undoStacks[key]) undoStacks[key] = [];
-  undoStacks[key].push(JSON.stringify(loadDayData(currentSessionId, currentProfile)));
+  const snapshot = JSON.stringify(loadDayData(currentSessionId, currentProfile));
+  /* Inutile d'empiler deux fois le même état : la pile se remplirait de doublons
+     et le bouton ↩️ semblerait ne rien faire. */
+  if(undoStacks[key][undoStacks[key].length - 1] === snapshot) return;
+  undoStacks[key].push(snapshot);
   if(undoStacks[key].length > 25) undoStacks[key].shift();
+}
+
+/* Un focus seul ne modifie rien : on "arme" le snapshot au focus et on ne
+   l'empile qu'à la première frappe effective dans le champ. */
+let undoArmed = false;
+function armUndoSnapshot(){ undoArmed = true; }
+function snapshotBeforeEdit(){
+  if(!undoArmed) return;
+  undoArmed = false;
+  pushUndoSnapshot();
 }
 function undoLastAction(){
   const key = dataKey(currentSessionId, currentProfile);
@@ -926,8 +1201,12 @@ function selectSession(sessionId){
   setTimeout(adjustBottomSpacing, 300);
 }
 
-function goToProfileView(){
-  showView('view-profile', 'back');
+function goToMenuView(){
+  showView('view-menu', 'back');
+}
+
+function goToProfileView(direction){
+  showView('view-profile', direction || 'back');
 }
 
 function goToSessionView(){
@@ -940,16 +1219,47 @@ function goToArchivesView(direction){
   showView('view-archives', direction || 'fwd');
 }
 
-function goToProgressView(){
+/* Profil consulté dans l'écran Progression. Volontairement distinct de
+   `currentProfile` : regarder les courbes de l'autre ne doit pas changer le
+   profil avec lequel on s'entraîne. */
+let progressProfile = currentProfile;
+
+function setProgressProfile(profile){
+  progressProfile = profile;
+  renderProgressView();
+}
+
+function renderProgressView(){
+  document.querySelectorAll('#progress-profile-switch .profile-switch-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.classList.contains(progressProfile));
+  });
+  /* Le graphique reprend la couleur du profil consulté (override local de --accent) */
+  const view = document.getElementById('view-progress');
+  if(view) view.style.setProperty('--accent', progressProfile === 'lisa' ? 'var(--lisa)' : 'var(--corentin)');
   renderProgressExerciseList();
   document.getElementById('progress-chart-wrap').innerHTML = '';
+}
+
+function goToProgressView(){
+  progressProfile = currentProfile;
+  renderProgressView();
   showView('view-progress', 'fwd');
 }
 
+/* D'où le builder a été ouvert : depuis le menu principal (création) ou depuis la
+   liste des séances (édition via ✏️). Le retour doit ramener au bon endroit. */
+let builderReturn = 'menu';
+
 function goToBuilderView(){
+  builderReturn = 'menu';
   resetBuilderDraft();
   renderBuilderForm();
   showView('view-builder', 'fwd');
+}
+
+function exitBuilder(){
+  if(builderReturn === 'session') goToSessionView();
+  else goToMenuView();
 }
 
 function showView(viewId, direction){
@@ -961,6 +1271,7 @@ function showView(viewId, direction){
     if(direction === 'back') target.classList.add('slide-back');
   }
   window.scrollTo(0,0);
+  if(typeof adjustBottomSpacing === 'function') adjustBottomSpacing();
 }
 
 function renderSessionList(){
@@ -975,8 +1286,8 @@ function renderSessionList(){
     btn.innerHTML = `
       <span class="session-icon">${session.muscleIcon}</span>
       <span class="session-text">
-        <span class="s-label">${session.label}</span>
-        <span class="s-subtitle">${session.title}</span>
+        <span class="s-label">${escapeHtml(session.label)}</span>
+        <span class="s-subtitle">${escapeHtml(session.title)}</span>
       </span>
     `;
     btn.onclick = () => selectSession(session.id);
@@ -990,8 +1301,8 @@ function renderSessionList(){
     row.innerHTML = `
       <span class="session-icon">${ICON_CUSTOM}</span>
       <span class="session-text">
-        <span class="s-label">${session.label}</span>
-        <span class="s-subtitle">${session.title || 'Séance personnalisée'}</span>
+        <span class="s-label">${escapeHtml(session.label)}</span>
+        <span class="s-subtitle">${escapeHtml(session.title || 'Séance personnalisée')}</span>
       </span>
     `;
     row.onclick = () => selectSession(session.id);
@@ -1037,8 +1348,8 @@ function computeSessionTonnage(dayProgram, data){
     for(let s = 1; s <= ex.sets; s++){
       const setData = data.sets[`ex${exIdx}_set${s}`];
       if(ex.logType !== 'circuit' && setData){
-        const w = parseFloat(setData.weight);
-        const r = parseFloat(setData.reps);
+        const w = parseNum(setData.weight);
+        const r = parseNum(setData.reps);
         if(!isNaN(w) && !isNaN(r)) tonnage += w * r;
       }
     }
@@ -1105,15 +1416,16 @@ function render(){
     const head = document.createElement('div');
     head.className = 'exercise-head';
     head.innerHTML = `
-      <div class="exercise-name">${ex.name}</div>
-      <div class="exercise-target">${ex.target[currentProfile]}</div>
+      <div class="exercise-name">${escapeHtml(ex.name)}</div>
+      <div class="exercise-target">${escapeHtml((ex.target && ex.target[currentProfile]) || '')}</div>
     `;
     card.appendChild(head);
 
     if(ex.equipmentOptions){
       const variantRow = document.createElement('div');
       variantRow.className = 'variant-row';
-      const selectedVariant = data.variants[exIdx] || '';
+      const variantKey = exerciseKey(ex, exIdx);
+      const selectedVariant = readByExercise(data.variants, ex, exIdx);
 
       ex.equipmentOptions.forEach(option => {
         const optBtn = document.createElement('button');
@@ -1123,7 +1435,9 @@ function render(){
           pushUndoSnapshot();
           const d = loadDayData(currentSessionId, currentProfile);
           d.variants = d.variants || {};
-          d.variants[exIdx] = (d.variants[exIdx] === option) ? '' : option;
+          const current = readByExercise(d.variants, ex, exIdx);
+          if(exIdx in d.variants) delete d.variants[exIdx]; /* migration ancienne clé */
+          d.variants[variantKey] = (current === option) ? '' : option;
           saveDayData(currentSessionId, currentProfile, d);
           render();
         };
@@ -1155,30 +1469,41 @@ function render(){
 
       if(!isCircuit){
         const weightInput = document.createElement('input');
-        weightInput.type = 'number';
+        /* type="text" et non "number" : avec un clavier français, "22,5" est jugé
+           invalide par Safari et `input.value` renvoie une chaîne vide — la saisie
+           disparaissait silencieusement. parseNum() gère la virgule au calcul. */
+        weightInput.type = 'text';
         weightInput.inputMode = 'decimal';
+        weightInput.autocomplete = 'off';
         weightInput.placeholder = 'kg';
         weightInput.value = savedSet.weight;
-        weightInput.onfocus = () => pushUndoSnapshot();
+        weightInput.onfocus = armUndoSnapshot;
         weightInput.oninput = () => {
+          sanitizeField(weightInput, 'decimal');
+          snapshotBeforeEdit();
           const d = loadDayData(currentSessionId, currentProfile);
           d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
           d.sets[setKey].weight = weightInput.value;
           saveDayData(currentSessionId, currentProfile, d);
+          updateSessionProgress(); /* tonnage recalculé en direct */
         };
         row.appendChild(weightInput);
 
         const repsInput = document.createElement('input');
-        repsInput.type = 'number';
+        repsInput.type = 'text';
         repsInput.inputMode = 'numeric';
+        repsInput.autocomplete = 'off';
         repsInput.placeholder = 'reps';
         repsInput.value = savedSet.reps;
-        repsInput.onfocus = () => pushUndoSnapshot();
+        repsInput.onfocus = armUndoSnapshot;
         repsInput.oninput = () => {
+          sanitizeField(repsInput, 'integer');
+          snapshotBeforeEdit();
           const d = loadDayData(currentSessionId, currentProfile);
           d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', done:false };
           d.sets[setKey].reps = repsInput.value;
           saveDayData(currentSessionId, currentProfile, d);
+          updateSessionProgress(); /* tonnage recalculé en direct */
         };
         row.appendChild(repsInput);
 
@@ -1243,12 +1568,14 @@ function render(){
     noteInput.className = 'note-input';
     noteInput.rows = 1;
     noteInput.placeholder = "Pourquoi pas fait / charge réduite... (optionnel)";
-    noteInput.value = data.notes[exIdx] || '';
-    noteInput.onfocus = () => pushUndoSnapshot();
+    noteInput.value = readByExercise(data.notes, ex, exIdx);
+    noteInput.onfocus = armUndoSnapshot;
     noteInput.oninput = () => {
+      snapshotBeforeEdit();
       const d = loadDayData(currentSessionId, currentProfile);
       d.notes = d.notes || {};
-      d.notes[exIdx] = noteInput.value;
+      if(exIdx in d.notes) delete d.notes[exIdx]; /* migration ancienne clé */
+      d.notes[exerciseKey(ex, exIdx)] = noteInput.value;
       saveDayData(currentSessionId, currentProfile, d);
     };
     noteWrap.appendChild(noteInput);
@@ -1267,8 +1594,8 @@ function render(){
       <div class="label">
         <span class="icon">🏃</span>
         <div class="cardio-text">
-          <span class="name">${dayProgram.cardio.name}</span>
-          <span class="cardio-suggestion">Suggestion : ${dayProgram.cardio.targetMinutes} min</span>
+          <span class="name">${escapeHtml(dayProgram.cardio.name)}</span>
+          <span class="cardio-suggestion">Suggestion : ${escapeHtml(dayProgram.cardio.targetMinutes)} min</span>
         </div>
       </div>
     `;
@@ -1301,13 +1628,15 @@ function render(){
     minutesField.appendChild(minutesFieldLabel);
 
     const minutesInput = document.createElement('input');
-    minutesInput.type = 'number';
+    minutesInput.type = 'text';
     minutesInput.inputMode = 'numeric';
     minutesInput.className = 'cardio-minutes-input';
     minutesInput.placeholder = 'min';
     minutesInput.value = data.cardioMinutes || '';
-    minutesInput.onfocus = () => pushUndoSnapshot();
+    minutesInput.onfocus = armUndoSnapshot;
     minutesInput.oninput = () => {
+      sanitizeField(minutesInput, 'integer');
+      snapshotBeforeEdit();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioMinutes = minutesInput.value;
       saveDayData(currentSessionId, currentProfile, d);
@@ -1323,13 +1652,15 @@ function render(){
     inclineField.appendChild(inclineFieldLabel);
 
     const inclineInput = document.createElement('input');
-    inclineInput.type = 'number';
-    inclineInput.inputMode = 'numeric';
+    inclineInput.type = 'text';
+    inclineInput.inputMode = 'decimal';
     inclineInput.className = 'cardio-minutes-input';
     inclineInput.placeholder = '%';
     inclineInput.value = data.cardioIncline || '';
-    inclineInput.onfocus = () => pushUndoSnapshot();
+    inclineInput.onfocus = armUndoSnapshot;
     inclineInput.oninput = () => {
+      sanitizeField(inclineInput, 'decimal');
+      snapshotBeforeEdit();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioIncline = inclineInput.value;
       saveDayData(currentSessionId, currentProfile, d);
@@ -1350,8 +1681,9 @@ function render(){
     speedInput.className = 'cardio-minutes-input';
     speedInput.placeholder = 'ex: 5';
     speedInput.value = data.cardioSpeed || '';
-    speedInput.onfocus = () => pushUndoSnapshot();
+    speedInput.onfocus = armUndoSnapshot;
     speedInput.oninput = () => {
+      snapshotBeforeEdit();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioSpeed = speedInput.value;
       saveDayData(currentSessionId, currentProfile, d);
@@ -1373,8 +1705,9 @@ function render(){
     cardioNoteInput.rows = 1;
     cardioNoteInput.placeholder = "Sensation, essoufflement, raison d'un cardio écourté... (optionnel)";
     cardioNoteInput.value = data.cardioNote || '';
-    cardioNoteInput.onfocus = () => pushUndoSnapshot();
+    cardioNoteInput.onfocus = armUndoSnapshot;
     cardioNoteInput.oninput = () => {
+      snapshotBeforeEdit();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioNote = cardioNoteInput.value;
       saveDayData(currentSessionId, currentProfile, d);
@@ -1411,7 +1744,7 @@ function askReset(){
 }
 function doReset(){
   pushUndoSnapshot();
-  saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' });
+  saveDayData(currentSessionId, currentProfile, blankDayData());
   render();
   showToast('Séance réinitialisée');
 }
@@ -1434,8 +1767,9 @@ function buildExportText(){
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     txt += `\n${ex.name}\n`;
-    if(ex.equipmentOptions && data.variants[exIdx]){
-      txt += `Variante : ${data.variants[exIdx]}\n`;
+    const variant = readByExercise(data.variants, ex, exIdx);
+    if(ex.equipmentOptions && variant){
+      txt += `Variante : ${variant}\n`;
     }
     txt += `Cible : ${ex.target[currentProfile]}\n`;
     for(let s = 1; s <= ex.sets; s++){
@@ -1450,8 +1784,9 @@ function buildExportText(){
         txt += `  Série ${s} : ${weight} kg x ${reps} reps ${status}\n`;
       }
     }
-    if(data.notes[exIdx] && data.notes[exIdx].trim() !== ''){
-      txt += `  🗒️ Info : ${data.notes[exIdx].trim()}\n`;
+    const note = readByExercise(data.notes, ex, exIdx);
+    if(note && note.trim() !== ''){
+      txt += `  🗒️ Info : ${note.trim()}\n`;
     }
   });
 
@@ -1564,18 +1899,28 @@ function finishArchive(){
     rawSets: data.sets || {}
   };
 
+  /* Firestore ne résout la promesse de `setDoc` qu'après confirmation du serveur.
+     Hors ligne, elle reste donc en attente indéfiniment alors que l'écriture est
+     bien enregistrée dans le cache local. On agit immédiatement (offline-first)
+     et on ne traite la promesse que pour rattraper une éventuelle erreur. */
   const { db, doc, setDoc } = window.__fb;
+  const backup = JSON.stringify(loadDayData(currentSessionId, currentProfile));
+  const archivedSessionId = currentSessionId;
+  const archivedProfile = currentProfile;
+
   setDoc(doc(db, 'archives', archive.id), archive)
-    .then(() => {
-      saveDayData(currentSessionId, currentProfile, { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' });
-      closeFinishModal();
-      showToast('Séance archivée 📦');
-      goToSessionView();
-    })
     .catch((err) => {
       console.error('Erreur archivage Firestore', err);
+      /* L'archive n'est pas passée : on rend sa séance à l'utilisateur. */
+      try{ storage.set(dataKey(archivedSessionId, archivedProfile), backup); }catch(e){ /* ignore */ }
       showToast(firestoreErrorMessage(err, "de l'archivage"));
+      if(currentSessionId === archivedSessionId && currentProfile === archivedProfile) render();
     });
+
+  saveDayData(currentSessionId, currentProfile, blankDayData());
+  closeFinishModal();
+  showToast(navigator.onLine ? 'Séance archivée 📦' : 'Archivée hors ligne — synchro au retour du réseau 📦');
+  goToSessionView();
 }
 
 /* ---------- ARCHIVES (synchronisées via Firestore, partagées entre profils) ---------- */
@@ -1607,8 +1952,8 @@ function renderArchivesList(){
     const tonnageStr = arc.tonnage ? `· 💪 ${arc.tonnage.toLocaleString('fr-FR')} kg` : '';
     item.innerHTML = `
       <div class="archive-info">
-        <span class="archive-date">${arc.dateLabel} · ${arc.timeLabel} ${tonnageStr}</span>
-        <span class="archive-title">${arc.sessionLabel} — ${arc.sessionTitle}</span>
+        <span class="archive-date">${escapeHtml(arc.dateLabel)} · ${escapeHtml(arc.timeLabel)} ${tonnageStr}</span>
+        <span class="archive-title">${escapeHtml(arc.sessionLabel)} — ${escapeHtml(arc.sessionTitle)}</span>
       </div>
       <div class="archive-actions">
         <button class="archive-view-btn">Voir</button>
@@ -1660,12 +2005,12 @@ function getExerciseNamesFromArchives(profile){
 function renderProgressExerciseList(){
   const container = document.getElementById('progress-exercise-list');
   container.innerHTML = '';
-  const names = getExerciseNamesFromArchives(currentProfile);
+  const names = getExerciseNamesFromArchives(progressProfile);
 
   if(names.length === 0){
     const empty = document.createElement('p');
     empty.className = 'archive-empty';
-    empty.textContent = 'Pas encore assez de séances archivées pour afficher une progression.';
+    empty.textContent = `Aucune séance archivée pour ${progressProfile === 'corentin' ? 'Corentin' : 'Lisa'} — la progression apparaîtra après le premier archivage.`;
     container.appendChild(empty);
     return;
   }
@@ -1695,7 +2040,7 @@ function getBestSetPerArchiveForExercise(profile, exerciseName){
     let best = 0;
     Object.keys(rawSets).forEach(key => {
       if(key.indexOf(`ex${exIdx}_set`) !== 0) return;
-      const w = parseFloat(rawSets[key].weight);
+      const w = parseNum(rawSets[key] && rawSets[key].weight);
       if(!isNaN(w) && w > best) best = w;
     });
     if(best > 0){
@@ -1708,12 +2053,12 @@ function getBestSetPerArchiveForExercise(profile, exerciseName){
 
 function renderProgressChart(exerciseName){
   const wrap = document.getElementById('progress-chart-wrap');
-  const points = getBestSetPerArchiveForExercise(currentProfile, exerciseName);
+  const points = getBestSetPerArchiveForExercise(progressProfile, exerciseName);
 
   if(points.length === 0){
     wrap.innerHTML = `
       <div class="progress-chart-card">
-        <div class="progress-chart-title">${exerciseName}</div>
+        <div class="progress-chart-title">${escapeHtml(exerciseName)}</div>
         <div class="progress-chart-empty">Pas de poids enregistré pour cet exercice dans les archives.</div>
       </div>
     `;
@@ -1725,10 +2070,12 @@ function renderProgressChart(exerciseName){
   const minW = Math.min(...points.map(p => p.weight));
   const range = (maxW - minW) || 1;
 
+  const flat = maxW === minW; /* poids identiques partout : ligne centrée, pas collée en bas */
   const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
   const coords = points.map((p, i) => {
-    const x = padding + i * stepX;
-    const y = height - padding - ((p.weight - minW) / range) * (height - padding * 2);
+    const x = points.length > 1 ? padding + i * stepX : width / 2;
+    const ratio = flat ? 0.5 : (p.weight - minW) / range;
+    const y = height - padding - ratio * (height - padding * 2);
     return { x, y, ...p };
   });
 
@@ -1736,11 +2083,11 @@ function renderProgressChart(exerciseName){
 
   const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="var(--accent)"/>`).join('');
   const valueLabels = coords.map(c => `<text class="progress-value-label" x="${c.x.toFixed(1)}" y="${(c.y - 10).toFixed(1)}" text-anchor="middle">${c.weight}</text>`).join('');
-  const dateLabels = coords.map(c => `<text class="progress-point-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${c.dateLabel.slice(0,5)}</text>`).join('');
+  const dateLabels = coords.map(c => `<text class="progress-point-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${escapeHtml(String(c.dateLabel || '').slice(0,5))}</text>`).join('');
 
   wrap.innerHTML = `
     <div class="progress-chart-card">
-      <div class="progress-chart-title">${exerciseName} — meilleure série (kg)</div>
+      <div class="progress-chart-title">${escapeHtml(exerciseName)} — meilleure série (kg)</div>
       <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}">
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
         ${dots}
@@ -1760,14 +2107,14 @@ function deleteArchive(id){
     return;
   }
   const { db, doc, deleteDoc } = window.__fb;
+  /* Pas de .then() : hors ligne la promesse ne se résout qu'au retour du réseau,
+     alors que la suppression est déjà appliquée au cache local (et donc à l'écran). */
   deleteDoc(doc(db, 'archives', id))
-    .then(() => {
-      showToast('Archive supprimée');
-    })
     .catch((err) => {
       console.error('Erreur suppression Firestore', err);
       showToast(firestoreErrorMessage(err, "de la suppression"));
     });
+  showToast('Archive supprimée');
 }
 
 /* réagit en temps réel aux changements Firestore (y compris depuis l'autre téléphone) */
@@ -1776,12 +2123,112 @@ window.addEventListener('archives-updated', () => {
   if(!activeView) return;
   if(activeView.id === 'view-session') renderSessionList();
   if(activeView.id === 'view-archives') renderArchivesList();
+  if(activeView.id === 'view-progress'){
+    const selected = document.querySelector('.progress-exercise-btn.selected');
+    const selectedName = selected ? selected.textContent : null;
+    renderProgressExerciseList();
+    if(selectedName){
+      /* on réactive l'exercice consulté pour ne pas perdre le graphique affiché */
+      document.querySelectorAll('.progress-exercise-btn').forEach(b => {
+        if(b.textContent === selectedName){ b.classList.add('selected'); renderProgressChart(selectedName); }
+      });
+    }
+  }
 });
 window.addEventListener('custom-sessions-updated', () => {
   const activeView = document.querySelector('.view.active');
   if(!activeView) return;
   if(activeView.id === 'view-session') renderSessionList();
 });
+
+/* ---------- CATALOGUE D'EXERCICES ----------
+   Le graphique de progression retrouve un exercice par son nom exact : la moindre
+   faute de frappe scinderait la courbe en deux. On propose donc les noms déjà
+   utilisés, dérivés des trois sources existantes (programme fixe, séances
+   personnalisées, archives). Aucune collection Firestore supplémentaire : rien à
+   ajouter aux règles de sécurité, et un exercice reste proposé tant qu'il figure
+   dans au moins une séance ou une archive. */
+function normalizeExerciseName(name){
+  return String(name == null ? '' : name)
+    .trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  /* insensible aux accents */
+    .replace(/\s+/g, ' ');
+}
+
+function getExerciseCatalog(){
+  const seen = new Map(); /* clé normalisée -> orthographe à afficher */
+  function add(name){
+    if(!name || String(name).trim() === '') return;
+    const display = String(name).trim().replace(/\s+/g, ' ');
+    const key = normalizeExerciseName(display);
+    if(!seen.has(key)) seen.set(key, display);
+  }
+  SESSIONS.forEach(s => (s.exercises || []).forEach(ex => add(ex.name)));
+  (window.customSessionsCache || []).forEach(s => (s.exercises || []).forEach(ex => add(ex.name)));
+  const archives = window.archivesCache || {};
+  Object.keys(archives).forEach(profile => {
+    (archives[profile] || []).forEach(arc => (arc.exerciseNames || []).forEach(n => add(n)));
+  });
+  return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+/* Champ vide : on montre le début du catalogue. Sinon on filtre, en remontant
+   d'abord les noms qui commencent par la saisie. */
+function findExerciseMatches(query, limit){
+  const catalog = getExerciseCatalog();
+  const key = normalizeExerciseName(query);
+  if(key === '') return catalog.slice(0, limit);
+  const starts = [], contains = [];
+  catalog.forEach(name => {
+    const n = normalizeExerciseName(name);
+    if(n === key) return;                 /* déjà saisi à l'identique */
+    if(n.indexOf(key) === 0) starts.push(name);
+    else if(n.indexOf(key) !== -1) contains.push(name);
+  });
+  return starts.concat(contains).slice(0, limit);
+}
+
+/* Distance d'édition, pour repérer "Leg Extention" vs "Leg Extension". */
+function levenshtein(a, b){
+  if(a === b) return 0;
+  if(a.length === 0) return b.length;
+  if(b.length === 0) return a.length;
+  let prev = [];
+  for(let j = 0; j <= b.length; j++) prev[j] = j;
+  for(let i = 1; i <= a.length; i++){
+    const row = [i];
+    for(let j = 1; j <= b.length; j++){
+      const cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+      row[j] = Math.min(row[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    prev = row;
+  }
+  return prev[b.length];
+}
+
+function findNearExerciseName(value){
+  const key = normalizeExerciseName(value);
+  if(key.length < 4) return null;
+  const catalog = getExerciseCatalog();
+  if(catalog.some(n => normalizeExerciseName(n) === key)) return null; /* déjà exact */
+  let best = null, bestDistance = Infinity;
+  catalog.forEach(name => {
+    const distance = levenshtein(key, normalizeExerciseName(name));
+    if(distance < bestDistance){ bestDistance = distance; best = name; }
+  });
+  const tolerance = key.length > 12 ? 3 : 2;
+  return (best !== null && bestDistance <= tolerance) ? best : null;
+}
+
+/* Filet de sécurité à l'enregistrement : si le nom ne diffère d'un nom connu que
+   par la casse, les accents ou les espaces, on adopte l'orthographe du catalogue
+   pour que les deux séances alimentent bien la même courbe. */
+function canonicalExerciseName(name){
+  const cleaned = String(name == null ? '' : name).trim().replace(/\s+/g, ' ');
+  const key = normalizeExerciseName(cleaned);
+  const match = getExerciseCatalog().find(n => normalizeExerciseName(n) === key);
+  return match || cleaned;
+}
 
 /* ---------- BUILD TRAINING (création / édition de séance personnalisée) ---------- */
 let builderDraft = { name: '', cardio: false, exercises: [] };
@@ -1820,6 +2267,7 @@ function loadBuilderDraftFromSession(session){
 function editCustomSession(id){
   const session = (window.customSessionsCache || []).find(s => s.id === id);
   if(!session) return;
+  builderReturn = 'session';
   loadBuilderDraftFromSession(session);
   renderBuilderForm();
   showView('view-builder', 'fwd');
@@ -1828,11 +2276,20 @@ function editCustomSession(id){
 function renderBuilderForm(){
   const titleEl = document.getElementById('builder-title');
   if(titleEl) titleEl.textContent = editingSessionId ? 'Modifier la séance' : 'Créer une séance';
+  const backBtn = document.getElementById('builder-back-btn');
+  if(backBtn) backBtn.textContent = builderReturn === 'session' ? '← Séances' : '← Menu';
   const saveBtn = document.getElementById('builder-save-btn');
   if(saveBtn) saveBtn.textContent = editingSessionId ? 'Enregistrer les modifications ✅' : 'Enregistrer la séance ✅';
 
-  document.getElementById('builder-name').value = builderDraft.name;
-  document.getElementById('builder-cardio').checked = builderDraft.cardio;
+  /* Ces deux champs n'étaient jamais recopiés dans builderDraft : au moindre
+     re-render (cocher "circuit", réordonner avec ▲▼...) le nom saisi et la case
+     cardio étaient réécrits avec les valeurs périmées du brouillon, donc vidés. */
+  const nameField = document.getElementById('builder-name');
+  const cardioField = document.getElementById('builder-cardio');
+  nameField.value = builderDraft.name;
+  cardioField.checked = builderDraft.cardio;
+  nameField.oninput = () => { builderDraft.name = nameField.value; };
+  cardioField.onchange = () => { builderDraft.cardio = cardioField.checked; };
 
   const container = document.getElementById('builder-exercises');
   container.innerHTML = '';
@@ -1872,14 +2329,83 @@ function renderBuilderForm(){
     card.appendChild(head);
 
     const nameRow = document.createElement('div');
-    nameRow.className = 'builder-exercise-row';
+    nameRow.className = 'builder-exercise-row exercise-name-field';
     nameRow.innerHTML = `<span class="mini-label">Nom de l'exercice</span>`;
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
+    nameInput.autocomplete = 'off';
+    nameInput.autocapitalize = 'sentences';
     nameInput.placeholder = 'ex: Curl biceps (Haltères)';
     nameInput.value = ex.name;
-    nameInput.oninput = () => { builderDraft.exercises[idx].name = nameInput.value; };
     nameRow.appendChild(nameInput);
+
+    const suggestPanel = document.createElement('div');
+    suggestPanel.className = 'suggest-panel';
+    suggestPanel.style.display = 'none';
+    nameRow.appendChild(suggestPanel);
+
+    const typoHint = document.createElement('div');
+    typoHint.className = 'suggest-hint';
+    typoHint.style.display = 'none';
+    nameRow.appendChild(typoHint);
+
+    function hideSuggestions(){ suggestPanel.style.display = 'none'; }
+
+    function applyExerciseName(name){
+      nameInput.value = name;
+      builderDraft.exercises[idx].name = name;
+      hideSuggestions();
+      updateTypoHint();
+    }
+
+    function updateTypoHint(){
+      const near = findNearExerciseName(nameInput.value);
+      if(!near){ typoHint.style.display = 'none'; typoHint.innerHTML = ''; return; }
+      typoHint.innerHTML = '';
+      const text = document.createElement('span');
+      text.textContent = `Proche de « ${near} » — même nom = même courbe de progression.`;
+      typoHint.appendChild(text);
+      const useBtn = document.createElement('button');
+      useBtn.type = 'button';
+      useBtn.className = 'suggest-hint-btn';
+      useBtn.textContent = 'Utiliser ce nom';
+      useBtn.onmousedown = (e) => e.preventDefault();
+      useBtn.onclick = () => applyExerciseName(near);
+      typoHint.appendChild(useBtn);
+      typoHint.style.display = 'flex';
+    }
+
+    function refreshSuggestions(){
+      const matches = findExerciseMatches(nameInput.value, 8);
+      suggestPanel.innerHTML = '';
+      if(matches.length === 0){ hideSuggestions(); return; }
+      const head = document.createElement('div');
+      head.className = 'suggest-head';
+      head.textContent = nameInput.value.trim() === '' ? 'Exercices déjà utilisés' : 'Suggestions';
+      suggestPanel.appendChild(head);
+      matches.forEach(name => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'suggest-item';
+        option.textContent = name;
+        /* preventDefault sur mousedown : sans ça le blur du champ masquerait le
+           panneau avant que le clic n'aboutisse. */
+        option.onmousedown = (e) => e.preventDefault();
+        option.onclick = () => applyExerciseName(name);
+        suggestPanel.appendChild(option);
+      });
+      suggestPanel.style.display = 'block';
+    }
+
+    nameInput.oninput = () => {
+      builderDraft.exercises[idx].name = nameInput.value;
+      refreshSuggestions();
+      updateTypoHint();
+    };
+    nameInput.onfocus = refreshSuggestions;
+    nameInput.onblur = () => setTimeout(hideSuggestions, 180);
+
+    updateTypoHint();
     card.appendChild(nameRow);
 
     const setsRow = document.createElement('div');
@@ -1995,7 +2521,9 @@ function saveCustomSession(){
     .filter(ex => ex.name && ex.name.trim() !== '')
     .map(ex => {
       const built = {
-        name: ex.name.trim(),
+        /* canonicalExerciseName : "leg  extension" / "Leg Extension" deviennent le
+           même nom, sinon le graphique afficherait deux courbes distinctes. */
+        name: canonicalExerciseName(ex.name),
         sets: parseInt(ex.sets, 10) > 0 ? parseInt(ex.sets, 10) : 3,
         target: {
           corentin: ex.repsCorentin && ex.repsCorentin.trim() !== '' ? ex.repsCorentin.trim() : '—',
@@ -2023,15 +2551,15 @@ function saveCustomSession(){
   };
 
   const { db, doc, setDoc } = window.__fb;
+  const wasEditing = !!editingSessionId;
   setDoc(doc(db, 'customSessions', session.id), session)
-    .then(() => {
-      showToast(editingSessionId ? 'Séance mise à jour ✅' : 'Séance créée ✅');
-      goToProfileView();
-    })
     .catch((err) => {
       console.error('Erreur création séance Firestore', err);
       showToast(firestoreErrorMessage(err, "de la création"));
     });
+  showToast(wasEditing ? 'Séance mise à jour ✅' : 'Séance créée ✅');
+  editingSessionId = null;
+  exitBuilder();
 }
 
 function askDeleteCustomSession(id){
@@ -2044,13 +2572,11 @@ function deleteCustomSession(id){
   }
   const { db, doc, deleteDoc } = window.__fb;
   deleteDoc(doc(db, 'customSessions', id))
-    .then(() => {
-      showToast('Séance personnalisée supprimée');
-    })
     .catch((err) => {
       console.error('Erreur suppression séance Firestore', err);
       showToast(firestoreErrorMessage(err, "de la suppression"));
     });
+  showToast('Séance personnalisée supprimée');
 }
 
 /* ---------- TOAST ---------- */
@@ -2066,6 +2592,14 @@ function showToast(msg){
 /* ---------- AJUSTEMENT DYNAMIQUE DE L'ESPACE SOUS LE CONTENU (fix iPhone) ---------- */
 function adjustBottomSpacing(){
   try{
+    const activeView = document.querySelector('.view.active');
+    const onExercises = activeView && activeView.id === 'view-exercises';
+    // La bottom-bar n'existe que sur l'écran exercices : ailleurs, cette réserve
+    // de 120px créait un grand vide en bas de page pour rien.
+    if(!onExercises){
+      document.body.style.paddingBottom = 'calc(24px + env(safe-area-inset-bottom, 0px))';
+      return;
+    }
     const bar = document.getElementById('bottom-bar');
     if(bar){
       const h = bar.offsetHeight;
