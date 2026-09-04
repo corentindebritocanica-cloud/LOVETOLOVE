@@ -130,7 +130,6 @@
   .view-inner{
     padding:22px 18px; display:flex; flex-direction:column; gap:14px; flex:1;
   }
-  .center-view{ justify-content:center; }
   .app-title{
     font-size:12.5px; letter-spacing:1.6px; text-transform:uppercase;
     color:var(--text-dim); margin:0 0 4px 2px; font-weight:700;
@@ -197,6 +196,11 @@
   }
   .session-btn.selected .session-icon{ background:var(--tint-strong); }
   .custom-session-row{ cursor:pointer; }
+  .s-tag{
+    font-size:10px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase;
+    color:var(--accent); background:rgba(var(--accent-rgb, 76,141,251), 0.14);
+    border-radius:var(--r-sm); padding:2px 6px; margin-left:6px; vertical-align:1px;
+  }
   .custom-session-delete{
     flex:0 0 auto; width:34px; height:34px; border-radius:var(--r-sm);
     border:1px solid var(--border); background:var(--card-2); color:var(--text-dim);
@@ -347,10 +351,10 @@
     gap:8px; align-items:center;
   }
   .set-grid-header.circuit, .set-row.circuit{
-    grid-template-columns: 1fr 44px;
+    grid-template-columns: 58px 1fr 1fr 44px;
   }
   .set-row.circuit .set-num{
-    text-align:left; font-size:15px;
+    text-align:left; font-size:13.5px;
   }
   .set-grid-header{
     font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;
@@ -675,9 +679,35 @@
     background:rgba(242,89,158,0.14); border-color:var(--lisa); color:var(--lisa);
   }
 
+  /* Sections de l'écran progression : un intitulé par bloc, pour que chaque
+     réglage dise ce qu'il commande au lieu de flotter entre deux cartes. */
+  .progress-section{ display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+  .section-label{
+    font-size:11px; font-weight:800; letter-spacing:0.9px; text-transform:uppercase;
+    color:var(--text-dim); padding-left:2px;
+  }
+  /* Menu déroulant natif. font-size:16px impératif : en dessous, Safari iOS
+     zoome sur le champ à l'ouverture. La flèche est dessinée en fond parce que
+     `appearance:none` supprime celle du système. */
+  .progress-select{
+    width:100%; padding:14px 40px 14px 16px;
+    border-radius:var(--r-md); border:1px solid var(--border);
+    background-color:var(--card); color:var(--text);
+    font-size:16px; font-weight:700; font-family:inherit;
+    box-shadow: var(--shadow-sm);
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238a97a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position: right 16px center;
+  }
+  .progress-select:focus{ outline:none; border-color:var(--accent); }
+  /* Un choix fait se voit : bordure et texte à la couleur du profil. */
+  .progress-select.chosen{ border-color:var(--accent); color:var(--accent); }
+  .progress-select.skeleton-item{ display:flex; align-items:center; }
+
   /* 063 : cumul de tout ce qui a été soulevé */
   .lifetime-card{
-    display:flex; align-items:stretch; gap:14px; margin-top:12px;
+    display:flex; align-items:stretch; gap:14px; margin-top:0;
     background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
     padding:15px 16px; box-shadow: var(--shadow-sm);
   }
@@ -689,15 +719,9 @@
   .lifetime-label{ font-size:11.5px; color:var(--text-dim); font-weight:600; line-height:1.3; }
   .lifetime-sep{ width:1px; background:var(--border); flex:0 0 auto; }
 
-  .progress-exercise-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
-  .progress-exercise-btn{
-    padding:14px 16px; border-radius:var(--r-md); border:1px solid var(--border);
-    background:var(--card); color:var(--text); text-align:left;
-    font-size:14.5px; font-weight:700; box-shadow: var(--shadow-sm);
-  }
-  .progress-exercise-btn.selected{ border-color:var(--accent); color:var(--accent); }
+  .progress-exercise-list{ display:flex; flex-direction:column; gap:8px; margin-top:0; }
   /* Réglages de l'écran progression : métrique et période */
-  .progress-controls{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .progress-controls{ display:flex; flex-direction:column; gap:8px; margin-top:18px; }
   .segmented{
     display:flex; gap:4px; padding:4px;
     background:var(--card-2); border:1px solid var(--border); border-radius:var(--r-md);
@@ -711,8 +735,6 @@
   .segmented-btn.selected{
     background:var(--card); color:var(--accent); border-color:var(--border);
   }
-  .progress-exercise-btn.is-tonnage{ border-style:dashed; }
-
   .progress-chart-foot{
     font-size:11px; color:var(--text-dim); text-align:center; margin-top:2px;
   }
@@ -729,7 +751,7 @@
   .progress-delta.flat .delta-main, .progress-delta.flat .delta-pct{ color:var(--text-dim); }
 
   .progress-chart-card{
-    margin-top:16px; background:var(--card); border:1px solid var(--border);
+    margin-top:14px; background:var(--card); border:1px solid var(--border);
     border-radius:var(--r-lg); padding:16px; box-shadow: var(--shadow-sm);
   }
   .progress-chart-title{ font-size:14px; font-weight:800; margin-bottom:10px; }
@@ -855,7 +877,7 @@
 </head>
 <body>
 
-<!-- ÉCRAN DE CHARGEMENT (2 s puis fondu vers le menu principal) -->
+<!-- ÉCRAN DE CHARGEMENT (2,5 s puis fondu vers le menu principal) -->
 <div class="splash" id="splash" aria-hidden="true">
   <div class="splash-inner">
     <svg class="splash-barbell" viewBox="0 0 220 120" fill="none" aria-hidden="true">
@@ -906,7 +928,7 @@
 
 <!-- ÉCRAN 0 : MENU PRINCIPAL -->
 <div class="view active" id="view-menu">
-  <div class="view-inner center-view">
+  <div class="view-inner">
     <p class="app-title">Duo Training</p>
     <h1 class="big-question">Menu principal</h1>
     <button class="big-choice-btn" onclick="goToProfileView('fwd')">
@@ -926,7 +948,7 @@
 
 <!-- ÉCRAN 1 : CHOIX DU PROFIL -->
 <div class="view" id="view-profile">
-  <div class="view-inner center-view">
+  <div class="view-inner">
     <button class="back-btn" onclick="goToMenuView()">← Menu</button>
     <p class="app-title">Duo Training</p>
     <h1 class="big-question">Qui s'entraîne ?</h1>
@@ -995,9 +1017,18 @@
       <button class="profile-switch-btn corentin" onclick="setProgressProfile('corentin')">Corentin</button>
       <button class="profile-switch-btn lisa" onclick="setProgressProfile('lisa')">Lisa</button>
     </div>
-    <div class="lifetime-card" id="lifetime-card"></div>
+
+    <div class="progress-section">
+      <span class="section-label">Depuis le début</span>
+      <div class="lifetime-card" id="lifetime-card"></div>
+    </div>
+
+    <div class="progress-section">
+      <span class="section-label">Que veux-tu suivre ?</span>
+      <div class="progress-exercise-list" id="progress-exercise-list"></div>
+    </div>
+
     <div class="progress-controls" id="progress-controls"></div>
-    <div class="progress-exercise-list" id="progress-exercise-list"></div>
     <div id="progress-chart-wrap"></div>
   </div>
 </div>
@@ -1341,15 +1372,37 @@ const SESSIONS = [
   }
 ];
 
+/* Les 4 séances du programme sont modifiables : éditer l'une d'elles enregistre
+   une SURCHARGE dans `customSessions`, sous le même id (`s1`…). Elle prend alors
+   le pas sur la version codée en dur, et la supprimer restaure l'original.
+   Aucune collection ni règle Firestore supplémentaire, et les archives — qui
+   référencent `sessionId` — continuent de pointer au bon endroit. */
+function isFixedSessionId(id){
+  return SESSIONS.some(s => s.id === id);
+}
+function getSessionOverride(id){
+  return (window.customSessionsCache || []).find(s => s.id === id) || null;
+}
 function getSession(id){
+  const override = getSessionOverride(id);
+  if(override) return decorateSession(override);
   const fixed = SESSIONS.find(s => s.id === id);
   if(fixed) return fixed;
-  const custom = (window.customSessionsCache || []).find(s => s.id === id);
-  if(custom) return custom;
   return SESSIONS[0];
 }
+/* L'icône de groupe musculaire n'est pas stockée en base (SVG volumineux) :
+   une surcharge de séance fixe récupère celle de l'originale. */
+function decorateSession(session){
+  if(session.muscleIcon) return session;
+  const fixed = SESSIONS.find(s => s.id === session.id);
+  return Object.assign({}, session, { muscleIcon: fixed ? fixed.muscleIcon : ICON_CUSTOM });
+}
+/* Séances personnalisées à part entière, hors surcharges des séances fixes. */
+function getPureCustomSessions(){
+  return (window.customSessionsCache || []).filter(s => !isFixedSessionId(s.id));
+}
 function getAllSelectableSessions(){
-  return SESSIONS.concat(window.customSessionsCache || []);
+  return SESSIONS.map(s => getSession(s.id)).concat(getPureCustomSessions());
 }
 
 /* ---------- ETAT ---------- */
@@ -1576,18 +1629,39 @@ function renderSessionList(){
 
   const list = document.getElementById('session-list');
   list.innerHTML = '';
-  SESSIONS.forEach(session => {
-    const btn = document.createElement('button');
-    btn.className = 'session-btn' + (session.id === currentSessionId ? ' selected' : '');
-    btn.innerHTML = `
+  SESSIONS.forEach(fixed => {
+    const session = getSession(fixed.id);
+    const modified = !!getSessionOverride(fixed.id);
+    const row = document.createElement('div');
+    row.className = 'session-btn custom-session-row' + (session.id === currentSessionId ? ' selected' : '');
+    row.innerHTML = `
       <span class="session-icon">${session.muscleIcon}</span>
       <span class="session-text">
-        <span class="s-label">${escapeHtml(session.label)}</span>
+        <span class="s-label">${escapeHtml(session.label)}${modified ? ' <span class="s-tag">modifiée</span>' : ''}</span>
         <span class="s-subtitle">${escapeHtml(session.title)}</span>
       </span>
     `;
-    btn.onclick = () => selectSession(session.id);
-    list.appendChild(btn);
+    row.onclick = () => selectSession(fixed.id);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'custom-session-delete';
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Modifier cette séance';
+    editBtn.onclick = (e) => { e.stopPropagation(); editCustomSession(fixed.id); };
+    row.appendChild(editBtn);
+
+    /* La corbeille n'apparaît que si la séance a été modifiée : elle ne supprime
+       pas la séance, elle rend sa version d'origine. */
+    if(modified){
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'custom-session-delete';
+      resetBtn.textContent = '↺';
+      resetBtn.title = "Restaurer la séance d'origine";
+      resetBtn.onclick = (e) => { e.stopPropagation(); askRestoreFixedSession(fixed.id); };
+      row.appendChild(resetBtn);
+    }
+
+    list.appendChild(row);
   });
 
   /* 130 : les séances personnalisées arrivent de Firestore. Tant que le premier
@@ -1605,7 +1679,7 @@ function renderSessionList(){
     }
   }
 
-  const customSessions = window.customSessionsCache || [];
+  const customSessions = getPureCustomSessions();
   customSessions.forEach(session => {
     const row = document.createElement('div');
     row.className = 'session-btn custom-session-row' + (session.id === currentSessionId ? ' selected' : '');
@@ -1854,13 +1928,13 @@ function render(){
     const gridHeader = document.createElement('div');
     gridHeader.className = isCircuit ? 'set-grid-header circuit' : 'set-grid-header';
     gridHeader.innerHTML = isCircuit
-      ? `<span>Tour</span><span>✓</span>`
+      ? `<span>Tour</span><span>Reps</span><span>Durée (s)</span><span>✓</span>`
       : `<span>#</span><span>Poids (kg)</span><span>Reps</span><span></span><span>✓</span>`;
     body.appendChild(gridHeader);
 
     for(let s = 1; s <= ex.sets; s++){
       const setKey = `ex${exIdx}_set${s}`;
-      const savedSet = data.sets[setKey] || { weight:'', reps:'', done:false };
+      const savedSet = data.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
 
       const row = document.createElement('div');
       row.className = isCircuit ? 'set-row circuit' : 'set-row';
@@ -1869,6 +1943,46 @@ function render(){
       num.className = 'set-num';
       num.textContent = isCircuit ? `Tour ${s}` : s;
       row.appendChild(num);
+
+      if(isCircuit){
+        /* Un circuit garde sa consigne dans son intitulé (« Relevés 12-15r +
+           Gainage 45s »), mais ce qui est réellement fait se note ici : le
+           nombre de répétitions et la durée tenue. Ces valeurs n'entrent pas
+           dans le tonnage, qui n'aurait pas de sens sans charge. */
+        const circuitReps = document.createElement('input');
+        circuitReps.type = 'text';
+        circuitReps.inputMode = 'numeric';
+        circuitReps.autocomplete = 'off';
+        circuitReps.placeholder = 'reps';
+        circuitReps.value = savedSet.reps || '';
+        circuitReps.onfocus = armUndoSnapshot;
+        circuitReps.oninput = () => {
+          sanitizeField(circuitReps, 'integer');
+          snapshotBeforeEdit();
+          const d = loadDayData(currentSessionId, currentProfile);
+          d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
+          d.sets[setKey].reps = circuitReps.value;
+          saveDayData(currentSessionId, currentProfile, d);
+        };
+        row.appendChild(circuitReps);
+
+        const circuitDuration = document.createElement('input');
+        circuitDuration.type = 'text';
+        circuitDuration.inputMode = 'numeric';
+        circuitDuration.autocomplete = 'off';
+        circuitDuration.placeholder = 'sec';
+        circuitDuration.value = savedSet.duration || '';
+        circuitDuration.onfocus = armUndoSnapshot;
+        circuitDuration.oninput = () => {
+          sanitizeField(circuitDuration, 'integer');
+          snapshotBeforeEdit();
+          const d = loadDayData(currentSessionId, currentProfile);
+          d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
+          d.sets[setKey].duration = circuitDuration.value;
+          saveDayData(currentSessionId, currentProfile, d);
+        };
+        row.appendChild(circuitDuration);
+      }
 
       if(!isCircuit){
         const weightInput = document.createElement('input');
@@ -2189,7 +2303,9 @@ function buildExportText(){
       const setData = data.sets[setKey] || { weight:'', reps:'', done:false };
       const status = setData.done ? '✅' : '❌';
       if(ex.logType === 'circuit'){
-        txt += `  Tour ${s} : ${status}\n`;
+        const reps = setData.reps !== '' && setData.reps != null ? `${setData.reps} reps` : '- reps';
+        const dur = setData.duration !== '' && setData.duration != null ? `${setData.duration} s` : '- s';
+        txt += `  Tour ${s} : ${reps} · ${dur} ${status}\n`;
       } else {
         const weight = setData.weight !== '' ? setData.weight : '-';
         const reps = setData.reps !== '' ? setData.reps : '-';
@@ -2602,13 +2718,32 @@ function getExerciseNamesFromArchives(profile){
    séance entière), la métrique, et la période. Toute la chaîne passe par
    getSetsForExercise() : c'est le seul endroit qui connaît le format des archives. */
 
-const PROGRESS_TONNAGE_KEY = '__tonnage__';
+/* Le tonnage n'est comparable qu'entre séances identiques : additionner un bas
+   du corps et un haut du corps ne veut rien dire. La clé porte donc l'id de la
+   séance suivie — `__tonnage__:s1`, `__tonnage__:custom_1740…` */
+const PROGRESS_TONNAGE_PREFIX = '__tonnage__:';
+function tonnageKey(sessionId){ return PROGRESS_TONNAGE_PREFIX + sessionId; }
+function isTonnageKey(key){ return typeof key === 'string' && key.indexOf(PROGRESS_TONNAGE_PREFIX) === 0; }
+function tonnageSessionId(key){ return String(key).slice(PROGRESS_TONNAGE_PREFIX.length); }
 
-const PROGRESS_METRICS = [
-  { id:'weight',  label:'Poids max',  unit:'kg', title:'meilleure série' },
-  { id:'volume',  label:'Volume',     unit:'kg', title:'volume (poids × reps)' },
-  { id:'reps',    label:'Reps max',   unit:'reps', title:'meilleure série en reps' }
-];
+/* Séances distinctes présentes dans les archives d'un profil, du plus récemment
+   pratiqué au plus ancien. Le libellé retenu est celui de l'archive la plus
+   récente : une séance personnalisée renommée garde son nom actuel. */
+function getArchivedSessions(profile){
+  const seen = new Map();
+  getArchivesList(profile).forEach(arc => {
+    if(!arc.sessionId || seen.has(arc.sessionId)) return;
+    seen.set(arc.sessionId, {
+      id: arc.sessionId,
+      label: arc.sessionLabel || 'Séance',
+      title: arc.sessionTitle || ''
+    });
+  });
+  return Array.from(seen.values());
+}
+
+/* Une seule métrique : le poids max. Volume et reps max ont été retirés — trois
+   choix pour une même courbe brouillaient la lecture plus qu'ils n'aidaient. */
 const PROGRESS_PERIODS = [
   { id:'1m',  label:'1 mois', days:31 },
   { id:'3m',  label:'3 mois', days:92 },
@@ -2616,44 +2751,28 @@ const PROGRESS_PERIODS = [
   { id:'all', label:'Tout',   days:null }
 ];
 
-let progressMetric = 'weight';
 let progressPeriod = 'all';
-let progressSelection = null; /* nom d'exercice, ou PROGRESS_TONNAGE_KEY */
+let progressSelection = null; /* nom d'exercice, ou clé `__tonnage__:<sessionId>` */
 
-function setProgressMetric(id){
-  progressMetric = id;
-  renderProgressControls();
-  if(progressSelection) renderProgressChart(progressSelection);
-}
 function setProgressPeriod(id){
   progressPeriod = id;
   renderProgressControls();
   if(progressSelection) renderProgressChart(progressSelection);
 }
 
-/* La métrique n'a pas de sens sur le tonnage de séance : la valeur est déjà
-   agrégée dans l'archive. On masque le sélecteur plutôt que de proposer des
-   options sans effet. */
+/* Le filtre de période est placé juste au-dessus du graphique : c'est lui qu'il
+   commande, et le voir loin de la courbe rendait le lien peu évident. */
 function renderProgressControls(){
   const wrap = document.getElementById('progress-controls');
   if(!wrap) return;
-  const showMetric = progressSelection !== null && progressSelection !== PROGRESS_TONNAGE_KEY;
   wrap.innerHTML = '';
   if(progressSelection === null){ wrap.style.display = 'none'; return; }
   wrap.style.display = 'flex';
 
-  if(showMetric){
-    const row = document.createElement('div');
-    row.className = 'segmented';
-    PROGRESS_METRICS.forEach(m => {
-      const b = document.createElement('button');
-      b.className = 'segmented-btn' + (progressMetric === m.id ? ' selected' : '');
-      b.textContent = m.label;
-      b.onclick = () => setProgressMetric(m.id);
-      row.appendChild(b);
-    });
-    wrap.appendChild(row);
-  }
+  const label = document.createElement('span');
+  label.className = 'section-label';
+  label.textContent = 'Période';
+  wrap.appendChild(label);
 
   const periodRow = document.createElement('div');
   periodRow.className = 'segmented';
@@ -2676,21 +2795,23 @@ function getExerciseNamesFromArchives(profile){
   return Array.from(names).sort((a, b) => a.localeCompare(b, 'fr'));
 }
 
+/* Menu déroulant natif plutôt qu'une liste de boutons : sur iPhone, Safari
+   l'affiche en molette plein écran, et l'écran reste court quel que soit le
+   nombre d'exercices archivés. */
 function renderProgressExerciseList(){
   const container = document.getElementById('progress-exercise-list');
   container.innerHTML = '';
+  container.style.display = 'flex';
 
   const names = getExerciseNamesFromArchives(progressProfile);
 
-  /* Squelettes seulement s'il n'y a vraiment rien à montrer : si le cache contient
+  /* Squelette seulement s'il n'y a vraiment rien à montrer : si le cache contient
      déjà des données, on les affiche sans attendre la confirmation du snapshot. */
   if(names.length === 0 && !window.__archivesLoaded){
-    for(let i = 0; i < 4; i++){
-      const sk = document.createElement('div');
-      sk.className = 'progress-exercise-btn skeleton-item';
-      sk.innerHTML = '<span class="sk-line sk-lg"></span>';
-      container.appendChild(sk);
-    }
+    const sk = document.createElement('div');
+    sk.className = 'progress-select skeleton-item';
+    sk.innerHTML = '<span class="sk-line sk-lg"></span>';
+    container.appendChild(sk);
     return;
   }
 
@@ -2702,26 +2823,61 @@ function renderProgressExerciseList(){
     return;
   }
 
-  function addButton(key, label, extraClass){
-    const btn = document.createElement('button');
-    btn.className = 'progress-exercise-btn' + (extraClass ? ' ' + extraClass : '')
-      + (progressSelection === key ? ' selected' : '');
-    btn.textContent = label;
-    btn.dataset.key = key;
-    btn.onclick = () => {
-      progressSelection = key;
-      container.querySelectorAll('.progress-exercise-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      renderProgressControls();
-      renderProgressChart(key);
-    };
-    container.appendChild(btn);
+  const select = document.createElement('select');
+  select.className = 'progress-select';
+  select.id = 'progress-select';
+
+  /* Option d'amorce : sans elle, le premier exercice paraîtrait sélectionné
+     alors qu'aucun graphique n'est encore affiché. */
+  if(progressSelection === null){
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choisis un exercice…';
+    placeholder.selected = true;
+    select.appendChild(placeholder);
   }
 
-  /* 032 : le tonnage est une donnée de séance, pas d'exercice — il prend donc la
-     tête de la liste plutôt qu'un écran à part. */
-  addButton(PROGRESS_TONNAGE_KEY, 'Tonnage total de la séance', 'is-tonnage');
-  names.forEach(n => addButton(n, n));
+  /* 032 : le tonnage est une donnée de séance, pas d'exercice. Une entrée par
+     séance archivée, pour ne comparer que ce qui est comparable. */
+  const sessions = getArchivedSessions(progressProfile);
+  if(sessions.length > 0){
+    const groupSession = document.createElement('optgroup');
+    groupSession.label = `Tonnage par séance (${sessions.length})`;
+    sessions.forEach(sess => {
+      const opt = document.createElement('option');
+      opt.value = tonnageKey(sess.id);
+      opt.textContent = sess.title ? `${sess.label} — ${sess.title}` : sess.label;
+      groupSession.appendChild(opt);
+    });
+    select.appendChild(groupSession);
+  }
+
+  const groupEx = document.createElement('optgroup');
+  groupEx.label = `Exercices (${names.length})`;
+  names.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = n;
+    groupEx.appendChild(opt);
+  });
+  select.appendChild(groupEx);
+
+  if(progressSelection !== null){
+    select.value = progressSelection;
+    select.classList.add('chosen');
+  }
+
+  select.onchange = () => {
+    if(select.value === ''){ return; }
+    progressSelection = select.value;
+    /* on reconstruit le menu pour retirer l'amorce « Choisis un exercice… » et
+       marquer le champ comme renseigné ; le menu est déjà refermé à ce stade. */
+    renderProgressExerciseList();
+    renderProgressControls();
+    renderProgressChart(progressSelection);
+  };
+
+  container.appendChild(select);
 }
 
 /* Archives d'un profil filtrées par la période choisie, du plus ancien au plus récent. */
@@ -2739,23 +2895,17 @@ function getProgressPoints(profile, selection){
   const archives = getArchivesInPeriod(profile);
   const points = [];
 
+  const wantedSession = isTonnageKey(selection) ? tonnageSessionId(selection) : null;
+
   archives.forEach(arc => {
     let value = null;
-    if(selection === PROGRESS_TONNAGE_KEY){
-      if(arc.tonnage > 0) value = arc.tonnage;
+    if(wantedSession !== null){
+      /* seules les occurrences de CETTE séance entrent dans la courbe */
+      if(arc.sessionId === wantedSession && arc.tonnage > 0) value = arc.tonnage;
     } else {
       const sets = getSetsForExercise(arc, selection);
-      if(progressMetric === 'reps'){
-        const best = sets.reduce((m, x) => (!isNaN(x.reps) && x.reps > m) ? x.reps : m, 0);
-        if(best > 0) value = best;
-      } else if(progressMetric === 'volume'){
-        let total = 0;
-        sets.forEach(x => { if(!isNaN(x.weight) && !isNaN(x.reps)) total += x.weight * x.reps; });
-        if(total > 0) value = Math.round(total);
-      } else {
-        const best = sets.reduce((m, x) => (!isNaN(x.weight) && x.weight > m) ? x.weight : m, 0);
-        if(best > 0) value = best;
-      }
+      const best = sets.reduce((m, x) => (!isNaN(x.weight) && x.weight > m) ? x.weight : m, 0);
+      if(best > 0) value = best;
     }
     if(value !== null) points.push({ dateLabel: arc.dateLabel, value: value, createdAt: arc.createdAt });
   });
@@ -2774,11 +2924,13 @@ function getProgressDelta(points){
 }
 
 function progressMetricInfo(selection){
-  if(selection === PROGRESS_TONNAGE_KEY){
-    return { unit:'kg', title:'tonnage par séance', label:'Tonnage total de la séance' };
+  if(isTonnageKey(selection)){
+    const sess = getArchivedSessions(progressProfile)
+      .find(x => x.id === tonnageSessionId(selection));
+    const name = sess ? `${sess.label}${sess.title ? ' — ' + sess.title : ''}` : 'Séance';
+    return { unit:'kg', title:'tonnage à chaque répétition de cette séance', label:name };
   }
-  const m = PROGRESS_METRICS.find(x => x.id === progressMetric) || PROGRESS_METRICS[0];
-  return { unit:m.unit, title:m.title, label:selection };
+  return { unit:'kg', title:'meilleure série', label:selection };
 }
 
 function renderProgressChart(selection){
@@ -2936,15 +3088,11 @@ window.addEventListener('archives-updated', () => {
   if(activeView.id === 'view-session') renderSessionList();
   if(activeView.id === 'view-archives') renderArchivesList();
   if(activeView.id === 'view-progress'){
-    const selected = document.querySelector('.progress-exercise-btn.selected');
-    const selectedName = selected ? selected.textContent : null;
+    /* `progressSelection` survit au re-render : le menu se repositionne dessus
+       tout seul et le graphique reste affiché. */
+    renderLifetimeCard();
     renderProgressExerciseList();
-    if(selectedName){
-      /* on réactive l'exercice consulté pour ne pas perdre le graphique affiché */
-      document.querySelectorAll('.progress-exercise-btn').forEach(b => {
-        if(b.textContent === selectedName){ b.classList.add('selected'); renderProgressChart(selectedName); }
-      });
-    }
+    if(progressSelection !== null) renderProgressChart(progressSelection);
   }
 });
 window.addEventListener('custom-sessions-updated', () => {
@@ -3077,7 +3225,11 @@ function loadBuilderDraftFromSession(session){
 }
 
 function editCustomSession(id){
-  const session = (window.customSessionsCache || []).find(s => s.id === id);
+  /* getSession rend la surcharge si elle existe, sinon la séance d'origine :
+     modifier une séance fixe repart donc de son état affiché. */
+  const session = isFixedSessionId(id)
+    ? getSession(id)
+    : (window.customSessionsCache || []).find(s => s.id === id);
   if(!session) return;
   builderReturn = 'session';
   loadBuilderDraftFromSession(session);
@@ -3353,11 +3505,15 @@ function saveCustomSession(){
   }
 
   const existing = editingSessionId ? (window.customSessionsCache || []).find(s => s.id === editingSessionId) : null;
+  const originalFixed = editingSessionId ? SESSIONS.find(s => s.id === editingSessionId) : null;
+  /* Le builder ne saisit que le nom : le sous-titre d'une séance fixe est donc
+     repris tel quel plutôt qu'écrasé par « Séance personnalisée ». */
+  const title = (existing && existing.title) || (originalFixed && originalFixed.title) || 'Séance personnalisée';
   const session = {
     id: editingSessionId || ('custom_' + Date.now()),
     label: name,
-    title: 'Séance personnalisée',
-    createdAt: existing ? existing.createdAt : Date.now(),
+    title: title,
+    createdAt: existing ? existing.createdAt : (originalFixed ? 0 : Date.now()),
     exercises: validExercises,
     cardio: cardioEnabled ? { name: 'Tapis incliné Zone 2', targetMinutes: 30 } : null
   };
@@ -3370,8 +3526,31 @@ function saveCustomSession(){
       showToast(firestoreErrorMessage(err, "de la création"));
     });
   showToast(wasEditing ? 'Séance mise à jour ✅' : 'Séance créée ✅');
+  renderSessionList();
   editingSessionId = null;
   exitBuilder();
+}
+
+function askRestoreFixedSession(id){
+  const fixed = SESSIONS.find(s => s.id === id);
+  if(!fixed) return;
+  showConfirm(`Restaurer « ${fixed.label} » dans sa version d'origine ? Tes modifications seront perdues, mais tes archives et ta progression sont conservées.`,
+    () => restoreFixedSession(id));
+}
+function restoreFixedSession(id){
+  if(!window.__fb){
+    showToast('Connexion au cloud en cours, réessaie dans un instant');
+    return;
+  }
+  const { db, doc, deleteDoc } = window.__fb;
+  /* Supprimer la surcharge suffit : la version codée en dur reprend la main. */
+  deleteDoc(doc(db, 'customSessions', id))
+    .catch((err) => {
+      console.error('Erreur restauration séance Firestore', err);
+      showToast(firestoreErrorMessage(err, "de la restauration"));
+    });
+  showToast("Séance d'origine restaurée ↺");
+  renderSessionList();
 }
 
 function askDeleteCustomSession(id){
