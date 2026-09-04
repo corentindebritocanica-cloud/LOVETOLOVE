@@ -384,6 +384,73 @@
     100%{ color:var(--text-dim); border-color:var(--border); transform:translateY(0); }
   }
 
+  /* Fil de discussion du coach */
+  .coach-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .coach-head .big-question{ margin:0; }
+  .chat-thread{
+    display:flex; flex-direction:column; gap:10px; margin-top:14px;
+    min-height:120px;
+  }
+  .chat-msg{
+    max-width:88%; padding:11px 14px; border-radius:var(--r-md);
+    font-size:14px; line-height:1.5; white-space:pre-wrap;
+  }
+  .chat-msg.user{
+    align-self:flex-end; background:var(--accent); color:#fff;
+    border-bottom-right-radius:var(--r-xs);
+  }
+  .chat-msg.coach{
+    align-self:flex-start; background:var(--card); color:var(--text);
+    border:1px solid var(--border); border-bottom-left-radius:var(--r-xs);
+  }
+  .chat-author{
+    font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px;
+    opacity:.75; display:block; margin-bottom:3px;
+  }
+  .chat-empty{ font-size:13.5px; color:var(--text-dim); line-height:1.55; margin:0; }
+  .chat-composer{
+    display:flex; flex-direction:column; gap:8px; margin-top:16px;
+    padding-top:14px; border-top:1px solid var(--border);
+  }
+  .chat-send{
+    padding:13px; border-radius:var(--r-md); border:none;
+    background:var(--accent); color:#fff; font-size:15px; font-weight:800;
+    font-family:inherit;
+  }
+  .chat-send:disabled{ opacity:.55; }
+
+  /* Conseiller */
+  .coach-block{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .coach-feedback{
+    background:var(--card-2); border:1px solid var(--border); border-radius:var(--r-md);
+    padding:13px 15px; font-size:13.5px; line-height:1.55; color:var(--text);
+    white-space:pre-wrap; max-height:340px; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .coach-loading{
+    display:flex; flex-direction:column; gap:8px;
+    background:var(--card-2); border:1px solid var(--border);
+    border-radius:var(--r-md); padding:14px 15px;
+  }
+  .coach-note{ font-size:12px; color:var(--text-dim); margin:0; text-align:center; }
+  .coach-actions{ display:flex; gap:8px; }
+  .coach-btn{
+    flex:1; padding:12px; border-radius:var(--r-md); border:1px solid var(--accent);
+    background:transparent; color:var(--accent); font-size:14px; font-weight:700;
+    font-family:inherit;
+  }
+  .coach-btn.ghost{
+    flex:0 0 48px; border-color:var(--border); color:var(--text-dim);
+  }
+  .builder-field{ flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; }
+
+  .session-note-card{
+    display:flex; flex-direction:column; gap:6px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:13px 15px; box-shadow: var(--shadow-sm);
+  }
+  .session-note-input{ min-height:52px; }
+
   .note-wrap{
     display:flex; flex-direction:column; gap:5px; margin-top:2px;
     padding-top:10px; border-top:1px solid var(--border);
@@ -802,6 +869,26 @@
     .sk-line::after{ animation:none; }
   }
 
+  /* ---------- CONNEXION ---------- */
+  .login-overlay{
+    position:fixed; inset:0; z-index:150; display:none;
+    align-items:center; justify-content:center; padding:24px;
+    background:
+      radial-gradient(circle at 50% 35%, rgba(76,141,251,0.14), transparent 60%),
+      var(--bg);
+  }
+  .login-overlay.open{ display:flex; }
+  .login-box{ width:100%; max-width:360px; display:flex; flex-direction:column; gap:11px; }
+  .login-title{ font-size:27px; font-weight:850; letter-spacing:-0.02em; margin:6px 0 0 0; }
+  .login-sub{ font-size:13px; color:var(--text-dim); margin:0 0 8px 0; }
+  .login-error{ font-size:13px; color:var(--danger); margin:0; min-height:18px; }
+  .login-btn{
+    padding:15px; border-radius:var(--r-md); border:none;
+    background:var(--corentin); color:#fff; font-size:16px; font-weight:800;
+    font-family:inherit;
+  }
+  .login-btn:disabled{ opacity:.6; }
+
   /* ---------- ÉCRAN DE CHARGEMENT ---------- */
   .splash{
     position:fixed; inset:0; z-index:200;
@@ -926,6 +1013,19 @@
 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Changer de thème">🌙</button>
 <div class="sync-badge" id="sync-badge" aria-hidden="true">🟢</div>
 
+<!-- CONNEXION -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <p class="splash-sub">Duo Training</p>
+    <h1 class="login-title">Connexion</h1>
+    <p class="login-sub">Le même compte sur les deux téléphones.</p>
+    <input type="email" id="login-email" class="builder-input" placeholder="Adresse e-mail" autocomplete="username" autocapitalize="none">
+    <input type="password" id="login-password" class="builder-input" placeholder="Mot de passe" autocomplete="current-password">
+    <p class="login-error" id="login-error"></p>
+    <button class="login-btn" id="login-btn" onclick="doSignIn()">Se connecter</button>
+  </div>
+</div>
+
 <!-- ÉCRAN 0 : MENU PRINCIPAL -->
 <div class="view active" id="view-menu">
   <div class="view-inner">
@@ -939,10 +1039,30 @@
       <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14.5 3.5a3 3 0 0 0-4.2 3.6L4 13.4V17h3.6l6.3-6.3a3 3 0 0 0 3.6-4.2l-2.1 2.1-1.8-1.8 2.1-2.1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
       Build Training
     </button>
+    <button class="big-choice-btn" onclick="goToCoachView()">
+      <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 12a8 8 0 1 0-3.2 6.4L20 19.5l-1-3.1A7.9 7.9 0 0 0 20 12Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11h6M9 14.5h3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+      Coach
+    </button>
     <button class="big-choice-btn" onclick="goToProgressView()">
       <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       Suivi Progression
     </button>
+  </div>
+</div>
+
+<!-- COACH : FIL DE DISCUSSION -->
+<div class="view" id="view-coach">
+  <div class="view-inner">
+    <button class="back-btn" onclick="goToMenuView()">← Menu</button>
+    <div class="coach-head">
+      <h1 class="big-question">Coach</h1>
+      <button class="coach-btn ghost" onclick="openCoachSettings()" title="Réglages">⚙️</button>
+    </div>
+    <div class="chat-thread" id="chat-thread"></div>
+    <div class="chat-composer">
+      <textarea id="chat-input" class="note-input" rows="2" placeholder="Pose ta question au coach…"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendCoachMessage()">Envoyer ↗</button>
+    </div>
   </div>
 </div>
 
@@ -1059,6 +1179,7 @@
     <h3>📤 Récapitulatif de séance</h3>
     <p class="motivation-line" id="motivation-line"></p>
     <textarea id="export-text" readonly></textarea>
+    <div class="coach-block" id="coach-block"></div>
     <div class="modal-actions">
       <button class="btn-copy" onclick="copyExport()">Copier 📋</button>
       <button class="btn-close-modal" onclick="closeExportModal()">Fermer</button>
@@ -1076,6 +1197,32 @@
       <button class="finish-btn archive" onclick="finishArchive()">📦 Archiver la séance</button>
     </div>
     <button class="btn-cancel-text" onclick="closeFinishModal()">Annuler</button>
+  </div>
+</div>
+
+<!-- RÉGLAGES DU CONSEILLER -->
+<div class="confirm-overlay" id="coach-settings-modal">
+  <div class="confirm-box finish-box">
+    <p class="finish-title">Réglages du conseiller</p>
+    <p class="finish-sub">La clé reste sur ce téléphone, elle n'est jamais envoyée sur GitHub ni partagée. Crée-la gratuitement sur aistudio.google.com.</p>
+    <label class="mini-label">Clé API Google AI Studio</label>
+    <input type="text" id="coach-key-input" class="builder-input" placeholder="AIza…" autocomplete="off">
+    <label class="mini-label">Modèle</label>
+    <input type="text" id="coach-model-input" class="builder-input" placeholder="gemini-2.5-flash" autocomplete="off">
+    <div class="builder-reps-row">
+      <div class="builder-field">
+        <label class="mini-label">Poids Corentin (kg)</label>
+        <input type="text" inputmode="decimal" id="coach-weight-corentin" class="builder-input" placeholder="79">
+      </div>
+      <div class="builder-field">
+        <label class="mini-label">Poids Lisa (kg)</label>
+        <input type="text" inputmode="decimal" id="coach-weight-lisa" class="builder-input" placeholder="51">
+      </div>
+    </div>
+    <div class="finish-actions">
+      <button class="finish-btn archive" onclick="saveCoachSettings()">Enregistrer</button>
+      <button class="finish-btn copy" onclick="closeCoachSettings()">Annuler</button>
+    </div>
   </div>
 </div>
 
@@ -1111,6 +1258,9 @@
     getFirestore, initializeFirestore, collection, doc, setDoc, deleteDoc, onSnapshot,
     persistentLocalCache, persistentMultipleTabManager
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDk07pFMBaSwV7HCmqZGw4hq-OJcu4UUbY",
@@ -1139,9 +1289,17 @@
 
   const archivesCol = collection(db, 'archives');
   const customSessionsCol = collection(db, 'customSessions');
+  const coachChatCol = collection(db, 'coachChat');
+
+  const auth = getAuth(app);
 
   // Pont vers le script principal (non-module)
   window.__fb = { db, doc, setDoc, deleteDoc };
+  window.__auth = {
+    signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+    signOut: () => signOut(auth),
+    current: () => auth.currentUser
+  };
 
   function updateSyncStatus(hasPendingWrites, fromCache){
     window.__syncPending = hasPendingWrites;
@@ -1149,6 +1307,18 @@
     window.dispatchEvent(new Event('sync-status-updated'));
   }
 
+  /* Les règles Firestore exigent désormais une session : s'abonner avant la
+     connexion provoquerait un `permission-denied`. On attend donc l'état d'auth.
+     Firebase conserve la session localement, donc le mode hors-ligne survit :
+     après une première connexion, l'app fonctionne en salle sans réseau. */
+  let subscribed = false;
+  onAuthStateChanged(auth, (user) => {
+    window.__authUser = user ? { email: user.email, uid: user.uid } : null;
+    window.dispatchEvent(new Event('auth-changed'));
+    if(user && !subscribed){ subscribed = true; subscribeAll(); }
+  });
+
+  function subscribeAll(){
   onSnapshot(archivesCol, { includeMetadataChanges: true }, (snapshot) => {
     const all = [];
     snapshot.forEach(d => all.push(d.data()));
@@ -1183,6 +1353,29 @@
   }, (error) => {
     console.error('Erreur de synchronisation Firestore (customSessions)', error);
   });
+
+  /* Réglages du conseiller, partagés par les deux téléphones. Possible seulement
+     parce que les règles sont fermées : sans authentification, y déposer une clé
+     API serait la donner à quiconque connaît l'identifiant du projet. */
+  onSnapshot(doc(db, 'settings', 'coach'), (snap) => {
+    window.coachSettingsCache = snap.exists() ? snap.data() : {};
+    window.__coachSettingsLoaded = true;
+    window.dispatchEvent(new Event('coach-settings-updated'));
+  }, (error) => {
+    console.error('Erreur de synchronisation des réglages', error);
+  });
+
+  onSnapshot(coachChatCol, { includeMetadataChanges: true }, (snapshot) => {
+    const all = [];
+    snapshot.forEach(d => all.push(d.data()));
+    all.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    window.coachChatCache = all;
+    window.__coachChatLoaded = true;
+    window.dispatchEvent(new Event('coach-chat-updated'));
+  }, (error) => {
+    console.error('Erreur de synchronisation du fil du conseiller', error);
+  });
+  }
 </script>
 
 <script>
@@ -1419,7 +1612,7 @@ function dataKey(sessionId, profile){
   return `duo_data_${sessionId}_${profile}`;
 }
 function blankDayData(){
-  return { sets:{}, variants:{}, notes:{}, cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' };
+  return { sets:{}, variants:{}, notes:{}, sessionNote:'', cardioDone:false, cardioMinutes:'', cardioIncline:'', cardioSpeed:'', cardioNote:'' };
 }
 function loadDayData(sessionId, profile){
   const raw = storage.get(dataKey(sessionId, profile));
@@ -1806,6 +1999,30 @@ function render(){
 
   data.variants = data.variants || {};
   data.notes = data.notes || {};
+
+  /* Note de séance : contexte global du jour (fatigue, douleur, matériel,
+     changement de programme). Distincte des notes d'exercice, qui répondent à
+     « comment s'est passé CET exercice ». */
+  const sessionNoteWrap = document.createElement('div');
+  sessionNoteWrap.className = 'session-note-card';
+  const sessionNoteLabel = document.createElement('span');
+  sessionNoteLabel.className = 'mini-label';
+  sessionNoteLabel.textContent = '📝 Note de séance';
+  sessionNoteWrap.appendChild(sessionNoteLabel);
+  const sessionNoteInput = document.createElement('textarea');
+  sessionNoteInput.className = 'note-input session-note-input';
+  sessionNoteInput.rows = 2;
+  sessionNoteInput.placeholder = "Comment tu te sens, ce qui a changé aujourd'hui…";
+  sessionNoteInput.value = data.sessionNote || '';
+  sessionNoteInput.onfocus = armUndoSnapshot;
+  sessionNoteInput.oninput = () => {
+    snapshotBeforeEdit();
+    const d = loadDayData(currentSessionId, currentProfile);
+    d.sessionNote = sessionNoteInput.value;
+    saveDayData(currentSessionId, currentProfile, d);
+  };
+  sessionNoteWrap.appendChild(sessionNoteInput);
+  main.appendChild(sessionNoteWrap);
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     const card = document.createElement('div');
@@ -2287,6 +2504,9 @@ function buildExportText(){
   data.notes = data.notes || {};
   let txt = `🏋️ BILAN DE SÉANCE\n`;
   txt += `Nom : ${profileName}\n`;
+  if(data.sessionNote && data.sessionNote.trim() !== ''){
+    txt += `📝 Note de séance : ${data.sessionNote.trim()}\n`;
+  }
   txt += `Date : ${dateStr}\n`;
   txt += `Séance : ${dayProgram.label} — ${dayProgram.title}\n`;
   txt += `------------------------------\n`;
@@ -2413,6 +2633,7 @@ function sessionHasData(sessionId, profile){
     return v.done || (v.weight !== '' && v.weight != null) || (v.reps !== '' && v.reps != null);
   });
   if(filled) return true;
+  if((d.sessionNote || '').trim() !== '') return true;
   const notes = d.notes || {};
   if(Object.keys(notes).some(k => (notes[k] || '').trim() !== '')) return true;
   if(program && program.cardio){
@@ -2477,6 +2698,7 @@ function finishArchive(){
     sessionLabel: dayProgram.label,
     sessionTitle: dayProgram.title,
     exportText: buildExportText(),
+    sessionNote: (data.sessionNote || '').trim(),
     tonnage: Math.round(computeSessionTonnage(dayProgram, data)),
     exerciseNames: dayProgram.exercises.map(ex => ex.name),
     rawSets: data.sets || {}
@@ -2676,13 +2898,385 @@ function renderArchivesList(){
     list.appendChild(item);
   });
 }
+let coachViewedDate = null;
+
 function viewArchive(id){
   const archives = getArchivesList(currentProfile).concat(getTrashList(currentProfile));
   const arc = archives.find(a => a.id === id);
   if(!arc) return;
   document.getElementById('export-text').value = arc.exportText;
   document.getElementById('motivation-line').textContent = `Archivée le ${arc.dateLabel} à ${arc.timeLabel}`;
+  coachViewedDate = arc.dateLabel;
+  renderCoachBlock();
   document.getElementById('export-modal').classList.add('open');
+}
+
+/* ---------- CONNEXION ----------
+   Un seul compte, utilisé sur les deux téléphones : les règles Firestore
+   exigent `request.auth != null`, ce qui referme la base sans compliquer
+   l'usage. Firebase garde la session, donc on ne se reconnecte pas chaque jour. */
+function showLogin(show){
+  const overlay = document.getElementById('login-overlay');
+  if(overlay) overlay.classList.toggle('open', show);
+}
+
+async function doSignIn(){
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  errEl.textContent = '';
+
+  if(!email || !password){ errEl.textContent = 'Renseigne ton e-mail et ton mot de passe.'; return; }
+  if(!window.__auth){ errEl.textContent = 'Connexion au cloud en cours, réessaie dans un instant.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Connexion…';
+  try{
+    await window.__auth.signIn(email, password);
+    document.getElementById('login-password').value = '';
+  }catch(err){
+    console.error('Connexion', err);
+    errEl.textContent = signInErrorMessage(err);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+  }
+}
+
+function signInErrorMessage(err){
+  const code = (err && err.code) || '';
+  if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')){
+    return 'E-mail ou mot de passe incorrect.';
+  }
+  if(code.includes('invalid-email')) return "Cette adresse e-mail n'est pas valide.";
+  if(code.includes('too-many-requests')) return 'Trop de tentatives, réessaie dans quelques minutes.';
+  if(code.includes('network')) return 'Pas de réseau — la connexion initiale en demande une.';
+  return 'Connexion impossible : ' + (code || 'erreur inconnue');
+}
+
+function doSignOut(){
+  if(!window.__auth) return;
+  showConfirm('Se déconnecter de ce téléphone ?', () => {
+    window.__auth.signOut();
+    showToast('Déconnecté');
+  });
+}
+
+window.addEventListener('auth-changed', () => {
+  showLogin(!window.__authUser);
+  if(window.__authUser) render();
+});
+
+/* ---------- FIL DE DISCUSSION DU COACH ----------
+   Les messages vivent dans Firestore : les deux téléphones voient la même
+   conversation, en temps réel. La mémoire (chiffres, profil, bilans) est
+   réinjectée à chaque envoi, et seuls les derniers échanges sont transmis —
+   sans plafond, le coût grimperait à mesure que la discussion s'allonge. */
+
+const CHAT_HISTORY_LIMIT = 20;
+
+function getChatMessages(){ return window.coachChatCache || []; }
+
+function goToCoachView(){
+  renderChatThread();
+  showView('view-coach', 'fwd');
+}
+
+function renderChatThread(){
+  const thread = document.getElementById('chat-thread');
+  if(!thread) return;
+  thread.innerHTML = '';
+  const messages = getChatMessages();
+
+  if(messages.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'chat-empty';
+    empty.textContent = "Le coach connaît vos séances, vos records et vos bilans précédents. Demande-lui ce que tu veux : un ajustement de programme, un avis sur une gêne, un plan pour la semaine.";
+    thread.appendChild(empty);
+    return;
+  }
+
+  messages.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'chat-msg ' + (m.role === 'user' ? 'user' : 'coach');
+    if(m.role === 'user' && m.author){
+      const who = document.createElement('span');
+      who.className = 'chat-author';
+      who.textContent = PROFILE_NAMES[m.author] || m.author;
+      el.appendChild(who);
+    }
+    /* textContent : le texte vient d'un modèle ou d'une saisie libre, il ne doit
+       jamais être interprété comme du HTML. */
+    const body = document.createElement('span');
+    body.textContent = m.text;
+    el.appendChild(body);
+    thread.appendChild(el);
+  });
+  thread.scrollTop = thread.scrollHeight;
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+function saveChatMessage(msg){
+  if(!window.__fb) return;
+  const { db, doc, setDoc } = window.__fb;
+  setDoc(doc(db, 'coachChat', msg.id), msg)
+    .catch(err => console.error('Écriture du message', err));
+  /* optimiste : on affiche sans attendre le serveur, comme partout ailleurs */
+  window.coachChatCache = getChatMessages().concat([msg]);
+  renderChatThread();
+}
+
+let chatBusy = false;
+
+async function sendCoachMessage(){
+  if(chatBusy) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+
+  if(!coachGetKey()){
+    showToast('Renseigne la clé API pour commencer');
+    openCoachSettings();
+    return;
+  }
+  if(!navigator.onLine){
+    showToast('Le coach a besoin du réseau — réessaie plus tard');
+    return;
+  }
+
+  chatBusy = true;
+  const sendBtn = document.getElementById('chat-send');
+  sendBtn.disabled = true;
+  sendBtn.textContent = 'Le coach réfléchit…';
+
+  saveChatMessage({
+    id: 'msg_' + Date.now() + '_u',
+    role: 'user',
+    author: currentProfile,
+    text: text,
+    createdAt: Date.now()
+  });
+  input.value = '';
+
+  try{
+    const reply = await callCoachChat();
+    saveChatMessage({
+      id: 'msg_' + Date.now() + '_c',
+      role: 'coach',
+      author: 'coach',
+      text: reply,
+      createdAt: Date.now() + 1
+    });
+  }catch(err){
+    console.error('Coach', err);
+    showToast(coachErrorMessage(err));
+  }finally{
+    chatBusy = false;
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Envoyer ↗';
+  }
+}
+
+const CHAT_SYSTEM = `Tu es le coach de musculation personnel de Corentin et Lisa, un couple qui s'entraîne ensemble. Tu les suis depuis leurs débuts.
+
+Tu discutes avec eux par messages. Réponds en français, de façon directe et concrète.
+
+Règles :
+- Appuie-toi sur les chiffres fournis : charges, écarts, records, tonnages. Cite-les.
+- Compare toujours à des séances du MÊME type. Un bas du corps ne se compare pas à un haut du corps.
+- Si une douleur est évoquée, sois prudent : propose de réduire l'amplitude ou de substituer un exercice, et invite à consulter un professionnel si ça persiste. Ne pousse jamais à forcer sur une douleur.
+- Réponds à la question posée. Pas de bilan complet si on te demande juste un conseil.
+- Pas d'encouragement générique.
+- Le message indique qui parle, Corentin ou Lisa. Adresse-toi à cette personne, mais tu peux mentionner l'autre si c'est utile.
+
+Réponds en texte simple, sans JSON ni balises.`;
+
+async function callCoachChat(){
+  const key = coachGetKey();
+  if(!key) throw new Error('NO_KEY');
+
+  const model = coachGetModel();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+
+  /* Contexte rappelé à chaque envoi : le modèle n'a aucune mémoire propre. */
+  let context = 'CE QUE TU SAIS D\'EUX\n';
+  const profileText = getCoachProfileText();
+  if(profileText) context += profileText + '\n';
+  context += '\n' + buildCoachDigest('corentin') + '\n' + buildCoachDigest('lisa') + '\n';
+  const previous = getRecentCoachFeedbacks(2);
+  if(previous.length){
+    context += '\nTES DERNIERS BILANS\n';
+    previous.forEach(a => { context += '[' + a.dateLabel + '] ' + a.coachFeedback + '\n\n'; });
+  }
+
+  const history = getChatMessages().slice(-CHAT_HISTORY_LIMIT);
+  const contents = [
+    { role: 'user', parts: [{ text: context }] },
+    { role: 'model', parts: [{ text: "C'est noté, j'ai leur historique en tête." }] }
+  ];
+  history.forEach(m => {
+    contents.push({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.role === 'user' ? `[${PROFILE_NAMES[m.author] || 'Utilisateur'}] ${m.text}` : m.text }]
+    });
+  });
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: CHAT_SYSTEM }] },
+      contents: contents,
+      generationConfig: { temperature: 0.7 }
+    })
+  });
+
+  if(!res.ok){
+    let detail = '';
+    try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
+    if(res.status === 400 && /API key/i.test(detail)) throw new Error('BAD_KEY');
+    if(res.status === 404) throw new Error('BAD_MODEL');
+    if(res.status === 429) throw new Error('QUOTA');
+    throw new Error(detail || `Erreur ${res.status}`);
+  }
+
+  const data = await res.json();
+  const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+  const text = parts.map(x => x.text || '').join('').trim();
+  if(!text) throw new Error('Réponse vide du modèle');
+  return text;
+}
+
+window.addEventListener('coach-chat-updated', () => {
+  const active = document.querySelector('.view.active');
+  if(active && active.id === 'view-coach') renderChatThread();
+});
+
+/* ---------- INTERFACE DU CONSEILLER ---------- */
+
+function findCoachFeedbackForDate(dateLabel){
+  const found = getDayArchives(dateLabel).find(a => a.coachFeedback);
+  return found ? found.coachFeedback : null;
+}
+
+function renderCoachBlock(state){
+  const block = document.getElementById('coach-block');
+  if(!block || !coachViewedDate) return;
+  block.innerHTML = '';
+
+  if(state === 'loading'){
+    block.innerHTML = `<div class="coach-loading"><span class="sk-line sk-lg"></span><span class="sk-line sk-lg"></span><span class="sk-line sk-sm"></span></div>
+      <p class="coach-note">Le conseiller relit vos séances…</p>`;
+    return;
+  }
+
+  const existing = findCoachFeedbackForDate(coachViewedDate);
+  if(existing){
+    const box = document.createElement('div');
+    box.className = 'coach-feedback';
+    box.textContent = existing; /* textContent : le texte vient d'un modèle, jamais interprété comme du HTML */
+    block.appendChild(box);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'coach-actions';
+
+  const runBtn = document.createElement('button');
+  runBtn.className = 'coach-btn';
+  runBtn.textContent = existing ? '🤖 Refaire le bilan' : '🤖 Demander un bilan du duo';
+  runBtn.onclick = () => requestCoachFeedback(coachViewedDate);
+  actions.appendChild(runBtn);
+
+  const settingsBtn = document.createElement('button');
+  settingsBtn.className = 'coach-btn ghost';
+  settingsBtn.textContent = '⚙️';
+  settingsBtn.title = 'Réglages du conseiller';
+  settingsBtn.onclick = openCoachSettings;
+  actions.appendChild(settingsBtn);
+
+  block.appendChild(actions);
+}
+
+function openCoachSettings(){
+  document.getElementById('coach-key-input').value = coachGetKey();
+  document.getElementById('coach-model-input').value = coachGetModel();
+  const w = coachGetWeights();
+  document.getElementById('coach-weight-corentin').value = w.corentin || '';
+  document.getElementById('coach-weight-lisa').value = w.lisa || '';
+  document.getElementById('coach-settings-modal').classList.add('open');
+}
+function closeCoachSettings(){
+  document.getElementById('coach-settings-modal').classList.remove('open');
+}
+function saveCoachSettings(){
+  const next = {
+    apiKey: document.getElementById('coach-key-input').value.trim(),
+    model: document.getElementById('coach-model-input').value.trim() || COACH_DEFAULT_MODEL,
+    weights: {
+      corentin: document.getElementById('coach-weight-corentin').value.trim(),
+      lisa: document.getElementById('coach-weight-lisa').value.trim()
+    }
+  };
+  saveCoachSettingsRemote(next).catch(err => {
+    console.error('Enregistrement des réglages', err);
+    showToast(firestoreErrorMessage(err, "de l'enregistrement"));
+  });
+  closeCoachSettings();
+  showToast('Réglages enregistrés pour les deux téléphones');
+  renderCoachBlock();
+}
+
+let coachBusy = false;
+
+async function requestCoachFeedback(dateLabel){
+  if(coachBusy) return;
+  if(!coachGetKey()){
+    showToast('Renseigne ta clé API pour commencer');
+    openCoachSettings();
+    return;
+  }
+  if(!navigator.onLine){
+    showToast('Le bilan a besoin du réseau — réessaie plus tard');
+    return;
+  }
+  coachBusy = true;
+  renderCoachBlock('loading');
+  try{
+    const result = await callCoach(dateLabel);
+    saveCoachFeedback(dateLabel, result);
+    showToast('Bilan reçu 🤖');
+  }catch(err){
+    console.error('Conseiller', err);
+    showToast(coachErrorMessage(err));
+  }finally{
+    coachBusy = false;
+    renderCoachBlock();
+  }
+}
+
+function coachErrorMessage(err){
+  const m = String(err && err.message);
+  if(m === 'NO_KEY') return 'Aucune clé API enregistrée';
+  if(m === 'BAD_KEY') return 'Clé API refusée — vérifie-la dans les réglages';
+  if(m === 'BAD_MODEL') return "Ce modèle n'existe pas — vérifie son nom dans les réglages";
+  if(m === 'QUOTA') return 'Quota atteint — réessaie dans quelques minutes';
+  return 'Le bilan a échoué : ' + m;
+}
+
+/* Le bilan est écrit sur les DEUX archives du jour : il concerne le duo, et
+   chacun doit le retrouver depuis son propre écran d'archives. */
+function saveCoachFeedback(dateLabel, result){
+  if(!window.__fb) return;
+  const { db, doc, setDoc } = window.__fb;
+  getDayArchives(dateLabel).forEach(arc => {
+    const updated = Object.assign({}, arc, {
+      coachFeedback: result.bilan,
+      coachProfile: result.profil || arc.coachProfile || ''
+    });
+    setDoc(doc(db, 'archives', arc.id), updated)
+      .catch(err => console.error('Écriture du bilan', err));
+  });
 }
 /* ---------- EXPORT DE TOUTES LES ARCHIVES ---------- */
 function exportAllArchives(){
@@ -3005,6 +3599,193 @@ function renderProgressChart(selection){
       ${deltaHtml}
     </div>
   `;
+}
+
+/* ==========================================================================
+   CONSEILLER (bilan IA)
+   Trois couches de mémoire, pour que le conseiller connaisse l'historique sans
+   qu'on lui envoie tout à chaque fois :
+     1. les CHIFFRES, calculés ici (exacts, gratuits, compacts) ;
+     2. les DERNIERS BILANS, pour qu'il ne se répète pas ;
+     3. un PROFIL évolutif qu'il réécrit à chaque analyse.
+   Le tout tient dans quelques milliers de tokens au lieu de l'historique brut,
+   qui atteindrait 100 000 tokens au bout d'un an.
+
+   Stockage : deux champs ajoutés à l'archive (`coachFeedback`, `coachProfile`).
+   Aucune collection Firestore supplémentaire, donc aucune règle à modifier.
+   ========================================================================== */
+
+const COACH_DEFAULT_MODEL = 'gemini-2.5-flash';
+
+/* Les réglages vivent dans Firestore (document `settings/coach`) : saisis une
+   fois, ils valent pour les deux téléphones. Les anciennes valeurs locales
+   servent de repli tant que le premier snapshot n'est pas arrivé. */
+function coachSettings(){ return window.coachSettingsCache || {}; }
+function coachGetKey(){ return coachSettings().apiKey || storage.get('duo_coach_key') || ''; }
+function coachGetModel(){ return coachSettings().model || COACH_DEFAULT_MODEL; }
+function coachGetWeights(){ return coachSettings().weights || {}; }
+
+function saveCoachSettingsRemote(next){
+  if(!window.__fb) return Promise.reject(new Error('Cloud indisponible'));
+  const { db, doc, setDoc } = window.__fb;
+  /* écriture optimiste : le cache local prend effet tout de suite */
+  window.coachSettingsCache = next;
+  return setDoc(doc(db, 'settings', 'coach'), next);
+}
+
+const PROFILE_NAMES = { corentin:'Corentin', lisa:'Lisa' };
+
+/* ---- Couche 1 : les chiffres ---- */
+
+/* Historique compact d'un profil : records, 5 dernières valeurs par exercice,
+   évolution du tonnage séance par séance. */
+function buildCoachDigest(profile){
+  const archives = getArchivesChrono(profile);
+  if(archives.length === 0) return `${PROFILE_NAMES[profile]} : aucune séance archivée.`;
+
+  const weights = coachGetWeights();
+  const stats = getLifetimeStats(profile);
+  let out = `--- ${PROFILE_NAMES[profile]} ---\n`;
+  if(weights[profile]) out += `Poids de corps : ${weights[profile]} kg\n`;
+  out += `${stats.sessions} séances archivées, ${stats.tonnage} kg cumulés.\n`;
+
+  /* Tonnage par type de séance : seules les séances identiques sont comparables. */
+  getArchivedSessions(profile).forEach(sess => {
+    const pts = archives
+      .filter(a => a.sessionId === sess.id && a.tonnage > 0)
+      .slice(-5)
+      .map(a => `${a.dateLabel} ${a.tonnage}kg`);
+    if(pts.length) out += `Tonnage ${sess.label} : ${pts.join(' → ')}\n`;
+  });
+
+  out += `Exercices :\n`;
+  getExerciseNamesFromArchives(profile).forEach(name => {
+    const line = [];
+    archives.slice(-8).forEach(arc => {
+      const sets = getSetsForExercise(arc, name);
+      if(sets.length === 0) return;
+      const best = sets.reduce((m, x) => (!isNaN(x.weight) && x.weight > (m.weight || 0)) ? x : m, sets[0]);
+      if(isNaN(best.weight)) return;
+      line.push(`${arc.dateLabel} ${formatNumberFr(best.weight)}kg×${isNaN(best.reps) ? '?' : best.reps}`);
+    });
+    const record = getPersonalRecord(profile, name);
+    if(line.length) out += `  ${name} — record ${formatNumberFr(record)}kg | ${line.slice(-5).join(' → ')}\n`;
+  });
+  return out;
+}
+
+/* ---- Couche 2 et 3 : bilans précédents et profil évolutif ---- */
+
+/* Le profil courant est celui de l'archive la plus récente qui en porte un :
+   chaque bilan le réécrit, donc le dernier fait foi. */
+function getCoachProfileText(){
+  const all = getArchivesList('corentin').concat(getArchivesList('lisa'))
+    .filter(a => a.coachProfile)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  return all.length ? all[0].coachProfile : '';
+}
+function getRecentCoachFeedbacks(limit){
+  const seen = new Set();
+  return getArchivesList('corentin').concat(getArchivesList('lisa'))
+    .filter(a => a.coachFeedback)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .filter(a => { const k = a.dateLabel; if(seen.has(k)) return false; seen.add(k); return true; })
+    .slice(0, limit)
+    .reverse();
+}
+
+/* Les deux archives d'une même journée : le bilan est commun au duo. */
+function getDayArchives(dateLabel){
+  return getArchivesList('corentin').concat(getArchivesList('lisa'))
+    .filter(a => a.dateLabel === dateLabel)
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+function buildCoachPrompt(dateLabel){
+  const dayArchives = getDayArchives(dateLabel);
+  let p = `SÉANCES DU ${dateLabel}\n\n`;
+  dayArchives.forEach(arc => {
+    p += arc.exportText + '\n\n';
+  });
+
+  p += `HISTORIQUE CHIFFRÉ\n`;
+  p += buildCoachDigest('corentin') + '\n';
+  p += buildCoachDigest('lisa') + '\n';
+
+  const profileText = getCoachProfileText();
+  if(profileText) p += `\nCE QUE TU SAIS D'EUX (profil que tu tiens à jour)\n${profileText}\n`;
+
+  const previous = getRecentCoachFeedbacks(3);
+  if(previous.length){
+    p += `\nTES BILANS PRÉCÉDENTS (ne te répète pas, vérifie si tes conseils ont été suivis)\n`;
+    previous.forEach(a => { p += `[${a.dateLabel}]\n${a.coachFeedback}\n\n`; });
+  }
+  return p;
+}
+
+const COACH_SYSTEM = `Tu es le coach de musculation personnel de Corentin et Lisa, un couple qui s'entraîne ensemble. Tu les suis depuis leurs débuts et tu connais leur historique.
+
+Rédige un bilan de leur séance, en français, structuré ainsi :
+- une phrase d'ouverture sur la séance dans son ensemble ;
+- une section par personne, avec un titre clair ;
+- dans chaque section, un point par exercice qui mérite un commentaire (pas tous) : ce qui a progressé, ce qui bloque, et un conseil technique CONCRET et actionnable ;
+- une estimation de la dépense calorique de la musculation pour chacun, présentée comme un ordre de grandeur et non comme un chiffre exact ;
+- une phrase de clôture.
+
+Règles :
+- Appuie-toi sur les chiffres fournis. Cite les charges, les écarts, les records.
+- Compare à leurs séances précédentes du MÊME type. Un bas du corps ne se compare pas à un haut du corps.
+- Si une douleur ou une gêne est mentionnée, sois prudent : propose de réduire l'amplitude ou de substituer un exercice, et invite à consulter un professionnel si ça persiste. Ne pousse jamais à forcer sur une douleur.
+- Pas d'encouragement générique. Si tu n'as rien de précis à dire sur un exercice, n'en parle pas.
+- Tiens compte du contexte qu'ils ont noté (fatigue, cycle, matériel indisponible).
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans balises de code :
+{"bilan": "le texte du bilan", "profil": "le profil mis à jour"}
+
+Le champ "profil" est ta mémoire longue : 10 lignes maximum, réécrites à chaque fois. Objectifs, contraintes physiques, habitudes observées, points de vigilance. Repars du profil existant et fais-le évoluer, ne le repars pas de zéro.`;
+
+/* ---- Appel API ---- */
+
+async function callCoach(dateLabel){
+  const key = coachGetKey();
+  if(!key) throw new Error('NO_KEY');
+
+  const model = coachGetModel();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: COACH_SYSTEM }] },
+      contents: [{ role: 'user', parts: [{ text: buildCoachPrompt(dateLabel) }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+    })
+  });
+
+  if(!res.ok){
+    let detail = '';
+    try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
+    if(res.status === 400 && /API key/i.test(detail)) throw new Error('BAD_KEY');
+    if(res.status === 404) throw new Error('BAD_MODEL');
+    if(res.status === 429) throw new Error('QUOTA');
+    throw new Error(detail || `Erreur ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = (((data.candidates || [])[0] || {}).content || {}).parts
+    ? data.candidates[0].content.parts.map(x => x.text || '').join('')
+    : '';
+  if(!text) throw new Error('Réponse vide du modèle');
+
+  /* Le JSON est demandé explicitement, mais on reste tolérant : si le modèle
+     enrobe sa réponse, on récupère le texte brut plutôt que d'échouer. */
+  try{
+    const parsed = JSON.parse(text.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
+    return { bilan: parsed.bilan || text, profil: parsed.profil || '' };
+  }catch(e){
+    return { bilan: text, profil: '' };
+  }
 }
 
 /* ---------- CORBEILLE ----------
