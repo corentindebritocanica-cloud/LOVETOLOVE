@@ -882,6 +882,8 @@
   .login-title{ font-size:27px; font-weight:850; letter-spacing:-0.02em; margin:6px 0 0 0; }
   .login-sub{ font-size:13px; color:var(--text-dim); margin:0 0 8px 0; }
   .login-error{ font-size:13px; color:var(--danger); margin:0; min-height:18px; }
+  .model-status{ font-size:12px; color:var(--text-dim); margin:0; line-height:1.4; }
+  .model-status.error{ color:var(--danger); }
   .login-btn{
     padding:15px; border-radius:var(--r-md); border:none;
     background:var(--corentin); color:#fff; font-size:16px; font-weight:800;
@@ -1208,7 +1210,10 @@
     <label class="mini-label">Clé API Google AI Studio</label>
     <input type="text" id="coach-key-input" class="builder-input" placeholder="AIza…" autocomplete="off">
     <label class="mini-label">Modèle</label>
-    <input type="text" id="coach-model-input" class="builder-input" placeholder="gemini-2.5-flash" autocomplete="off">
+    <select id="coach-model-select" class="builder-input" style="display:none"></select>
+    <input type="text" id="coach-model-input" class="builder-input" placeholder="gemini-flash-latest" autocomplete="off">
+    <p class="model-status" id="coach-model-status"></p>
+    <button class="coach-btn" onclick="loadCoachModels()">Charger les modèles disponibles</button>
     <div class="builder-reps-row">
       <div class="builder-field">
         <label class="mini-label">Poids Corentin (kg)</label>
@@ -3060,7 +3065,7 @@ async function sendCoachMessage(){
   input.value = '';
 
   try{
-    const reply = await callCoachChat();
+    const reply = await withModelRepair(() => callCoachChat());
     saveChatMessage({
       id: 'msg_' + Date.now() + '_c',
       role: 'coach',
@@ -3097,7 +3102,6 @@ async function callCoachChat(){
   if(!key) throw new Error('NO_KEY');
 
   const model = coachGetModel();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
 
   /* Contexte rappelé à chaque envoi : le modèle n'a aucune mémoire propre. */
   let context = 'CE QUE TU SAIS D\'EUX\n';
@@ -3122,7 +3126,7 @@ async function callCoachChat(){
     });
   });
 
-  const res = await fetch(url, {
+  const res = await geminiFetch(`models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -3132,14 +3136,7 @@ async function callCoachChat(){
     })
   });
 
-  if(!res.ok){
-    let detail = '';
-    try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
-    if(res.status === 400 && /API key/i.test(detail)) throw new Error('BAD_KEY');
-    if(res.status === 404) throw new Error('BAD_MODEL');
-    if(res.status === 429) throw new Error('QUOTA');
-    throw new Error(detail || `Erreur ${res.status}`);
-  }
+  if(!res.ok) throw await geminiError(res);
 
   const data = await res.json();
   const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
@@ -3198,21 +3195,87 @@ function renderCoachBlock(state){
   block.appendChild(actions);
 }
 
+/* Google retire et renomme régulièrement ses modèles : plutôt que de coder un
+   nom en dur et de tomber sur un 404, on demande la liste à l'API. Le même appel
+   sert de diagnostic pour la clé : s'il échoue, c'est elle qui est en cause. */
+async function loadCoachModels(){
+  const status = document.getElementById('coach-model-status');
+  const select = document.getElementById('coach-model-select');
+  const input = document.getElementById('coach-model-input');
+  const key = document.getElementById('coach-key-input').value.trim();
+
+  status.className = 'model-status';
+  if(!key){ status.textContent = "Renseigne d'abord la clé API."; status.className = 'model-status error'; return; }
+
+  status.textContent = 'Interrogation de Google…';
+  try{
+    /* On lit la clé saisie, pas encore enregistrée : le diagnostic doit pouvoir
+       tester une clé avant de la valider. */
+    const previous = window.coachSettingsCache;
+    window.coachSettingsCache = Object.assign({}, previous || {}, { apiKey: key });
+    let res;
+    try{ res = await geminiFetch('models'); }
+    finally{ window.coachSettingsCache = previous; }
+    if(!res.ok){
+      let detail = '';
+      try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
+      throw new Error('HTTP ' + res.status + (detail ? ' — ' + detail : ''));
+    }
+    const data = await res.json();
+    /* on ne garde que les modèles capables de générer du texte */
+    const models = (data.models || [])
+      .filter(m => (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1)
+      .map(m => String(m.name || '').replace(/^models\//, ''))
+      .filter(n => n.indexOf('gemini') === 0)
+      .sort();
+
+    if(models.length === 0) throw new Error('Aucun modèle de texte disponible avec cette clé');
+
+    select.innerHTML = '';
+    models.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      select.appendChild(opt);
+    });
+    const current = input.value.trim() || coachGetModel();
+    if(models.indexOf(current) !== -1) select.value = current;
+    select.style.display = 'block';
+    input.style.display = 'none';
+    status.textContent = `${models.length} modèles disponibles. La clé fonctionne.`;
+  }catch(err){
+    console.error('Liste des modèles', err);
+    select.style.display = 'none';
+    input.style.display = 'block';
+    status.className = 'model-status error';
+    status.textContent = 'Échec : ' + err.message;
+  }
+}
+
 function openCoachSettings(){
   document.getElementById('coach-key-input').value = coachGetKey();
   document.getElementById('coach-model-input').value = coachGetModel();
   const w = coachGetWeights();
   document.getElementById('coach-weight-corentin').value = w.corentin || '';
   document.getElementById('coach-weight-lisa').value = w.lisa || '';
+  document.getElementById('coach-model-select').style.display = 'none';
+  document.getElementById('coach-model-input').style.display = 'block';
+  document.getElementById('coach-model-status').textContent = '';
+  document.getElementById('coach-model-status').className = 'model-status';
   document.getElementById('coach-settings-modal').classList.add('open');
 }
+function readCoachModelField(){
+  const select = document.getElementById('coach-model-select');
+  if(select && select.style.display !== 'none' && select.value) return select.value;
+  return document.getElementById('coach-model-input').value.trim() || COACH_DEFAULT_MODEL;
+}
+
 function closeCoachSettings(){
   document.getElementById('coach-settings-modal').classList.remove('open');
 }
 function saveCoachSettings(){
   const next = {
     apiKey: document.getElementById('coach-key-input').value.trim(),
-    model: document.getElementById('coach-model-input').value.trim() || COACH_DEFAULT_MODEL,
+    model: readCoachModelField(),
     weights: {
       corentin: document.getElementById('coach-weight-corentin').value.trim(),
       lisa: document.getElementById('coach-weight-lisa').value.trim()
@@ -3243,7 +3306,7 @@ async function requestCoachFeedback(dateLabel){
   coachBusy = true;
   renderCoachBlock('loading');
   try{
-    const result = await callCoach(dateLabel);
+    const result = await withModelRepair(() => callCoach(dateLabel));
     saveCoachFeedback(dateLabel, result);
     showToast('Bilan reçu 🤖');
   }catch(err){
@@ -3259,7 +3322,9 @@ function coachErrorMessage(err){
   const m = String(err && err.message);
   if(m === 'NO_KEY') return 'Aucune clé API enregistrée';
   if(m === 'BAD_KEY') return 'Clé API refusée — vérifie-la dans les réglages';
-  if(m === 'BAD_MODEL') return "Ce modèle n'existe pas — vérifie son nom dans les réglages";
+  if(m.indexOf('KEY_REJECTED') === 0) return "Clé refusée par Google (401) — voir les réglages pour le détail";
+  if(m.indexOf('KEY_FORBIDDEN') === 0) return "Accès refusé (403) — l'API Gemini est peut-être désactivée sur ce projet";
+  if(m === 'BAD_MODEL') return "Ce modèle n'existe pas — ouvre les réglages et charge la liste";
   if(m === 'QUOTA') return 'Quota atteint — réessaie dans quelques minutes';
   return 'Le bilan a échoué : ' + m;
 }
@@ -3615,7 +3680,9 @@ function renderProgressChart(selection){
    Aucune collection Firestore supplémentaire, donc aucune règle à modifier.
    ========================================================================== */
 
-const COACH_DEFAULT_MODEL = 'gemini-2.5-flash';
+/* Alias maintenu par Google et repointé à chaque génération : plus durable
+   qu'un numéro de version, qui finit toujours par être retiré du service. */
+const COACH_DEFAULT_MODEL = 'gemini-flash-latest';
 
 /* Les réglages vivent dans Firestore (document `settings/coach`) : saisis une
    fois, ils valent pour les deux téléphones. Les anciennes valeurs locales
@@ -3744,6 +3811,116 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans balises de code :
 
 Le champ "profil" est ta mémoire longue : 10 lignes maximum, réécrites à chaque fois. Objectifs, contraintes physiques, habitudes observées, points de vigilance. Repars du profil existant et fais-le évoluer, ne le repars pas de zéro.`;
 
+/* ---- Appel HTTP vers Gemini ----
+   Google migre des clés « standard » (AIza…) vers des clés d'autorisation
+   (AQ.…), liées à un compte de service. Les deux formats coexistent et ne sont
+   pas acceptés de la même façon selon la voie utilisée.
+
+   On tente d'abord la clé en paramètre d'URL : c'est la voie historique, et
+   surtout elle n'ajoute aucun en-tête personnalisé, donc pas de requête CORS
+   préalable depuis Safari. Si le serveur répond 401, on réessaie avec l'en-tête
+   `x-goog-api-key`, recommandé pour les clés d'autorisation. */
+async function geminiFetch(path, init){
+  const key = coachGetKey();
+  if(!key) throw new Error('NO_KEY');
+  const base = 'https://generativelanguage.googleapis.com/v1beta/' + path;
+  const sep = base.indexOf('?') !== -1 ? '&' : '?';
+
+  let res = await fetch(base + sep + 'key=' + encodeURIComponent(key), init || {});
+  if(res.status === 401){
+    const retry = Object.assign({}, init || {});
+    retry.headers = Object.assign({}, (init && init.headers) || {}, { 'x-goog-api-key': key });
+    res = await fetch(base, retry);
+  }
+  return res;
+}
+
+/* Détail d'erreur renvoyé par Google, pour ne pas afficher un code nu. */
+async function geminiError(res){
+  let detail = '';
+  try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
+  if(res.status === 401){
+    /* Cas très fréquent avec les clés AQ. : la clé existe mais le service la
+       refuse. Le message doit orienter vers la clé, pas vers le modèle. */
+    return new Error('KEY_REJECTED:' + detail);
+  }
+  if(res.status === 400 && /API key/i.test(detail)) return new Error('BAD_KEY');
+  if(res.status === 403) return new Error('KEY_FORBIDDEN:' + detail);
+  if(res.status === 404) return new Error('BAD_MODEL');
+  if(res.status === 429) return new Error('QUOTA');
+  return new Error(detail || 'Erreur ' + res.status);
+}
+
+/* ---- Résistance aux changements de modèles ----
+   Google retire régulièrement des modèles : un nom figé finit toujours par
+   renvoyer un 404. Plutôt que de laisser l'app bloquée, on demande la liste
+   à jour, on choisit le meilleur remplaçant, on l'enregistre et on réessaie
+   une fois. L'utilisateur n'a rien à faire, il est simplement prévenu. */
+
+async function fetchAvailableModels(){
+  const res = await geminiFetch('models');
+  if(!res.ok) throw new Error('Liste des modèles indisponible');
+  const data = await res.json();
+  return (data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1)
+    .map(m => String(m.name || '').replace(/^models\//, ''))
+    .filter(n => n.indexOf('gemini') === 0);
+}
+
+/* Préférences, du plus durable au plus spécifique : un alias `latest` d'abord,
+   puis un Flash stable, puis n'importe quel modèle capable de générer du texte. */
+function pickBestModel(models){
+  if(models.length === 0) return null;
+  const byPref = [
+    m => m === 'gemini-flash-latest',
+    m => m.indexOf('flash-latest') !== -1,
+    m => m.indexOf('flash') !== -1 && m.indexOf('lite') === -1 && m.indexOf('preview') === -1,
+    m => m.indexOf('flash') !== -1,
+    () => true
+  ];
+  for(const test of byPref){
+    const found = models.find(test);
+    if(found) return found;
+  }
+  return models[0];
+}
+
+let coachModelRepaired = false; /* une seule réparation par appel, pas de boucle */
+
+async function repairCoachModel(){
+  const key = coachGetKey();
+  if(!key) return null;
+  const models = await fetchAvailableModels();
+  const next = pickBestModel(models);
+  if(!next || next === coachGetModel()) return null;
+  const settings = Object.assign({}, coachSettings(), { model: next });
+  saveCoachSettingsRemote(settings).catch(err => console.error('Réparation du modèle', err));
+  showToast(`Modèle mis à jour : ${next}`);
+  return next;
+}
+
+/* Enveloppe commune aux deux appels (bilan et discussion). */
+async function withModelRepair(run){
+  try{
+    return await run();
+  }catch(err){
+    if(String(err && err.message) !== 'BAD_MODEL' || coachModelRepaired) throw err;
+    coachModelRepaired = true;
+    let next = null;
+    try{
+      next = await repairCoachModel();
+    }catch(repairErr){
+      /* La réparation a échoué à son tour (clé invalide, pas de réseau) :
+         on remonte l'erreur d'origine, plus parlante que « liste indisponible ». */
+      console.error('Réparation impossible', repairErr);
+    }finally{
+      coachModelRepaired = false;
+    }
+    if(!next) throw err;
+    return await run();
+  }
+}
+
 /* ---- Appel API ---- */
 
 async function callCoach(dateLabel){
@@ -3751,9 +3928,7 @@ async function callCoach(dateLabel){
   if(!key) throw new Error('NO_KEY');
 
   const model = coachGetModel();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
-
-  const res = await fetch(url, {
+  const res = await geminiFetch(`models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -3763,14 +3938,7 @@ async function callCoach(dateLabel){
     })
   });
 
-  if(!res.ok){
-    let detail = '';
-    try{ const e = await res.json(); detail = (e.error && e.error.message) || ''; }catch(err){}
-    if(res.status === 400 && /API key/i.test(detail)) throw new Error('BAD_KEY');
-    if(res.status === 404) throw new Error('BAD_MODEL');
-    if(res.status === 429) throw new Error('QUOTA');
-    throw new Error(detail || `Erreur ${res.status}`);
-  }
+  if(!res.ok) throw await geminiError(res);
 
   const data = await res.json();
   const text = (((data.candidates || [])[0] || {}).content || {}).parts
