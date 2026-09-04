@@ -387,6 +387,7 @@
   /* Fil de discussion du coach */
   .coach-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .coach-head .big-question{ margin:0; }
+  .chat-tabs{ margin-top:14px; }
   .chat-thread{
     display:flex; flex-direction:column; gap:10px; margin-top:14px;
     min-height:120px;
@@ -1059,6 +1060,10 @@
     <div class="coach-head">
       <h1 class="big-question">Coach</h1>
       <button class="coach-btn ghost" onclick="openCoachSettings()" title="Réglages">⚙️</button>
+    </div>
+    <div class="segmented chat-tabs" id="chat-tabs">
+      <button class="segmented-btn" onclick="setChatThread('suivi')">Suivi</button>
+      <button class="segmented-btn" onclick="setChatThread('questions')">Question ?</button>
     </div>
     <div class="chat-thread" id="chat-thread"></div>
     <div class="chat-composer">
@@ -2916,6 +2921,57 @@ function viewArchive(id){
   document.getElementById('export-modal').classList.add('open');
 }
 
+/* ---------- RETOUR PAR GLISSEMENT ----------
+   Plutôt que de dupliquer la logique de chaque écran, le geste déclenche le
+   bouton retour de l'écran actif : le comportement est donc rigoureusement
+   identique au tap, y compris le rappel d'archivage sur l'écran de saisie. */
+
+const SWIPE_MIN_X = 70;   /* distance horizontale minimale */
+const SWIPE_MAX_Y = 55;   /* au-delà, c'est un défilement vertical */
+const SWIPE_MAX_MS = 600; /* au-delà, c'est un glissement lent, pas un geste */
+
+let swipeStartX = 0, swipeStartY = 0, swipeStartAt = 0, swipeValid = false;
+
+/* Le geste doit rester sans effet sur ce qui défile horizontalement ou se
+   sélectionne : listes déroulantes, champs de saisie, barres segmentées. */
+function swipeBlocked(target){
+  if(!target || !target.closest) return true;
+  if(target.closest('input, textarea, select, button')) return true;
+  if(target.closest('.segmented, .profile-switch, .suggest-panel, .chat-composer')) return true;
+  if(document.querySelector('.modal-overlay.open, .confirm-overlay.open')) return true;
+  if(document.querySelector('.login-overlay.open')) return true;
+  const splash = document.getElementById('splash');
+  if(splash && splash.style.display !== 'none') return true;
+  return false;
+}
+
+document.addEventListener('touchstart', (e) => {
+  if(e.touches.length !== 1 || swipeBlocked(e.target)){ swipeValid = false; return; }
+  swipeValid = true;
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+  swipeStartAt = Date.now();
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if(!swipeValid) return;
+  swipeValid = false;
+  const touch = e.changedTouches && e.changedTouches[0];
+  if(!touch) return;
+  const dx = touch.clientX - swipeStartX;
+  const dy = Math.abs(touch.clientY - swipeStartY);
+  if(dx < SWIPE_MIN_X || dy > SWIPE_MAX_Y) return;
+  if(Date.now() - swipeStartAt > SWIPE_MAX_MS) return;
+  goBackFromActiveView();
+}, { passive: true });
+
+function goBackFromActiveView(){
+  const active = document.querySelector('.view.active');
+  if(!active) return;
+  const btn = active.querySelector('.back-btn');
+  if(btn) btn.click(); /* le menu principal n'en a pas : le geste y est sans effet */
+}
+
 /* ---------- CONNEXION ----------
    Un seul compte, utilisé sur les deux téléphones : les règles Firestore
    exigent `request.auth != null`, ce qui referme la base sans compliquer
@@ -2981,11 +3037,58 @@ window.addEventListener('auth-changed', () => {
 
 const CHAT_HISTORY_LIMIT = 20;
 
-function getChatMessages(){ return window.coachChatCache || []; }
+/* Deux fils distincts.
+   - `suivi` : la conversation historique. Les messages écrits avant l'ajout des
+     onglets n'ont pas de champ `thread` : ils y sont rattachés par défaut, donc
+     rien n'est perdu ni à migrer.
+   - `questions` : les questions libres. Ce fil reçoit en contexte les derniers
+     échanges du suivi, pour ne pas repartir de zéro. */
+const CHAT_THREADS = {
+  suivi:     { label:'Suivi',     placeholder:"Où en est-on ? Un point sur la semaine…" },
+  questions: { label:'Question ?', placeholder:"Ta question au coach : technique, matériel, programme…" }
+};
+let currentChatThread = 'suivi';
+
+function messageThread(m){ return m.thread || 'suivi'; }
+function getChatMessages(thread){
+  const all = window.coachChatCache || [];
+  return all.filter(m => messageThread(m) === (thread || currentChatThread));
+}
+
+function setChatThread(thread){
+  currentChatThread = thread;
+  renderChatTabs();
+  renderChatThread();
+  const input = document.getElementById('chat-input');
+  if(input) input.placeholder = CHAT_THREADS[thread].placeholder;
+}
+
+function renderChatTabs(){
+  const tabs = document.getElementById('chat-tabs');
+  if(!tabs) return;
+  const buttons = tabs.querySelectorAll('.segmented-btn');
+  const keys = Object.keys(CHAT_THREADS);
+  buttons.forEach((b, i) => {
+    const count = getChatMessages(keys[i]).length;
+    b.textContent = CHAT_THREADS[keys[i]].label + (count ? ` (${count})` : '');
+    b.classList.toggle('selected', keys[i] === currentChatThread);
+  });
+}
 
 function goToCoachView(){
+  renderChatTabs();
   renderChatThread();
+  setChatThread(currentChatThread);
   showView('view-coach', 'fwd');
+  /* On arrive en bas du fil : c'est le dernier message qui intéresse, pas le
+     premier. Le défilement est différé pour laisser l'écran s'afficher. */
+  setTimeout(scrollChatToBottom, 60);
+}
+
+function scrollChatToBottom(){
+  const thread = document.getElementById('chat-thread');
+  if(thread) thread.scrollTop = thread.scrollHeight;
+  window.scrollTo(0, document.documentElement.scrollHeight);
 }
 
 function renderChatThread(){
@@ -2997,7 +3100,9 @@ function renderChatThread(){
   if(messages.length === 0){
     const empty = document.createElement('p');
     empty.className = 'chat-empty';
-    empty.textContent = "Le coach connaît vos séances, vos records et vos bilans précédents. Demande-lui ce que tu veux : un ajustement de programme, un avis sur une gêne, un plan pour la semaine.";
+    empty.textContent = currentChatThread === 'questions'
+      ? "Pose ici tes questions ponctuelles : technique d'un exercice, matériel, adaptation du programme. Le coach a vos séances, vos archives et le fil Suivi en tête."
+      : "Le suivi de fond : l'état de forme, l'avancement, les ajustements de programme. Le coach connaît vos séances, vos records et vos bilans.";
     thread.appendChild(empty);
     return;
   }
@@ -3018,8 +3123,7 @@ function renderChatThread(){
     el.appendChild(body);
     thread.appendChild(el);
   });
-  thread.scrollTop = thread.scrollHeight;
-  window.scrollTo(0, document.body.scrollHeight);
+  scrollChatToBottom();
 }
 
 function saveChatMessage(msg){
@@ -3028,7 +3132,8 @@ function saveChatMessage(msg){
   setDoc(doc(db, 'coachChat', msg.id), msg)
     .catch(err => console.error('Écriture du message', err));
   /* optimiste : on affiche sans attendre le serveur, comme partout ailleurs */
-  window.coachChatCache = getChatMessages().concat([msg]);
+  window.coachChatCache = (window.coachChatCache || []).concat([msg]);
+  renderChatTabs();
   renderChatThread();
 }
 
@@ -3059,6 +3164,7 @@ async function sendCoachMessage(){
     id: 'msg_' + Date.now() + '_u',
     role: 'user',
     author: currentProfile,
+    thread: currentChatThread,
     text: text,
     createdAt: Date.now()
   });
@@ -3070,6 +3176,7 @@ async function sendCoachMessage(){
       id: 'msg_' + Date.now() + '_c',
       role: 'coach',
       author: 'coach',
+      thread: currentChatThread,
       text: reply,
       createdAt: Date.now() + 1
     });
@@ -3108,10 +3215,25 @@ async function callCoachChat(){
   const profileText = getCoachProfileText();
   if(profileText) context += profileText + '\n';
   context += '\n' + buildCoachDigest('corentin') + '\n' + buildCoachDigest('lisa') + '\n';
+  context += '\n' + buildArchiveExcerpts(6);
   const previous = getRecentCoachFeedbacks(2);
   if(previous.length){
     context += '\nTES DERNIERS BILANS\n';
     previous.forEach(a => { context += '[' + a.dateLabel + '] ' + a.coachFeedback + '\n\n'; });
+  }
+
+  /* Le fil « Question ? » doit connaître le suivi : sans ça, il redemanderait
+     un contexte déjà donné dans l'autre conversation. */
+  if(currentChatThread === 'questions'){
+    const suivi = getChatMessages('suivi').slice(-8);
+    if(suivi.length){
+      context += '\nCE QUI S\'EST DIT DANS LE FIL SUIVI\n';
+      suivi.forEach(m => {
+        const who = m.role === 'user' ? (PROFILE_NAMES[m.author] || 'Eux') : 'Toi';
+        context += who + ' : ' + m.text + '\n';
+      });
+      context += '\n';
+    }
   }
 
   const history = getChatMessages().slice(-CHAT_HISTORY_LIMIT);
@@ -3147,7 +3269,7 @@ async function callCoachChat(){
 
 window.addEventListener('coach-chat-updated', () => {
   const active = document.querySelector('.view.active');
-  if(active && active.id === 'view-coach') renderChatThread();
+  if(active && active.id === 'view-coach'){ renderChatTabs(); renderChatThread(); }
 });
 
 /* ---------- INTERFACE DU CONSEILLER ---------- */
@@ -3759,6 +3881,27 @@ function getRecentCoachFeedbacks(limit){
     .filter(a => { const k = a.dateLabel; if(seen.has(k)) return false; seen.add(k); return true; })
     .slice(0, limit)
     .reverse();
+}
+
+/* Archives récentes en texte intégral. Le condensé chiffré couvre TOUT
+   l'historique, mais il perd le détail : notes, variantes, cardio, contexte du
+   jour. On joint donc les dernières séances telles qu'elles ont été écrites.
+   Pourquoi seulement les dernières : un an d'archives brutes représenterait
+   ~100 000 tokens par appel, pour une pertinence moindre — le modèle se noierait
+   dans le détail au lieu de voir les tendances, que les chiffres portent déjà. */
+function buildArchiveExcerpts(limit){
+  const recent = getArchivesList('corentin').concat(getArchivesList('lisa'))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .slice(0, limit)
+    .reverse();
+  if(recent.length === 0) return '';
+  let out = 'ARCHIVES RÉCENTES (texte intégral, notes comprises)\n\n';
+  recent.forEach(a => {
+    out += a.exportText + '\n';
+    if(a.coachFeedback) out += '↳ ton bilan de ce jour-là : ' + a.coachFeedback + '\n';
+    out += '\n';
+  });
+  return out;
 }
 
 /* Les deux archives d'une même journée : le bilan est commun au duo. */
