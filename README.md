@@ -1,6 +1,6 @@
 # Duo Training
 
-Application web mono-fichier (HTML/CSS/JS vanilla, aucun build, aucun npm) de suivi de musculation en duo pour **Corentin** et **Lisa**. Ouverte dans Safari sur iPhone. Thème sombre par défaut avec bascule vers un thème clair. ~3 460 lignes.
+Application web mono-fichier (HTML/CSS/JS vanilla, aucun build, aucun npm) de suivi de musculation en duo pour **Corentin** et **Lisa**. Ouverte dans Safari sur iPhone. Thème sombre par défaut avec bascule vers un thème clair. ~3 640 lignes.
 
 ## Où vit le projet
 
@@ -57,6 +57,12 @@ view-menu (Menu principal)
 
 `showView(viewId, direction)` gère l'affichage, le glissement et appelle systématiquement `adjustBottomSpacing()`. Un **écran de chargement** de 2,5 s précède le menu.
 
+**Tous les écrans alignent leur contenu en haut.** Le menu principal et l'écran
+des profils étaient les deux seuls centrés verticalement (classe `center-view`,
+supprimée) : c'était la seule incohérence de mise en page de l'app. Seul
+`view-exercises` a une structure différente — header collant + `main` + barre
+du bas — les six autres partagent `.view-inner` à l'identique.
+
 Retour contextuel du builder : `builderReturn` vaut `'menu'` (ouverture depuis le menu) ou `'session'` (édition via ✏️). `exitBuilder()` ramène au bon écran et le libellé du bouton s'adapte.
 
 ## Jetons de design (CSS)
@@ -75,16 +81,35 @@ Retour contextuel du builder : `builderReturn` vaut `'menu'` (ouverture depuis l
 
 2,5 s puis fondu de 0,46 s. Barre de musculation qui se dessine, disques bleu et rose qui glissent, jauge qui se remplit, trois messages de statut successifs (800 ms chacun).
 
-⚠️ Le commentaire HTML au-dessus du bloc dit encore « 2 s puis fondu » alors que
-le code est à 2500 ms — reste d'un ajustement, à corriger à l'occasion.
-
 Deux garde-fous à ne pas retirer : le script est **isolé dans sa propre balise `<script>`** placée juste après son markup (si le script principal plantait, l'écran s'effacerait quand même), et une animation CSS de secours l'efface à 5 s **même si le JS ne s'exécute pas du tout**.
 
-## Programme fixe (SESSIONS)
+## Programme fixe (SESSIONS) et surcharges
 
 4 séances codées en dur (`s1` à `s4`) : `label`, `title`, `muscleIcon`, `cardio`, `exercises[]` avec `{ name, sets, target:{corentin,lisa}, logType?, equipmentOptions? }`.
-- `logType:'circuit'` → pas de poids/reps, « Tour N » + check.
+- `logType:'circuit'` → pas de poids, mais reps et durée (voir « Circuits »).
 - `equipmentOptions` → sélecteur de variante Haltères / Poulie.
+
+**Les 4 séances sont modifiables.** Éditer l'une d'elles enregistre une
+**surcharge** dans `customSessions`, sous le **même id** (`s1`…), qui prend le
+pas sur la version codée en dur. Trois conséquences voulues :
+
+- aucune collection ni règle Firestore supplémentaire ;
+- les archives référencent `sessionId`, donc le tonnage par séance continue de
+  fonctionner y compris sur les séances archivées avant modification ;
+- c'est réversible : supprimer la surcharge (bouton ↺) restaure l'original.
+
+Points d'implémentation :
+- `getSession(id)` consulte **d'abord** la surcharge, puis `SESSIONS`.
+- `getPureCustomSessions()` exclut les surcharges de la liste des séances
+  personnalisées, sinon `s1` apparaîtrait deux fois.
+- `decorateSession()` récupère le `muscleIcon` de l'originale : le SVG n'est pas
+  stocké en base.
+- À l'enregistrement, le `title` d'une séance fixe est **repris tel quel** — le
+  builder ne saisit que le nom, et écraser le sous-titre par « Séance
+  personnalisée » perdrait « Bas du Corps (Quads & Fessiers) ».
+- Une séance fixe n'a **pas** de 🗑️ : elle ne doit pas pouvoir disparaître. Le ↺
+  n'apparaît que si une surcharge existe, et la ligne porte une étiquette
+  « modifiée ».
 
 ## Firebase / Firestore
 
@@ -102,6 +127,15 @@ Deux garde-fous à ne pas retirer : le script est **isolé dans sa propre balise
 - Poids / Reps / ✓ par série, avec bouton ⇊ de recopie à partir de la série 2.
 - ⚠️ **Champs numériques en `type="text"` + `inputMode`**, jamais `type="number"` : avec un clavier français, « 22,5 » est jugé invalide par Safari et `input.value` renvoie une chaîne vide — la saisie disparaissait silencieusement. `sanitizeField()` filtre à la frappe ; **`parseNum()` (virgule → point) pour tout calcul**, jamais `parseFloat`.
 - Note « 🗒️ Info » par exercice, sélecteur de variante si `equipmentOptions`.
+
+### Circuits (`logType:'circuit'`)
+Grille propre : `Tour | Reps | Durée (s) | ✓`. La consigne d'origine reste dans
+le nom de l'exercice (« Relevés de jambes 12-15r + Gainage 45s ») et dans la
+cible (« 3 tours ») ; les champs servent à noter ce qui a **réellement** été
+fait. La durée est stockée dans un champ `duration` sur la série, à côté de
+`reps`. **Ces valeurs n'entrent pas dans le tonnage** — un gainage sans charge
+n'a pas de kilos à additionner — et les circuits restent exclus des records et
+du rappel de dernier poids.
 
 ### Structure de la carte
 Deux zones distinctes : `.exercise-headwrap` (fond teinté — nom, cible, historique, record) et `.exercise-body` (fond neutre — badge, variantes, séries, note). Une carte dont toutes les séries sont validées reçoit la classe `complete` : bordure verte et liseré sur la tranche gauche.
@@ -135,13 +169,36 @@ Snapshot **armé** au focus (`armUndoSnapshot`), **empilé à la première frapp
 
 Entrée du menu principal. Sélecteur **Corentin / Lisa** piloté par `progressProfile`, **volontairement distinct de `currentProfile`** : consulter les courbes de l'autre ne change pas le profil d'entraînement.
 
+Ordre de lecture de l'écran, chaque bloc portant un intitulé : **qui** → **combien
+au total** → **quoi suivre** → **sur quelle période** → **la courbe**.
+
 - **Cumul** en tête (`getLifetimeStats`) : tonnage total et nombre de séances, corbeille exclue.
-- **Sélection** : `progressSelection` vaut un nom d'exercice ou `PROGRESS_TONNAGE_KEY`. L'entrée « Tonnage total de la séance » est en tête de liste, en bordure pointillée — le tonnage est une donnée de séance, pas d'exercice, mais il n'a pas mérité un écran à part.
-- **Métrique** (`progressMetric`) : poids max, volume (poids × reps cumulé), reps max. **Masquée sur le tonnage** : proposer « reps max » sur un tonnage n'aurait aucun sens.
-- **Période** (`progressPeriod`) : 1 / 3 / 6 mois, ou tout.
+- **Sélection** : un `<select>` natif (`renderProgressExerciseList`), pas une
+  liste de boutons. Sur iPhone, Safari l'affiche en molette plein écran et
+  l'écran garde la même longueur quel que soit le nombre d'exercices. Deux
+  `optgroup` : « Tonnage par séance (N) » puis « Exercices (N) ». Une option
+  d'amorce « Choisis un exercice… » tant que rien n'est sélectionné, sinon le
+  premier exercice paraîtrait choisi alors qu'aucune courbe n'est affichée ; le
+  menu est reconstruit au `change` pour la retirer et marquer le champ.
+  ⚠️ `font-size:16px` impératif sur `.progress-select`, sinon Safari zoome.
+- **Une seule métrique : le poids max.** Volume et reps max ont existé puis ont
+  été retirés — trois choix pour une même courbe brouillaient la lecture plus
+  qu'ils n'aidaient. Le sélecteur de métrique a disparu avec eux.
+- **Tonnage : une entrée par séance**, jamais un tonnage global. Clé
+  `__tonnage__:<sessionId>` (`PROGRESS_TONNAGE_PREFIX`, `isTonnageKey()`,
+  `tonnageSessionId()`). Additionner un bas du corps et un haut du corps n'a
+  aucun sens : la courbe ne retient que les occurrences de **cette** séance.
+  `getArchivedSessions()` liste les séances réellement archivées et retient le
+  libellé de l'archive la plus récente, pour qu'une séance renommée garde son
+  nom actuel.
+- **Période** (`progressPeriod`) : 1 / 3 / 6 mois, ou tout. Placée juste
+  au-dessus du graphique, puisque c'est lui qu'elle commande.
 - **Écart** (`getProgressDelta`) : gain absolu, pourcentage et contexte, vert / rouge / gris. Rien ne s'affiche sous deux points.
 - **Étiquettes de dates** : au-delà de 8 points, une sur N seulement, première et dernière toujours conservées. Sinon elles se chevauchent en bouillie.
 - Ligne centrée verticalement quand toutes les valeurs sont identiques.
+- Le rafraîchissement temps réel s'appuie sur `progressSelection`, qui survit au
+  re-render — pas sur un élément du DOM, comme c'était le cas avant le passage
+  au menu déroulant.
 
 ## Catalogue d'exercices (autocomplétion du Build Training)
 
@@ -189,19 +246,20 @@ Onze suites écrites au fil du projet, **273 assertions**. Elles vivent dans
 l'environnement d'exécution et ne sont pas versionnées : elles sont réécrites à
 la demande, en ciblant la zone modifiée. Ce tableau dit quoi recouvrir.
 
-| Fichier | Couvre |
+| Domaine | À couvrir |
 |---|---|
-| `test.js` | virgule décimale, undo, échappement, espace bas, builder |
-| `test2.js` | archivage hors ligne, export texte |
-| `test3.js` | catalogue d'exercices, fautes de frappe, normalisation |
-| `test4.js` | navigation (menu, profils, builder, progression) |
-| `test5.js` | écran de chargement (minutage, disparition, robustesse) |
-| `test6.js` | dernier poids, record personnel, cumul |
-| `test7.js` | rappel d'archivage |
-| `test8.js` | métrique, période, écart, tonnage, étiquettes |
-| `test9.js` | jetons de design, structure des cartes |
-| `test10.js` | toasts, validation, 100 %, micro-animations, squelettes |
-| `audit.js` | socle de lecture des archives, corbeille |
+| Saisie | virgule décimale, filtrage des champs, undo armé/empilé |
+| Circuits | reps + durée, exclusion du tonnage, export |
+| Archivage | hors ligne (promesse non résolue), export texte, rappel d'archivage |
+| Corbeille | `deletedAt`, restauration, vidage, exclusion des stats |
+| Catalogue | suggestions, fautes de frappe, normalisation à l'enregistrement |
+| Séances fixes | surcharge, restauration ↺, absence de doublon, titre et icône |
+| Navigation | menu, profils, builder (retour contextuel), progression |
+| Progression | menu déroulant, tonnage par séance, période, écart, étiquettes |
+| Historique | dernier poids en placeholder, record personnel, cumul |
+| Chargement | minutage du splash, disparition, filet de sécurité |
+| Design | jetons (aucune valeur en dur), structure des cartes, alignement |
+| Retours d'état | toasts empilables, validation, 100 %, squelettes |
 
 Méthode : charger le HTML dans **jsdom** (`runScripts:'dangerously'`) et appeler les fonctions globales.
 
@@ -218,12 +276,20 @@ Poids/reps/séries, notes libres, dates. Firestore est en accès ouvert (pas d'a
 
 ## Pour la suite
 
-Traité : refonte UI/UX, architecture en écrans, variantes, notes, cardio enrichi, undo, archives Firebase, Build Training, graphique de progression, export global, mode hors-ligne, badge de sync, passe complète de correction de bugs, catalogue d'exercices, menu principal, écran de chargement, corbeille, dernier poids, records, cumul, rappel d'archivage, lot progression complet, jetons de design, refonte des cartes, animations et retours d'état.
+Traité : refonte UI/UX, architecture en écrans, variantes, notes, cardio enrichi, undo, archives Firebase, Build Training, graphique de progression, export global, mode hors-ligne, badge de sync, passe complète de correction de bugs, catalogue d'exercices, menu principal, écran de chargement, corbeille, dernier poids, records, cumul, rappel d'archivage, lot progression complet, jetons de design, refonte des cartes, animations et retours d'état, réorganisation du Suivi Progression, menu déroulant, tonnage par séance, alignement de tous les écrans, séances fixes modifiables, saisie des circuits.
 
 Abandonné en connaissance de cause :
 - **Série en échec** — écarté pour ne pas compliquer le calcul du tonnage et des records.
 - **Accent personnalisable** — le bleu et le rose ne sont pas décoratifs, ils indiquent quel profil est actif et distinguent les courbes. Et il n'y a pas d'écran de réglages où le loger.
+- **Choix de métrique** (volume, reps max) — implémenté puis retiré : trois
+  courbes possibles pour un même exercice compliquaient la lecture sans rien
+  apporter. Ne pas le réintroduire sans raison précise.
+- **Tonnage toutes séances confondues** — retiré au profit d'une entrée par
+  séance : la courbe globale mélangeait des séances incomparables.
 
 Pistes évoquées, non faites :
 - **Fusion de deux noms d'exercice déjà archivés.** Le catalogue protège les futures saisies, mais deux orthographes déjà en archive restent deux courbes (le nom est figé dans l'archive). Il faudrait réécrire les documents archivés.
+- **Progression des circuits.** Les reps et durées des circuits sont désormais
+  archivées : on pourrait tracer l'évolution du gainage, ce que le Suivi ne
+  propose pas encore (il ne suit que le poids max).
 - Chrono de repos, boutons +/- de charge, bandeau « séance en cours », dupliquer une séance, bibliothèque d'exercices, comparer Corentin et Lisa sur un même graphe, calendrier des séances, recherche dans les archives, export CSV, partage iOS natif, installation en PWA, sauvegarde JSON, authentification Firebase.
