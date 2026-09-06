@@ -339,13 +339,21 @@
   /* 133 : les boutons de variante et de duplication ne donnaient aucun retour
      au doigt. Enfoncement à la pression, et transition sur le changement d'état. */
   .variant-btn{
-    flex:1 1 auto; min-width:0; padding:9px 8px; border-radius:var(--r-sm);
+    flex:1 1 0; min-width:0; padding:8px 6px; border-radius:var(--r-sm);
+    display:flex; flex-direction:column; gap:2px; align-items:center;
     border:1px solid var(--border); background:transparent; color:var(--text-dim);
-    font-size:12.5px; font-weight:600; text-align:center; white-space:nowrap;
+    text-align:center;
     transition: border-color var(--t-fast) ease, color var(--t-fast) ease,
                 background var(--t-fast) ease, transform var(--t-fast) ease;
   }
   .variant-btn:active{ transform:scale(.96); }
+  .variant-name{ font-size:12.5px; font-weight:700; line-height:1.2; }
+  .variant-sub{ font-size:10px; font-weight:600; opacity:.8; line-height:1.2; }
+  .variant-hint{
+    font-size:11.5px; line-height:1.4; color:var(--text-dim);
+    margin-top:-4px; padding-left:2px;
+  }
+  .variant-hint.doubled{ color:var(--accent); font-weight:600; }
   .variant-btn.selected{
     border-color:var(--accent); color:var(--accent); background:var(--tint);
     animation: variantPick .3s cubic-bezier(.34,1.4,.64,1);
@@ -364,7 +372,7 @@
     gap:8px; align-items:center;
   }
   .set-grid-header.circuit, .set-row.circuit{
-    grid-template-columns: 58px 1fr 1fr 44px;
+    grid-template-columns: 58px 1fr 44px;
   }
   .set-row.circuit .set-num{
     text-align:left; font-size:13.5px;
@@ -572,6 +580,8 @@
   .cardio-card .name{font-weight:700; font-size:15px;}
   .cardio-suggestion{font-size:12px; color:var(--text-dim);}
   .cardio-fields-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  /* Replié : pas de gros bloc vide en bas de séance quand on n'a pas fait de cardio */
+  .cardio-card.collapsed{ padding:13px 16px; gap:0; }
   .cardio-field{ min-width:88px; }
   .cardio-field{ flex:1; display:flex; flex-direction:column; gap:5px; }
   .cardio-field-label{ font-size:11px; color:var(--text-dim); font-weight:600; }
@@ -1599,6 +1609,55 @@ const ICON_CUSTOM = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"
 /* Options de variante proposées pour les exercices du haut du corps (haltères / poulie) */
 const UPPER_BODY_OPTIONS = ["Haltères", "Poulie unilatéral", "Poulie 2 mains"];
 
+/* ---------- MODE DE CHARGE ----------
+   Le matériel n'est pas le bon critère : seule compte la question « y a-t-il une
+   charge dans chaque main, ou une seule charge partagée ? ».
+
+   Deux haltères de 22,5 kg × 10 → chaque répétition déplace 45 kg → 450 kg.
+   Une poulie à 22,5 kg, 10 à droite puis 10 à gauche → 20 répétitions à
+   22,5 kg → 450 kg. Simultané ou alterné, le total est le même : ce qui double,
+   c'est la présence de deux charges, pas l'ordre d'exécution.
+
+   Une barre, une machine ou une poulie tenue à deux mains n'ont qu'une charge,
+   déjà totale : elles comptent telles quelles. */
+/* `hint` dit littéralement quoi taper dans chaque case, avec un exemple chiffré :
+   une formulation abstraite laissait planer un doute sur « poids d'un côté ». */
+const LOAD_MODES = [
+  { id:'total', label:'Barre / machine', sub:'charge totale', factor:1,
+    hint:'Poids : la charge affichée sur la barre ou la machine. Reps : le nombre de répétitions. Exemple : 100 kg × 8 reps → 800 kg comptés.' },
+  { id:'dumbbell', label:'Haltères', sub:'poids par main', factor:2,
+    hint:"Poids : celui d'UN seul haltère. Reps : le nombre de répétitions (les deux bras travaillent ensemble). Exemple : 22,5 kg × 10 reps → 450 kg comptés, les deux haltères étant additionnés." },
+  { id:'single', label:'Un bras à la fois', sub:'poids par main', factor:2,
+    hint:'Poids : la charge affichée. Reps : le nombre de répétitions faites par UN bras. Exemple : 22,5 kg × 10 reps de chaque côté → 450 kg comptés.' }
+];
+
+/* Les anciennes valeurs (« Haltères », « Poulie 2 mains »…) portaient sur le
+   MATÉRIEL et n'avaient aucun effet sur le tonnage. Les traduire vers un mode
+   doublerait rétroactivement des séances saisies sous une autre règle, et ferait
+   apparaître un mode sélectionné alors qu'on n'a rien choisi dans ce modèle-ci.
+   Elles sont donc ignorées : seuls les identifiants du nouveau modèle comptent. */
+function normalizeLoadMode(value){
+  if(!value) return null;
+  return LOAD_MODES.some(m => m.id === value) ? value : null;
+}
+
+/* Aucune présélection : on arrive sur un exercice vierge, poids et répétitions
+   pris tels quels. Le mode ne sert qu'à signaler un cas particulier, et rend
+   alors le tonnage plus juste. `null` = rien de choisi. */
+function getLoadMode(ex, exIdx, data){
+  return normalizeLoadMode(readByExercise(data.variants, ex, exIdx));
+}
+function loadModeInfo(id){
+  return LOAD_MODES.find(m => m.id === id) || LOAD_MODES[0];
+}
+function isPerHandVariant(mode){
+  return loadModeInfo(normalizeLoadMode(mode) || mode).factor === 2;
+}
+function variantMultiplier(mode){
+  const id = normalizeLoadMode(mode);
+  return id ? loadModeInfo(id).factor : 1;
+}
+
 /* Séances numérotées (indépendantes du jour de la semaine, pour s'adapter à un emploi du temps mobile) */
 const SESSIONS = [
   {
@@ -2010,12 +2069,15 @@ function renderSessionList(){
 function computeSessionTonnage(dayProgram, data){
   let tonnage = 0;
   dayProgram.exercises.forEach((ex, exIdx) => {
+    /* Sans mode choisi, la charge saisie est prise telle quelle. */
+    const mode = getLoadMode(ex, exIdx, data);
+    const factor = mode ? loadModeInfo(mode).factor : 1;
     for(let s = 1; s <= ex.sets; s++){
       const setData = data.sets[`ex${exIdx}_set${s}`];
       if(ex.logType !== 'circuit' && setData){
         const w = parseNum(setData.weight);
         const r = parseNum(setData.reps);
-        if(!isNaN(w) && !isNaN(r)) tonnage += w * r;
+        if(!isNaN(w) && !isNaN(r)) tonnage += w * r * factor;
       }
     }
   });
@@ -2035,6 +2097,8 @@ function updateSessionProgress(){
       if(setData && setData.done) done++;
     }
   });
+  /* Le cardio ne compte dans la progression que s'il est prévu par la séance :
+     une case optionnelle non cochée ne doit pas empêcher d'atteindre 100 %. */
   if(dayProgram.cardio){
     total++;
     if(data.cardioDone) done++;
@@ -2201,43 +2265,60 @@ function render(){
     refreshRecordBadge();
     refreshCardState();
 
-    if(ex.equipmentOptions){
+    /* Le mode de charge est proposé sur TOUS les exercices chargés : un squat
+       peut se faire aux haltères, un tirage à un bras. Chaque bouton porte sa
+       conséquence en toutes lettres — « poids par main » ou « charge totale » —
+       plutôt qu'un facteur ×2 illisible. */
+    if(!isCircuitEx){
+      const variantKey = exerciseKey(ex, exIdx);
+      const currentMode = getLoadMode(ex, exIdx, data);
+
       const variantRow = document.createElement('div');
       variantRow.className = 'variant-row';
-      const variantKey = exerciseKey(ex, exIdx);
-      const selectedVariant = readByExercise(data.variants, ex, exIdx);
-
-      ex.equipmentOptions.forEach(option => {
+      LOAD_MODES.forEach(mode => {
         const optBtn = document.createElement('button');
-        optBtn.className = 'variant-btn' + (selectedVariant === option ? ' selected' : '');
-        optBtn.textContent = option;
+        optBtn.className = 'variant-btn' + (currentMode === mode.id ? ' selected' : '');
+        optBtn.innerHTML = `<span class="variant-name">${escapeHtml(mode.label)}</span>`
+          + `<span class="variant-sub">${escapeHtml(mode.sub)}</span>`;
         optBtn.onclick = () => {
           pushUndoSnapshot();
           const d = loadDayData(currentSessionId, currentProfile);
           d.variants = d.variants || {};
-          const current = readByExercise(d.variants, ex, exIdx);
           if(exIdx in d.variants) delete d.variants[exIdx]; /* migration ancienne clé */
-          d.variants[variantKey] = (current === option) ? '' : option;
+          /* re-toucher le mode actif le désactive : on revient à l'état vierge */
+          d.variants[variantKey] = (currentMode === mode.id) ? '' : mode.id;
           saveDayData(currentSessionId, currentProfile, d);
           render();
         };
         variantRow.appendChild(optBtn);
       });
       body.appendChild(variantRow);
+
+      /* L'explication n'apparaît qu'une fois un mode choisi : sur un exercice
+         vierge, elle n'aurait rien à préciser. */
+      if(currentMode){
+        const info = loadModeInfo(currentMode);
+        const variantHint = document.createElement('div');
+        variantHint.className = 'variant-hint' + (info.factor === 2 ? ' doubled' : '');
+        variantHint.textContent = info.hint;
+        body.appendChild(variantHint);
+      }
     }
 
     const isCircuit = ex.logType === 'circuit';
 
     const gridHeader = document.createElement('div');
     gridHeader.className = isCircuit ? 'set-grid-header circuit' : 'set-grid-header';
+    const headMode = isCircuit ? null : getLoadMode(ex, exIdx, data);
+    const perHand = !!headMode && loadModeInfo(headMode).factor === 2;
     gridHeader.innerHTML = isCircuit
-      ? `<span>Tour</span><span>Reps</span><span>Durée (s)</span><span>✓</span>`
-      : `<span>#</span><span>Poids (kg)</span><span>Reps</span><span></span><span>✓</span>`;
+      ? `<span>Tour</span><span>Résultat</span><span>✓</span>`
+      : `<span>#</span><span>${perHand ? 'Poids / main' : 'Poids (kg)'}</span><span>${perHand ? 'Reps / bras' : 'Reps'}</span><span></span><span>✓</span>`;
     body.appendChild(gridHeader);
 
     for(let s = 1; s <= ex.sets; s++){
       const setKey = `ex${exIdx}_set${s}`;
-      const savedSet = data.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
+      const savedSet = data.sets[setKey] || { weight:'', reps:'', duration:'', info:'', done:false };
 
       const row = document.createElement('div');
       row.className = isCircuit ? 'set-row circuit' : 'set-row';
@@ -2248,43 +2329,29 @@ function render(){
       row.appendChild(num);
 
       if(isCircuit){
-        /* Un circuit garde sa consigne dans son intitulé (« Relevés 12-15r +
-           Gainage 45s »), mais ce qui est réellement fait se note ici : le
-           nombre de répétitions et la durée tenue. Ces valeurs n'entrent pas
-           dans le tonnage, qui n'aurait pas de sens sans charge. */
-        const circuitReps = document.createElement('input');
-        circuitReps.type = 'text';
-        circuitReps.inputMode = 'numeric';
-        circuitReps.autocomplete = 'off';
-        circuitReps.placeholder = 'reps';
-        circuitReps.value = savedSet.reps || '';
-        circuitReps.onfocus = armUndoSnapshot;
-        circuitReps.oninput = () => {
-          sanitizeField(circuitReps, 'integer');
+        /* Un circuit enchaîne plusieurs mouvements de natures différentes —
+           des répétitions pour l'un, des secondes pour l'autre. Deux cases
+           chiffrées ne peuvent pas représenter ça : une seule case libre laisse
+           noter ce qui a réellement été fait, dans les mots de l'exercice.
+           Ces valeurs n'entrent pas dans le tonnage, qui n'a pas de sens sans charge. */
+        const circuitInfo = document.createElement('input');
+        circuitInfo.type = 'text';
+        circuitInfo.autocomplete = 'off';
+        circuitInfo.placeholder = 'ex : 12 relevés + 45 s';
+        /* Reprise des anciennes saisies chiffrées, pour ne rien perdre. */
+        circuitInfo.value = savedSet.info != null && savedSet.info !== ''
+          ? savedSet.info
+          : [savedSet.reps ? savedSet.reps + ' reps' : '', savedSet.duration ? savedSet.duration + ' s' : '']
+              .filter(Boolean).join(' + ');
+        circuitInfo.onfocus = armUndoSnapshot;
+        circuitInfo.oninput = () => {
           snapshotBeforeEdit();
           const d = loadDayData(currentSessionId, currentProfile);
-          d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
-          d.sets[setKey].reps = circuitReps.value;
+          d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', duration:'', info:'', done:false };
+          d.sets[setKey].info = circuitInfo.value;
           saveDayData(currentSessionId, currentProfile, d);
         };
-        row.appendChild(circuitReps);
-
-        const circuitDuration = document.createElement('input');
-        circuitDuration.type = 'text';
-        circuitDuration.inputMode = 'numeric';
-        circuitDuration.autocomplete = 'off';
-        circuitDuration.placeholder = 'sec';
-        circuitDuration.value = savedSet.duration || '';
-        circuitDuration.onfocus = armUndoSnapshot;
-        circuitDuration.oninput = () => {
-          sanitizeField(circuitDuration, 'integer');
-          snapshotBeforeEdit();
-          const d = loadDayData(currentSessionId, currentProfile);
-          d.sets[setKey] = d.sets[setKey] || { weight:'', reps:'', duration:'', done:false };
-          d.sets[setKey].duration = circuitDuration.value;
-          saveDayData(currentSessionId, currentProfile, d);
-        };
-        row.appendChild(circuitDuration);
+        row.appendChild(circuitInfo);
       }
 
       if(!isCircuit){
@@ -2412,9 +2479,13 @@ function render(){
     main.appendChild(card);
   });
 
-  if(dayProgram.cardio){
+  /* Le cardio est proposé à la fin de CHAQUE séance, même celles qui n'en
+     prévoient pas : la case à cocher décide, et les champs n'apparaissent que
+     si elle est cochée. Une séance sans cardio reste donc une simple ligne. */
+  {
+    const cardioPlan = dayProgram.cardio;
     const cardioCard = document.createElement('div');
-    cardioCard.className = 'cardio-card';
+    cardioCard.className = 'cardio-card' + (data.cardioDone ? '' : ' collapsed');
 
     const topRow = document.createElement('div');
     topRow.className = 'cardio-top-row';
@@ -2422,25 +2493,25 @@ function render(){
       <div class="label">
         <span class="icon">🏃</span>
         <div class="cardio-text">
-          <span class="name">${escapeHtml(dayProgram.cardio.name)}</span>
-          <span class="cardio-suggestion">Suggestion : ${escapeHtml(dayProgram.cardio.targetMinutes)} min</span>
+          <span class="name">${escapeHtml(cardioPlan ? cardioPlan.name : 'Cardio')}</span>
+          <span class="cardio-suggestion">${cardioPlan
+            ? 'Suggestion : ' + escapeHtml(cardioPlan.targetMinutes) + ' min'
+            : 'Optionnel — coche si tu en as fait'}</span>
         </div>
       </div>
     `;
     const cardioBtn = document.createElement('button');
     cardioBtn.className = 'check-btn' + (data.cardioDone ? ' checked' : '');
     cardioBtn.textContent = '✓';
+    cardioBtn.title = data.cardioDone ? 'Cardio fait' : 'Cocher si tu as fait du cardio';
     cardioBtn.onclick = () => {
       pushUndoSnapshot();
       const d = loadDayData(currentSessionId, currentProfile);
       d.cardioDone = !d.cardioDone;
       saveDayData(currentSessionId, currentProfile, d);
-      cardioBtn.classList.toggle('checked', d.cardioDone);
-      if(d.cardioDone){
-        cardioBtn.classList.remove('pulse'); void cardioBtn.offsetWidth; cardioBtn.classList.add('pulse');
-        vibrate();
-      }
-      updateSessionProgress();
+      if(d.cardioDone) vibrate();
+      /* re-render complet : les champs apparaissent ou disparaissent */
+      render();
     };
     topRow.appendChild(cardioBtn);
     cardioCard.appendChild(topRow);
@@ -2543,6 +2614,13 @@ function render(){
     cardioNoteWrap.appendChild(cardioNoteInput);
     cardioCard.appendChild(cardioNoteWrap);
 
+    /* Non coché : la carte se réduit à sa ligne du haut. Les champs restent dans
+       le DOM avec leurs valeurs — décocher par erreur n'efface donc rien. */
+    if(!data.cardioDone){
+      fieldsRow.style.display = 'none';
+      cardioNoteWrap.style.display = 'none';
+    }
+
     main.appendChild(cardioCard);
   }
 
@@ -2599,9 +2677,10 @@ function buildExportText(){
 
   dayProgram.exercises.forEach((ex, exIdx) => {
     txt += `\n${ex.name}\n`;
-    const variant = readByExercise(data.variants, ex, exIdx);
-    if(ex.equipmentOptions && variant){
-      txt += `Variante : ${variant}\n`;
+    const loadMode = ex.logType !== 'circuit' ? getLoadMode(ex, exIdx, data) : null;
+    if(loadMode){
+      const info = loadModeInfo(loadMode);
+      txt += `Charge : ${info.label} (${info.sub})\n`;
     }
     txt += `Cible : ${ex.target[currentProfile]}\n`;
     for(let s = 1; s <= ex.sets; s++){
@@ -2609,9 +2688,11 @@ function buildExportText(){
       const setData = data.sets[setKey] || { weight:'', reps:'', done:false };
       const status = setData.done ? '✅' : '❌';
       if(ex.logType === 'circuit'){
-        const reps = setData.reps !== '' && setData.reps != null ? `${setData.reps} reps` : '- reps';
-        const dur = setData.duration !== '' && setData.duration != null ? `${setData.duration} s` : '- s';
-        txt += `  Tour ${s} : ${reps} · ${dur} ${status}\n`;
+        const info = (setData.info != null && setData.info !== '')
+          ? setData.info
+          : [setData.reps ? setData.reps + ' reps' : '', setData.duration ? setData.duration + ' s' : '']
+              .filter(Boolean).join(' + ');
+        txt += `  Tour ${s} : ${info || '-'} ${status}\n`;
       } else {
         const weight = setData.weight !== '' ? setData.weight : '-';
         const reps = setData.reps !== '' ? setData.reps : '-';
@@ -2624,11 +2705,12 @@ function buildExportText(){
     }
   });
 
-  if(dayProgram.cardio){
+  if(dayProgram.cardio || data.cardioDone){
     const minutesStr = data.cardioMinutes !== '' && data.cardioMinutes != null ? `${data.cardioMinutes} min` : 'non renseigné';
     const inclineStr = data.cardioIncline !== '' && data.cardioIncline != null ? `${data.cardioIncline}% inclinaison` : 'inclinaison non renseignée';
     const speedStr = data.cardioSpeed !== '' && data.cardioSpeed != null ? `vitesse ${data.cardioSpeed}` : 'vitesse non renseignée';
-    txt += `\nCardio : ${dayProgram.cardio.name} — ${minutesStr}, ${inclineStr}, ${speedStr} ${data.cardioDone ? '✅' : '❌'}\n`;
+    const cardioName = dayProgram.cardio ? dayProgram.cardio.name : 'Cardio (hors programme)';
+    txt += `\nCardio : ${cardioName} — ${minutesStr}, ${inclineStr}, ${speedStr} ${data.cardioDone ? '✅' : '❌'}\n`;
     if(data.cardioNote && data.cardioNote.trim() !== ''){
       txt += `  🗒️ Info : ${data.cardioNote.trim()}\n`;
     }
@@ -3119,7 +3201,8 @@ const CHAT_HISTORY_LIMIT = 20;
      rien n'est perdu ni à migrer.
    - `questions` : les questions libres. Ce fil reçoit en contexte les derniers
      échanges du suivi, pour ne pas repartir de zéro. */
-/* Conversations, définies en base (document `settings/threads`) plutôt qu'en
+/* Conversations, définies en base dans le champ `threads` du document
+   `settings/coach` — le même que la clé API et les poids — plutôt qu'en
    dur : on peut donc en créer et en supprimer sans toucher au code, et les deux
    téléphones voient les mêmes. Pas de nouvelle collection Firestore, donc aucune
    règle de sécurité à modifier.
